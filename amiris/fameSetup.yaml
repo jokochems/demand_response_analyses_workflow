@@ -1,0 +1,13 @@
+outputPath: "./results/"
+outputFilePrefix: "amiris-output"
+outputFileTimeStamp: False
+
+agentPackages:
+   - "agents"
+
+messagePackages:
+   - "communications.message"
+   
+portablePackages:
+   - "communications"
+   - "agents"

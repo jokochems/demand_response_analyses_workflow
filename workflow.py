@@ -1,22 +1,32 @@
 from fameio.source.cli import Config
 
-from dr_analyses.helpers import (
+from dr_analyses.workflow_routines import (
     get_all_yaml_files_in_folder_except,
-    trim_file_name
+    make_scenario_config, run_amiris, convert_amiris_results
 )
-from fameio.scripts.convert_results import run as convert_results
-from fameio.scripts.make_config import run as make_config
 
 input_folder = "C:/Users/koch_j0/AMIRIS/asgard/input/demand_response"
 
 config_make = {
-    Config.LOG_LEVEL: "warn",
-    Config.OUTPUT: input_folder + "/configs/",
+    Config.LOG_LEVEL: "error",
     Config.LOG_FILE: None,
     # Config.NUM_PROCESSES: 1,
 }
 
+run_properties = {
+    "exe": "amiris/amiris-asgard-jar-with-dependencies.jar",
+    "logging": "-Dlog4j.configuration=file:amiris/log4j.properties",
+    "main": "de.dlr.gitlab.fame.setup.FameRunner",
+    "setup": "amiris/fameSetup.yaml"
+}
 
+config_convert = {
+    Config.LOG_LEVEL: "warn",
+    Config.LOG_FILE: None,
+    Config.OUTPUT: "./results/",
+    Config.AGENT_LIST: None,
+    Config.SINGLE_AGENT_EXPORT: False,
+}
 
 if __name__ == "__main__":
     to_ignore = ["schema.yaml"]
@@ -24,7 +34,8 @@ if __name__ == "__main__":
         input_folder, to_ignore
     )
     for scenario in scenario_files:
-        config_make[Config.OUTPUT] = (
-            config_make[Config.OUTPUT] + trim_file_name(scenario) + ".pb"
-        )
-        make_config(scenario, config_make)
+        make_scenario_config(scenario, config_make, input_folder)
+        run_amiris(run_properties, config_make)
+        # TODO: RESUME HERE!
+        convert_amiris_results()
+        break
