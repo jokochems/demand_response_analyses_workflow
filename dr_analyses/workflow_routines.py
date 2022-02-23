@@ -1,6 +1,7 @@
 import os
 from typing import List, Dict
 
+from fameio.scripts.convert_results import run as convert_results
 from fameio.scripts.make_config import run as make_config
 from fameio.source.cli import Config
 
@@ -37,7 +38,7 @@ def make_scenario_config(
     print(f"Scenario {trimmed_scenario} compiled")
 
 
-def run_amiris(run_properties: Dict[str], config_make: Dict) -> None:
+def run_amiris(run_properties: Dict, config_make: Dict) -> None:
     """Run AMIRIS for given run properties and make configuration"""
     call_amiris = "java -ea -Xmx2000M -cp {} {} {} -f {} -s {}".format(
         run_properties["exe"],
@@ -49,6 +50,9 @@ def run_amiris(run_properties: Dict[str], config_make: Dict) -> None:
     os.system(call_amiris)
 
 
-def convert_amiris_results():
+def convert_amiris_results(
+        scenario: str, config_convert: Dict, output_folder: str
+) -> None:
     """Convert AMIRIS results from a previous model run"""
-    pass
+    config_convert[Config.OUTPUT] = output_folder + trim_file_name(scenario)
+    convert_results(output_folder + "amiris-output.pb", config_convert)

@@ -5,7 +5,13 @@ from dr_analyses.workflow_routines import (
     make_scenario_config, run_amiris, convert_amiris_results
 )
 
-input_folder = "C:/Users/koch_j0/AMIRIS/asgard/input/demand_response"
+config_workflow = {
+    "input_folder": "C:/Users/koch_j0/AMIRIS/asgard/input/demand_response",
+    "output_folder": "./results/",
+    "make_scenario": True,
+    "run_amiris": True,
+    "convert_results": True,
+}
 
 config_make = {
     Config.LOG_LEVEL: "error",
@@ -23,7 +29,6 @@ run_properties = {
 config_convert = {
     Config.LOG_LEVEL: "warn",
     Config.LOG_FILE: None,
-    Config.OUTPUT: "./results/",
     Config.AGENT_LIST: None,
     Config.SINGLE_AGENT_EXPORT: False,
 }
@@ -31,11 +36,18 @@ config_convert = {
 if __name__ == "__main__":
     to_ignore = ["schema.yaml"]
     scenario_files = get_all_yaml_files_in_folder_except(
-        input_folder, to_ignore
+        config_workflow["input_folder"], to_ignore
     )
     for scenario in scenario_files:
-        make_scenario_config(scenario, config_make, input_folder)
-        run_amiris(run_properties, config_make)
-        # TODO: RESUME HERE!
-        convert_amiris_results()
+        if config_workflow["make_scenario"]:
+            make_scenario_config(
+                scenario, config_make, config_workflow["input_folder"]
+            )
+        if config_workflow["run_amiris"]:
+            run_amiris(run_properties, config_make)
+        if config_workflow["convert_results"]:
+            convert_amiris_results(
+                scenario, config_convert, config_workflow["output_folder"]
+            )
         break
+        # TODO: Resume with aggregation & analysis of results!
