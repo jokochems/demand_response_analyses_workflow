@@ -3,7 +3,9 @@ from fameio.source.cli import Config
 from dr_analyses.results_analysis import calc_load_shifting_results
 from dr_analyses.workflow_routines import (
     get_all_yaml_files_in_folder_except,
-    make_scenario_config, run_amiris, convert_amiris_results
+    make_scenario_config,
+    run_amiris,
+    convert_amiris_results,
 )
 
 config_workflow = {
@@ -12,6 +14,7 @@ config_workflow = {
     "make_scenario": False,
     "run_amiris": False,
     "convert_results": False,
+    "baseline_load_file": "C:/Users/koch_j0/AMIRIS/asgard/result/demand_response_eninnov/00_Evaluation/ind_cluster_shift_only_baseline_load.xlsx",  # noqa: E501
 }
 
 config_make = {
@@ -24,7 +27,7 @@ run_properties = {
     "exe": "amiris/amiris-core_1.2-jar-with-dependencies.jar",
     "logging": "-Dlog4j.configuration=file:amiris/log4j.properties",
     "main": "de.dlr.gitlab.fame.setup.FameRunner",
-    "setup": "amiris/fameSetup.yaml"
+    "setup": "amiris/fameSetup.yaml",
 }
 
 config_convert = {
@@ -50,5 +53,7 @@ if __name__ == "__main__":
             convert_amiris_results(
                 scenario, config_convert, config_workflow["output_folder"]
             )
-        calc_load_shifting_results(scenario, config_convert, config_workflow["output_folder"])
+        calc_load_shifting_results(
+            scenario, config_convert, config_workflow
+        )
         # TODO: Resume with aggregation & analysis of results!
