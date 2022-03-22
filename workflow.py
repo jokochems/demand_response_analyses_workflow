@@ -63,11 +63,7 @@ if __name__ == "__main__":
             calc_basic_load_shifting_results(cont)
             obtain_scenario_prices(cont)
             add_power_payments(cont)
-        if config_workflow["calculate_summary_parameters"]:
-            if not config_workflow["process_results"]:
-                # read from file
-                results = None
-            else:
-                calc_summary_parameters(results)
+        if config_workflow["aggregate_results"]:
+            calc_summary_parameters(cont)
         break
         # TODO: Resume with aggregation & analysis of results!

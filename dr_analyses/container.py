@@ -1,17 +1,22 @@
+import pandas as pd
+from fameio.source.cli import Config
 from fameio.source.loader import load_yaml
+
+from dr_analyses.workflow_routines import trim_file_name
 
 
 class Container:
     """Class holding Container objects with config and results information
 
-    :param str scenario: scenario to be analyzed
-    :param dict config_workflow: the workflow configuration
-    :param dict config_convert: the configuration for converting AMIRIS results
-    :param pd.DataFrame or NoneType results: load shifting results from the
+    :attr str scenario: scenario to be analyzed
+    :attr dict config_workflow: the workflow configuration
+    :attr dict config_convert: the configuration for converting AMIRIS results
+    :attr pd.DataFrame or NoneType results: load shifting results from the
     simulation
-    :param pd.DataFrame or NoneType power_prices: end consumer power price
+    :attr pd.DataFrame or NoneType power_prices: end consumer power price
     time series
-    :param dict or NoneType load_shifting_data: load shifting config from yaml
+    :attr dict or NoneType load_shifting_data: load shifting config from yaml
+    :attr dict or NoneType summary: parameter summary retrieved from results
     """
 
     def __init__(self, scenario, config_workflow, config_convert):
@@ -21,6 +26,7 @@ class Container:
         self.results = None
         self.power_prices = None
         self.load_shifting_data = None
+        self.summary = None
         self._define_components_mapping()
 
     def _define_components_mapping(self):
@@ -47,10 +53,10 @@ class Container:
             },
         }
 
-    def set_results(self, results):
+    def set_results(self, results: pd.DataFrame):
         self.results = results
 
-    def set_power_prices(self, power_prices):
+    def set_power_prices(self, power_prices: pd.DataFrame):
         self.power_prices = power_prices
 
     def set_load_shifting_data(self):
@@ -61,3 +67,14 @@ class Container:
             for agent in yaml_data["Agents"]
             if agent["Type"] == "LoadShiftingTrader"
         ][0]
+
+    def initialize_summary(self):
+        self.summary = dict()
+
+    def write_summary(self):
+        """Write parameter summary to disk"""
+        summary_series = pd.Series(self.summary, name="Summary")
+        summary_series.to_csv(
+            self.config_convert[Config.OUTPUT] + "parameter_summary.csv",
+            sep=";",
+        )

@@ -3,7 +3,7 @@ import pandas as pd
 from fameio.source.cli import Config
 
 from dr_analyses.container import Container
-from dr_analyses.subroutines import (
+from dr_analyses.results_subroutines import (
     add_abs_values,
     add_baseline_load_profile,
     calculate_dynamic_price_time_series,
@@ -59,18 +59,18 @@ def add_power_payments(cont: Container) -> None:
 
     :param Container cont: container object holding configuration and results
     """
-    cont.results["BaselinePayments"] = 0
-    cont.results["ShiftingPayments"] = 0
+    cont.results["BaselineTotalPayments"] = 0
+    cont.results["ShiftingTotalPayments"] = 0
     for col in cont.power_prices.columns:
         cont.results["Baseline" + col + "Payment"] = (
             cont.results["BaselineLoadProfile"] * cont.power_prices[col]
         )
-        cont.results["BaselinePayments"] += cont.results[
+        cont.results["BaselineTotalPayments"] += cont.results[
             "Baseline" + col + "Payment"
         ]
         cont.results["Shifting" + col + "Payment"] = (
             cont.results["LoadAfterShifting"] * cont.power_prices[col]
         )
-        cont.results["ShiftingPayments"] += cont.results[
+        cont.results["ShiftingTotalPayments"] += cont.results[
             "Shifting" + col + "Payment"
         ]
