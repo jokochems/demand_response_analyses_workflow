@@ -68,6 +68,20 @@ class Container:
             if agent["Type"] == "LoadShiftingTrader"
         ][0]
 
+    def write_results(self):
+        self.results.to_csv(
+            self.config_convert[Config.OUTPUT]
+            + "/LoadShiftingTraderExtended.csv",
+            sep=";"
+        )
+
+    def write_power_prices(self):
+        self.power_prices.to_csv(
+            self.config_convert[Config.OUTPUT]
+            + "/ConsumerPowerPrices.csv",
+            sep=";"
+        )
+
     def initialize_summary(self):
         self.summary = dict()
 
@@ -75,6 +89,6 @@ class Container:
         """Write parameter summary to disk"""
         summary_series = pd.Series(self.summary, name="Summary")
         summary_series.to_csv(
-            self.config_convert[Config.OUTPUT] + "parameter_summary.csv",
+            self.config_convert[Config.OUTPUT] + "/parameter_summary.csv",
             sep=";",
         )

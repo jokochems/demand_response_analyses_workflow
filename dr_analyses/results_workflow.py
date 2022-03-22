@@ -74,3 +74,9 @@ def add_power_payments(cont: Container) -> None:
         cont.results["ShiftingTotalPayments"] += cont.results[
             "Shifting" + col + "Payment"
         ]
+
+
+def write_results(cont: Container) -> None:
+    """Write load shifting results and consumer price time series to disk"""
+    cont.write_results()
+    cont.write_power_prices()
