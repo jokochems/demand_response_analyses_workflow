@@ -1,9 +1,12 @@
 from fameio.source.cli import Config
 
-from dr_analyses.results_analysis import (
+from dr_analyses.container import Container
+from dr_analyses.results_workflow import (
     calc_basic_load_shifting_results,
     obtain_scenario_prices,
+    add_power_payments,
 )
+from dr_analyses.summary import calc_summary_parameters
 from dr_analyses.workflow_routines import (
     get_all_yaml_files_in_folder_except,
     make_scenario_config,
@@ -48,23 +51,23 @@ if __name__ == "__main__":
         config_workflow["input_folder"], to_ignore
     )
     for scenario in scenario_files:
+        cont = Container(scenario, config_workflow, config_convert)
+
         if config_workflow["make_scenario"]:
-            make_scenario_config(
-                scenario, config_make, config_workflow["input_folder"]
-            )
+            make_scenario_config(cont)
         if config_workflow["run_amiris"]:
             run_amiris(run_properties, config_make)
         if config_workflow["convert_results"]:
-            convert_amiris_results(
-                scenario, config_convert, config_workflow["output_folder"]
-            )
+            convert_amiris_results(cont)
         if config_workflow["process_results"]:
-            load_shifting_results = calc_basic_load_shifting_results(
-                scenario, config_convert, config_workflow
-            )
-            power_prices = obtain_scenario_prices(
-                scenario, config_convert, config_workflow["input_folder"]
-            )
-            add_price_results(load_shifting_results, power_prices)
+            calc_basic_load_shifting_results(cont)
+            obtain_scenario_prices(cont)
+            add_power_payments(cont)
+        if config_workflow["calculate_summary_parameters"]:
+            if not config_workflow["process_results"]:
+                # read from file
+                results = None
+            else:
+                calc_summary_parameters(results)
         break
         # TODO: Resume with aggregation & analysis of results!
