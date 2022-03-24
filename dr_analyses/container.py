@@ -17,6 +17,7 @@ class Container:
     time series
     :attr dict or NoneType load_shifting_data: load shifting config from yaml
     :attr dict or NoneType summary: parameter summary retrieved from results
+    :attr dict or pd.Series summary_series: parameter summary as Series
     """
 
     def __init__(self, scenario, config_workflow, config_convert):
@@ -27,6 +28,7 @@ class Container:
         self.power_prices = None
         self.load_shifting_data = None
         self.summary = None
+        self.summary_series = None
         self._define_components_mapping()
 
     def _define_components_mapping(self):
@@ -85,10 +87,12 @@ class Container:
     def initialize_summary(self):
         self.summary = dict()
 
+    def set_summary_series(self):
+        self.summary_series = pd.Series(self.summary, name="Summary")
+
     def write_summary(self):
         """Write parameter summary to disk"""
-        summary_series = pd.Series(self.summary, name="Summary")
-        summary_series.to_csv(
+        self.summary_series.to_csv(
             self.config_convert[Config.OUTPUT] + "/parameter_summary.csv",
             sep=";",
         )

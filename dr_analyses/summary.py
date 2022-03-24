@@ -19,6 +19,7 @@ def calc_summary_parameters(cont: Container) -> None:
     add_capacity_charges_summary(cont)
     add_energy_payments_summary(cont)
     add_total_costs_and_savings_summary(cont)
+    cont.set_summary_series()
     cont.write_summary()
 
 

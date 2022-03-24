@@ -1,6 +1,10 @@
 from fameio.source.cli import Config
 
 from dr_analyses.container import Container
+from dr_analyses.cross_scenario_evaluation import (
+    read_scenario_result,
+    concat_results,
+)
 from dr_analyses.results_workflow import (
     calc_basic_load_shifting_results,
     obtain_scenario_prices,
@@ -13,6 +17,7 @@ from dr_analyses.workflow_routines import (
     make_scenario_config,
     run_amiris,
     convert_amiris_results,
+    trim_file_name,
 )
 
 config_workflow = {
@@ -53,6 +58,7 @@ if __name__ == "__main__":
     scenario_files = get_all_yaml_files_in_folder_except(
         config_workflow["input_folder"], to_ignore
     )
+    scenario_results = dict()
     for scenario in scenario_files:
         cont = Container(scenario, config_workflow, config_convert)
 
@@ -70,8 +76,14 @@ if __name__ == "__main__":
                 write_results(cont)
         if config_workflow["aggregate_results"]:
             calc_summary_parameters(cont)
+            scenario_results[trim_file_name(scenario)] = cont.summary_series
         break
 
     if config_workflow["evaluate_cross_scenarios"]:
-        pass
+        if len(scenario_results) == 0:
+            for scenario in scenario_files:
+                scenario_results[
+                    trim_file_name(scenario)
+                ] = read_scenario_result(config_workflow, scenario)
+        concat_results(scenario_results)
         # TODO: Add cross-scenario analysis
