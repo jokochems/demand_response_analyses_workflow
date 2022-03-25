@@ -2,8 +2,6 @@ import pandas as pd
 from fameio.source.cli import Config
 from fameio.source.loader import load_yaml
 
-from dr_analyses.workflow_routines import trim_file_name
-
 
 class Container:
     """Class holding Container objects with config and results information

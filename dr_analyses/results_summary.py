@@ -1,5 +1,3 @@
-import pandas as pd
-
 from dr_analyses.container import Container
 
 
