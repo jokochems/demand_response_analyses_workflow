@@ -52,7 +52,7 @@ def concat_results(scenario_results: Dict) -> pd.DataFrame:
 
 def evaluate_all_parameter_results(
     config_workflow: Dict, overall_results: pd.DataFrame
-) -> Dict[pd.DataFrame]:
+) -> Dict[str, pd.DataFrame]:
     """Evaluate all parameter results and store them in a dict of DataFrames"""
     all_parameter_results = dict()
     for param in overall_results.index:

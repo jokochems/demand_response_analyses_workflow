@@ -5,9 +5,11 @@ from fameio.scripts.convert_results import run as convert_results
 from fameio.scripts.make_config import run as make_config
 from fameio.source.cli import Config
 
+from dr_analyses.container import Container
+
 
 def get_all_yaml_files_in_folder_except(
-        folder: str, file_list: List[str]
+    folder: str, file_list: List[str]
 ) -> List[str]:
     """Returns all .yaml files in given folder but not given ones"""
     return [
@@ -18,23 +20,20 @@ def get_all_yaml_files_in_folder_except(
     ]
 
 
-def trim_file_name(
-        file_name: str
-) -> str:
+def trim_file_name(file_name: str) -> str:
     """Return the useful part of a scenario name"""
     return file_name.rsplit("/", 1)[1].split(".")[0]
 
 
-def make_scenario_config(
-        scenario: str, config_make: Dict, input_folder: str
-) -> None:
+def make_scenario_config(cont: Container) -> None:
     """Make a config for a given scenario with absolute path"""
-    trimmed_scenario = trim_file_name(scenario)
+    trimmed_scenario = trim_file_name(cont.scenario)
     print(f"Compiling scenario {trimmed_scenario}")
-    config_make[Config.OUTPUT] = (
-            input_folder + "/configs/" + trimmed_scenario + ".pb"
-    )
-    make_config(scenario, config_make)
+    cont.config_make[
+        Config.OUTPUT
+    ] = f'{cont.config_workflow["input_folder"]}/configs/{trimmed_scenario}.pb'
+
+    make_config(cont.scenario, cont.config_make)
     print(f"Scenario {trimmed_scenario} compiled")
 
 
@@ -50,9 +49,12 @@ def run_amiris(run_properties: Dict, config_make: Dict) -> None:
     os.system(call_amiris)
 
 
-def convert_amiris_results(
-        scenario: str, config_convert: Dict, output_folder: str
-) -> None:
+def convert_amiris_results(cont: Container) -> None:
     """Convert AMIRIS results from a previous model run"""
-    config_convert[Config.OUTPUT] = output_folder + trim_file_name(scenario)
-    convert_results(output_folder + "amiris-output.pb", config_convert)
+    cont.config_convert[Config.OUTPUT] = cont.config_workflow[
+        "output_folder"
+    ] + trim_file_name(cont.scenario)
+    convert_results(
+        cont.config_workflow["output_folder"] + "amiris-output.pb",
+        cont.config_convert,
+    )

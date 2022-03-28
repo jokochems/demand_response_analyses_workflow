@@ -18,10 +18,11 @@ class Container:
     :attr dict or pd.Series summary_series: parameter summary as Series
     """
 
-    def __init__(self, scenario, config_workflow, config_convert):
+    def __init__(self, scenario, config_workflow, config_convert, config_make):
         self.scenario = scenario
         self.config_workflow = config_workflow
         self.config_convert = config_convert
+        self.config_make = config_make
         self.results = None
         self.power_prices = None
         self.load_shifting_data = None

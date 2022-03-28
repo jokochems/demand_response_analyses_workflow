@@ -63,7 +63,7 @@ if __name__ == "__main__":
     )
     scenario_results = dict()
     for scenario in scenario_files:
-        cont = Container(scenario, config_workflow, config_convert)
+        cont = Container(scenario, config_workflow, config_convert, config_make)
 
         if config_workflow["make_scenario"]:
             make_scenario_config(cont)
