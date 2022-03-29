@@ -33,8 +33,8 @@ def concat_results(scenario_results: Dict) -> pd.DataFrame:
         "static_tariff": "static_tariff",
         "DA_plus_static": "DA",
         "DA_plus_dynamicEEG": "DA_dyn_EEG",
-        "RTP_with_caps": "RTP_w_Caps",
-        "RTP_without_caps": "RTP_wo_Caps",
+        "RTP_wo": "RTP_w_Caps",
+        "RTP_no_cap": "RTP_wo_Caps",
     }
     for key, val in cost_groups.items():
         overall_results.loc[

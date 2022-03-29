@@ -20,18 +20,26 @@ def plot_bar_charts(
         _ = ax.set_ylabel(param)
         _ = plt.tight_layout()
 
-        plt.show()
+        _ = fig.savefig(config_workflow["output_folder"] + param + ".png", dpi=300)
+        plt.close()
 
 
 def determine_yaxis_spacing(param_results):
     """Determine the yaxis space"""
     max_val = param_results.max().max()
-    # Handle negative values
-    if max_val < 0:
-        max_val *= (-1)
+    min_val = param_results.min().min()
 
     # Determine rounding
-    digits = len(str(max_val * 1.1).split(".")[0]) - 1
-    plot_max = np.round(max_val * 1.1, -2)
+    to_subtract_max = 1
+    to_subtract_min = to_subtract_max + 1
+    if max_val < 0:
+        to_subtract_max += 1
+    if min_val < 0:
+        to_subtract_min += 1
+    
+    digits_upper = len(str(max_val * 1.1).split(".")[0]) - to_subtract_max
+    digits_lower = len(str(min_val * 1.1).split(".")[0]) - to_subtract_min
+    plot_max = np.round(max_val * 1.1, -digits_upper)
+    plot_min = np.round(min_val * 1.1, -digits_lower)
 
-    return range(0, int(plot_max) + 1, int(plot_max / 10))
+    return range(min(int(plot_min), 0), int(plot_max) + 1, max(int((plot_min + plot_max) / 10), 1))
