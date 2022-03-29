@@ -28,11 +28,11 @@ config_workflow = {
     "make_scenario": False,
     "run_amiris": False,
     "convert_results": False,
-    "process_results": True,
+    "process_results": False,
     "write_results": False,
-    "aggregate_results": True,
+    "aggregate_results": False,
     "evaluate_cross_scenarios": True,
-    "make_plots": False,
+    "make_plots": True,
     "baseline_load_file": "C:/Users/koch_j0/AMIRIS/asgard/result/demand_response_eninnov/00_Evaluation/ind_cluster_shift_only_baseline_load.xlsx",  # noqa: E501
 }
 
@@ -80,7 +80,6 @@ if __name__ == "__main__":
         if config_workflow["aggregate_results"]:
             calc_summary_parameters(cont)
             scenario_results[trim_file_name(scenario)] = cont.summary_series
-        break
 
     if config_workflow["evaluate_cross_scenarios"]:
         if len(scenario_results) == 0:
