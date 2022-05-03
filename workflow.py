@@ -25,12 +25,12 @@ from dr_analyses.workflow_routines import (
 config_workflow = {
     "input_folder": "C:/Users/koch_j0/AMIRIS/asgard/input/demand_response",
     "output_folder": "./results/",
-    "make_scenario": False,
-    "run_amiris": False,
-    "convert_results": False,
-    "process_results": False,
-    "write_results": False,
-    "aggregate_results": False,
+    "make_scenario": True,
+    "run_amiris": True,
+    "convert_results": True,
+    "process_results": True,
+    "write_results": True,
+    "aggregate_results": True,
     "evaluate_cross_scenarios": True,
     "make_plots": True,
     "baseline_load_file": "C:/Users/koch_j0/AMIRIS/asgard/result/demand_response_eninnov/00_Evaluation/ind_cluster_shift_only_baseline_load.xlsx",  # noqa: E501
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     scenario_files = get_all_yaml_files_in_folder_except(
         config_workflow["input_folder"], to_ignore
     )
-    scenario_results = dict()
+    scenario_results = {}
     for scenario in scenario_files:
         cont = Container(scenario, config_workflow, config_convert, config_make)
 
@@ -82,11 +82,11 @@ if __name__ == "__main__":
             scenario_results[trim_file_name(scenario)] = cont.summary_series
 
     if config_workflow["evaluate_cross_scenarios"]:
-        if len(scenario_results) == 0:
+        if not scenario_results:
             for scenario in scenario_files:
-                scenario_results[
-                    trim_file_name(scenario)
-                ] = read_scenario_result(config_workflow, scenario)
+                scenario_results[trim_file_name(scenario)] = read_scenario_result(
+                    config_workflow, scenario
+                )
         overall_results = concat_results(scenario_results)
         all_parameter_results = evaluate_all_parameter_results(
             config_workflow, overall_results

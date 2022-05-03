@@ -24,9 +24,7 @@ def calc_summary_parameters(cont: Container) -> None:
 def add_full_shift_cycles(cont: Container) -> None:
     """Determine and add the number of full shift cycles to summary"""
     full_shift_cycle_energy = (
-        cont.load_shifting_data["Attributes"]["LoadShiftingPortfolio"][
-            "PowerInMW"
-        ]
+        cont.load_shifting_data["Attributes"]["LoadShiftingPortfolio"]["PowerInMW"]
         * cont.load_shifting_data["Attributes"]["LoadShiftingPortfolio"][
             "MaximumShiftTimeInHours"
         ]
@@ -39,15 +37,10 @@ def add_full_shift_cycles(cont: Container) -> None:
 
 def add_peak_load_summary(cont: Container) -> None:
     """Add peak load information to summary"""
-    cont.summary["PeakLoadBeforeShifting"] = cont.results[
-        "BaselineLoadProfile"
-    ].max()
-    cont.summary["PeakLoadAfterShifting"] = cont.results[
-        "LoadAfterShifting"
-    ].max()
+    cont.summary["PeakLoadBeforeShifting"] = cont.results["BaselineLoadProfile"].max()
+    cont.summary["PeakLoadAfterShifting"] = cont.results["LoadAfterShifting"].max()
     cont.summary["PeakLoadChange"] = (
-        cont.summary["PeakLoadAfterShifting"]
-        - cont.summary["PeakLoadBeforeShifting"]
+        cont.summary["PeakLoadAfterShifting"] - cont.summary["PeakLoadBeforeShifting"]
     )
 
 
@@ -96,8 +89,7 @@ def add_total_costs_and_savings_summary(cont: Container) -> None:
         cont.summary["TotalPaymentAfterShifting"]
         - cont.summary["TotalPaymentBeforeShifting"]
     )
-    cont.summary["TotalShiftingCosts"] = cont.results["Costs"].sum()
+    cont.summary["TotalShiftingCosts"] = cont.results["VariableShiftingCosts"].sum()
     cont.summary["NetSavings"] = (
-        -cont.summary["TotalPaymentChange"]
-        - cont.summary["TotalShiftingCosts"]
+        -cont.summary["TotalPaymentChange"] - cont.summary["TotalShiftingCosts"]
     )

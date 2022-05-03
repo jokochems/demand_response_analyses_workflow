@@ -34,11 +34,9 @@ def calculate_dynamic_price_time_series(
     power_prices = power_prices[["ElectricityPriceInEURperMWH"]]
     for component in dynamic_components:
         conditions = [
-            power_prices["ElectricityPriceInEURperMWH"].values
-            * component["Multiplier"]
+            power_prices["ElectricityPriceInEURperMWH"].values * component["Multiplier"]
             < component["LowerBound"],
-            power_prices["ElectricityPriceInEURperMWH"].values
-            * component["Multiplier"]
+            power_prices["ElectricityPriceInEURperMWH"].values * component["Multiplier"]
             > component["UpperBound"],
         ]
         choices = [
