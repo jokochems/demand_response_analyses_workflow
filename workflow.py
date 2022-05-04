@@ -10,6 +10,7 @@ from dr_analyses.plotting import plot_bar_charts
 from dr_analyses.results_workflow import (
     calc_basic_load_shifting_results,
     obtain_scenario_prices,
+    obtain_baseline_prices,
     add_power_payments,
     write_results,
 )
@@ -25,9 +26,9 @@ config_workflow = {
     "input_folder": "C:/Users/koch_j0/AMIRIS/asgard/input/demand_response",
     "output_folder": "./results/",
     "make_scenario": False,
-    "run_amiris": True,
+    "run_amiris": False,
     "convert_results": False,
-    "process_results": False,
+    "process_results": True,
     "write_results": False,
     "aggregate_results": False,
     "evaluate_cross_scenarios": False,
@@ -69,7 +70,9 @@ if __name__ == "__main__":
     scenario_results = {}
 
     for scenario in scenario_files:
-        cont = Container(scenario, config_workflow, config_convert, config_make)
+        cont = Container(
+            scenario, config_workflow, config_convert, config_make, baseline_scenario
+        )
 
         if config_workflow["make_scenario"]:
             make_scenario_config(cont)
@@ -78,8 +81,10 @@ if __name__ == "__main__":
         if config_workflow["convert_results"]:
             convert_amiris_results(cont)
         if config_workflow["process_results"]:
-            calc_basic_load_shifting_results(cont)
-            obtain_scenario_prices(cont)
+            if "_no_dr" not in scenario:
+                calc_basic_load_shifting_results(cont)
+                obtain_scenario_prices(cont)
+                obtain_baseline_prices(cont)
             add_power_payments(cont)
             if config_workflow["write_results"]:
                 write_results(cont)

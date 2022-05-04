@@ -42,11 +42,17 @@ def obtain_scenario_prices(cont: Container) -> None:
 
     :param Container cont: container object holding configuration
     """
-    cont.set_load_shifting_data()
-    dynamic_components = cont.load_shifting_data["Attributes"]["Policy"][
-        "DynamicTariffComponents"
-    ]
-    calculate_dynamic_price_time_series(cont, dynamic_components)
+    cont.set_load_shifting_data_and_dynamic_components()
+    calculate_dynamic_price_time_series(cont)
+    add_static_prices(cont)
+
+
+def obtain_baseline_prices(cont: Container) -> None:
+    """Obtain price time-series not considering price repercussions of demand response
+
+    :param Container cont: container object holding configuration
+    """
+    calculate_dynamic_price_time_series(cont, use_baseline_prices=True)
     add_static_prices(cont)
 
 

@@ -20,19 +20,28 @@ def add_baseline_load_profile(results: pd.DataFrame, file_name: str) -> None:
 
 
 def calculate_dynamic_price_time_series(
-    cont: Container, dynamic_components: List
+    cont: Container, use_baseline_prices=False
 ) -> None:
-    """Calculate dynamic price time series from energy exchange prices"
+    """Calculate dynamic price time series from energy exchange prices
 
-    :param Container cont: container object with configuration and results info 
-    :param list dynamic_components: dynamic tariff component 
-    with name, multiplier and bounds
-    """ ""
-    power_prices = pd.read_csv(
-        cont.config_convert[Config.OUTPUT] + "/EnergyExchange.csv", sep=";"
-    )
+    :param Container cont: container object with configuration and results info
+    :param boolean use_baseline_prices: if True, use prices from baseline
+    instead of those of current scenario
+    """
+    if use_baseline_prices:
+        power_prices = pd.read_csv(
+            cont.config_workflow["output_folder"]
+            + cont.trimmed_baseline_scenario
+            + "/EnergyExchange.csv",
+            sep=";",
+        )
+    else:
+        power_prices = pd.read_csv(
+            cont.config_convert[Config.OUTPUT] + "/EnergyExchange.csv", sep=";"
+        )
+
     power_prices = power_prices[["ElectricityPriceInEURperMWH"]]
-    for component in dynamic_components:
+    for component in cont.dynamic_components:
         conditions = [
             power_prices["ElectricityPriceInEURperMWH"].values * component["Multiplier"]
             < component["LowerBound"],
@@ -51,7 +60,10 @@ def calculate_dynamic_price_time_series(
         )
     power_prices.drop(columns="ElectricityPriceInEURperMWH", inplace=True)
 
-    cont.set_power_prices(power_prices)
+    if use_baseline_prices:
+        cont.set_baseline_power_prices(power_prices)
+    else:
+        cont.set_power_prices(power_prices)
 
 
 def add_static_prices(cont: Container) -> None:

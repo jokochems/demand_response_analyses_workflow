@@ -15,24 +15,33 @@ class Container:
     :attr dict config_workflow: the workflow configuration
     :attr dict config_convert: the configuration for converting AMIRIS results
     :attr str trimmed_scenario: scenario to be analyzed (name only)
+    :attr str trimmed_baseline_scenario: baseline scenario (name only)
     :attr pd.DataFrame or NoneType results: load shifting results from the
     simulation
     :attr pd.DataFrame or NoneType power_prices: end consumer power price
     time series
+    :attr pd.DataFrame or NoneType baseline_power_prices: end consumer power price
+    time series for the baseline load case (no price repercussions due to shifting)
     :attr dict or NoneType load_shifting_data: load shifting config from yaml
+    :attr list dynamic_components: dynamic tarrif components
     :attr dict or NoneType summary: parameter summary retrieved from results
     :attr dict or pd.Series summary_series: parameter summary as Series
     """
 
-    def __init__(self, scenario, config_workflow, config_convert, config_make):
+    def __init__(
+        self, scenario, config_workflow, config_convert, config_make, baseline_scenario
+    ):
         self.scenario = scenario
         self.config_workflow = config_workflow
         self.config_convert = config_convert
         self.config_make = config_make
         self.trimmed_scenario = trim_file_name(scenario)
+        self.trimmed_baseline_scenario = trim_file_name(baseline_scenario[0])
         self.results = None
         self.power_prices = None
+        self.baseline_power_prices = None
         self.load_shifting_data = None
+        self.dynamic_components = None
         self.summary = None
         self.summary_series = None
         self._define_components_mapping()
@@ -67,14 +76,20 @@ class Container:
     def set_power_prices(self, power_prices: pd.DataFrame):
         self.power_prices = power_prices
 
-    def set_load_shifting_data(self):
-        """Retrieve load shifting config from input yaml"""
+    def set_baseline_power_prices(self, baseline_power_prices: pd.DataFrame):
+        self.baseline_power_prices = baseline_power_prices
+
+    def set_load_shifting_data_and_dynamic_components(self):
+        """Retrieve load shifting config including dynamic tarrif components from input yaml"""
         yaml_data = load_yaml(self.scenario)
         self.load_shifting_data = [
             agent
             for agent in yaml_data["Agents"]
             if agent["Type"] == "LoadShiftingTrader"
         ][0]
+        self.dynamic_components = self.load_shifting_data["Attributes"]["Policy"][
+            "DynamicTariffComponents"
+        ]
 
     def write_results(self):
         self.results.to_csv(
