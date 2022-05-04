@@ -2,7 +2,7 @@ from typing import Dict
 
 import pandas as pd
 
-from dr_analyses.workflow_routines import trim_file_name
+from dr_analyses.container import trim_file_name
 
 
 def read_scenario_result(config_workflow: Dict, scenario: str) -> pd.Series:
@@ -70,16 +70,12 @@ def evaluate_parameter_results(
     config_workflow: Dict, overall_results: pd.DataFrame, param: str
 ) -> pd.DataFrame:
     """Pivot and evaluate parameter results"""
-    param_results = overall_results.loc[
-        [param, "cost_group", "tariff_group"]
-    ].T
+    param_results = overall_results.loc[[param, "cost_group", "tariff_group"]].T
     param_results = param_results.pivot(
         index="cost_group", columns="tariff_group", values=param
     )
 
     if config_workflow["write_results"]:
-        param_results.to_csv(
-            config_workflow["output_folder"] + param + ".csv", sep=";"
-        )
+        param_results.to_csv(config_workflow["output_folder"] + param + ".csv", sep=";")
 
     return param_results

@@ -3,12 +3,18 @@ from fameio.source.cli import Config
 from fameio.source.loader import load_yaml
 
 
+def trim_file_name(file_name: str) -> str:
+    """Return the useful part of a scenario name"""
+    return file_name.rsplit("/", 1)[1].split(".")[0]
+
+
 class Container:
     """Class holding Container objects with config and results information
 
-    :attr str scenario: scenario to be analyzed
+    :attr str scenario: scenario to be analyzed (full path)
     :attr dict config_workflow: the workflow configuration
     :attr dict config_convert: the configuration for converting AMIRIS results
+    :attr str trimmed_scenario: scenario to be analyzed (name only)
     :attr pd.DataFrame or NoneType results: load shifting results from the
     simulation
     :attr pd.DataFrame or NoneType power_prices: end consumer power price
@@ -23,6 +29,7 @@ class Container:
         self.config_workflow = config_workflow
         self.config_convert = config_convert
         self.config_make = config_make
+        self.trimmed_scenario = trim_file_name(scenario)
         self.results = None
         self.power_prices = None
         self.load_shifting_data = None
@@ -71,16 +78,13 @@ class Container:
 
     def write_results(self):
         self.results.to_csv(
-            self.config_convert[Config.OUTPUT]
-            + "/LoadShiftingTraderExtended.csv",
-            sep=";"
+            self.config_convert[Config.OUTPUT] + "/LoadShiftingTraderExtended.csv",
+            sep=";",
         )
 
     def write_power_prices(self):
         self.power_prices.to_csv(
-            self.config_convert[Config.OUTPUT]
-            + "/ConsumerPowerPrices.csv",
-            sep=";"
+            self.config_convert[Config.OUTPUT] + "/ConsumerPowerPrices.csv", sep=";"
         )
 
     def initialize_summary(self):

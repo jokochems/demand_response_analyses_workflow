@@ -9,7 +9,6 @@ from dr_analyses.results_subroutines import (
     calculate_dynamic_price_time_series,
     add_static_prices,
 )
-from dr_analyses.workflow_routines import trim_file_name
 
 
 def calc_basic_load_shifting_results(cont: Container) -> None:
@@ -17,9 +16,9 @@ def calc_basic_load_shifting_results(cont: Container) -> None:
 
     :param Container cont: container object holding configuration
     """
-    cont.config_convert[Config.OUTPUT] = cont.config_workflow[
-        "output_folder"
-    ] + trim_file_name(cont.scenario)
+    cont.config_convert[Config.OUTPUT] = (
+        cont.config_workflow["output_folder"] + cont.trimmed_scenario
+    )
     results = pd.read_csv(
         f"{cont.config_convert[Config.OUTPUT]}/LoadShiftingTrader.csv", sep=";"
     )
