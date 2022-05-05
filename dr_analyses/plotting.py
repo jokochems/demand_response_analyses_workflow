@@ -1,11 +1,10 @@
 from typing import Dict
 
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-import numpy as np
 
 
-# TODO: Develop and inspect plotting routine!
 def plot_bar_charts(
     config_workflow: Dict, all_parameter_results: Dict[str, pd.DataFrame]
 ):

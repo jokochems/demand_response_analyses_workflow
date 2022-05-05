@@ -6,8 +6,8 @@ from dr_analyses.container import Container
 from dr_analyses.results_subroutines import (
     add_abs_values,
     add_baseline_load_profile,
-    calculate_dynamic_price_time_series,
     add_static_prices,
+    calculate_dynamic_price_time_series,
 )
 
 
@@ -37,26 +37,23 @@ def calc_basic_load_shifting_results(cont: Container) -> None:
     cont.set_results(results)
 
 
-def obtain_scenario_prices(cont: Container) -> None:
-    """Obtain price time-series based on results of scenario
+def obtain_scenario_and_baseline_prices(cont: Container) -> None:
+    """Obtain price time-series based on results of scenario and for baseline
+
+    The baseline prices (baseline = no demand response, i.e. the situation before
+    load shifting) differ in so far, as they do not include any price repercussion.
 
     :param Container cont: container object holding configuration
     """
     cont.set_load_shifting_data_and_dynamic_components()
     calculate_dynamic_price_time_series(cont)
-    add_static_prices(cont)
-
-
-def obtain_baseline_prices(cont: Container) -> None:
-    """Obtain price time-series not considering price repercussions of demand response
-
-    :param Container cont: container object holding configuration
-    """
     calculate_dynamic_price_time_series(cont, use_baseline_prices=True)
     add_static_prices(cont)
 
 
-def add_power_payments(cont: Container) -> None:
+def add_power_payments(
+    cont: Container, use_baseline_prices_for_comparison: bool = True
+) -> None:
     """Add power payments to results DataFrame
 
     :param Container cont: container object holding configuration and results
@@ -64,8 +61,13 @@ def add_power_payments(cont: Container) -> None:
     cont.results["BaselineTotalPayments"] = 0
     cont.results["ShiftingTotalPayments"] = 0
     for col in cont.power_prices.columns:
+
+        if use_baseline_prices_for_comparison:
+            price = cont.baseline_power_prices[col]
+        else:
+            price = cont.power_prices[col]
         cont.results[f"Baseline{col}Payment"] = (
-            cont.results["BaselineLoadProfile"] * cont.power_prices[col]
+            cont.results["BaselineLoadProfile"] * price
         )
 
         cont.results["BaselineTotalPayments"] += cont.results[f"Baseline{col}Payment"]

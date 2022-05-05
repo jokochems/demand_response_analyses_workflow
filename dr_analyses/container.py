@@ -103,7 +103,7 @@ class Container:
         )
 
     def initialize_summary(self):
-        self.summary = dict()
+        self.summary = {}
 
     def set_summary_series(self):
         self.summary_series = pd.Series(self.summary, name="Summary")

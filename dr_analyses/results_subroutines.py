@@ -20,12 +20,12 @@ def add_baseline_load_profile(results: pd.DataFrame, file_name: str) -> None:
 
 
 def calculate_dynamic_price_time_series(
-    cont: Container, use_baseline_prices=False
+    cont: Container, use_baseline_prices: bool = False
 ) -> None:
     """Calculate dynamic price time series from energy exchange prices
 
     :param Container cont: container object with configuration and results info
-    :param boolean use_baseline_prices: if True, use prices from baseline
+    :param bool use_baseline_prices: if True, use prices from baseline
     instead of those of current scenario
     """
     if use_baseline_prices:
@@ -93,3 +93,4 @@ def add_static_prices(cont: Container) -> None:
             ]
 
         cont.power_prices[component] = price_component
+        cont.baseline_power_prices[component] = price_component

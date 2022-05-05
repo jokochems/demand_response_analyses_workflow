@@ -3,6 +3,7 @@ from dr_analyses.container import Container
 
 def calc_summary_parameters(cont: Container) -> None:
     """Calculate summary parameters from results time series"""
+
     if cont.results is None:
         msg = (
             "There are no results available, reading from disk is not (yet) "

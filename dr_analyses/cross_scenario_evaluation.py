@@ -27,7 +27,6 @@ def concat_results(scenario_results: Dict) -> pd.DataFrame:
         "low": "low",
         "medium": "medium",
         "high": "high",
-        "20": "20",
     }
     tariff_groups = {
         "static_tariff": "static_tariff",
@@ -54,7 +53,7 @@ def evaluate_all_parameter_results(
     config_workflow: Dict, overall_results: pd.DataFrame
 ) -> Dict[str, pd.DataFrame]:
     """Evaluate all parameter results and store them in a dict of DataFrames"""
-    all_parameter_results = dict()
+    all_parameter_results = {}
     for param in overall_results.index:
         if param in ["cost_group", "tariff_group"]:
             continue
@@ -73,6 +72,12 @@ def evaluate_parameter_results(
     param_results = overall_results.loc[[param, "cost_group", "tariff_group"]].T
     param_results = param_results.pivot(
         index="cost_group", columns="tariff_group", values=param
+    )
+
+    # Define index and columns order
+    param_results.reindex(
+        index=["low", "medium", "high"],
+        columns=["DA", "DA_dyn_EEG", "RTP_w_Caps", "RTP_wo_Caps"],
     )
 
     if config_workflow["write_results"]:
