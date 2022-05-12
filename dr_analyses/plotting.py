@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -23,14 +23,74 @@ def plot_bar_charts(
         _ = ax.set_axisbelow(True)
         _ = ax.grid(axis="y", color="lightgrey")
         _ = plt.legend(
-            bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0, ncol=1
+            bbox_to_anchor=(1.01, 1),
+            loc="upper left",
+            borderaxespad=0.0,
+            ncol=1,
         )
         _ = ax.set_ylabel(param)
         _ = plt.tight_layout()
 
-        _ = fig.savefig(config_workflow["output_folder"] + param + ".png", dpi=300)
+        _ = fig.savefig(
+            config_workflow["output_folder"] + param + ".png", dpi=300
+        )
         plt.close(fig)
         # plt.show()
+
+
+def plot_cross_run_comparison(
+    config_workflow: Dict,
+    param_results: Dict[str, Dict[str, pd.DataFrame]],
+    sharex=True,
+) -> None:
+    """Compare the results of different runs among each other"""
+    runs = config_workflow["runs_to_evaluate"]
+    params = config_workflow["params_to_evaluate"]
+
+    fig, axs = plt.subplots(
+        len(runs),
+        len(params),
+        figsize=(10 * len(runs), 6 * len(params)),
+        sharey="row",
+    )
+
+    col = 0
+    for run, run_name in runs.items():
+        for row, param in enumerate(params):
+            _ = param_results[run][param].plot(
+                kind="bar",
+                align="center",
+                width=0.2,
+                ax=axs[row, col],
+                colormap="Blues",
+                edgecolor="darkblue",
+                legend=False,
+            )
+            _ = axs[row, col].set_axisbelow(True)
+            _ = axs[row, col].grid(axis="y", color="lightgrey")
+            _ = axs[row, col].set_ylabel(param)
+            _ = axs[row, col].set_title(
+                f"Parameter {param} for run {run_name}"
+            )
+            handles, labels = axs[row, col].get_legend_handles_labels()
+
+        col += 1
+
+    _ = plt.legend(
+        handles,
+        labels,
+        loc="upper right",
+        borderaxespad=0.0,
+        ncol=1,
+    )
+
+    _ = plt.tight_layout()
+
+    _ = fig.savefig(
+        config_workflow["output_folder"] + "param_comparison" + ".png", dpi=300
+    )
+    plt.close(fig)
+    # plt.show()
 
 
 def determine_yaxis_spacing(param_results):

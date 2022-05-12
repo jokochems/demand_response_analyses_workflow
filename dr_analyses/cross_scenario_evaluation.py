@@ -32,7 +32,7 @@ def concat_results(scenario_results: Dict) -> pd.DataFrame:
         "static_tariff": "static_tariff",
         "DA_plus_static": "DA",
         "DA_plus_dynamicEEG": "DA_dyn_EEG",
-        "RTP_wo": "RTP_w_Caps",
+        "RTP_w": "RTP_w_Caps",
         "RTP_no_cap": "RTP_wo_Caps",
     }
     for key, val in cost_groups.items():
@@ -75,8 +75,8 @@ def evaluate_parameter_results(
     )
 
     # Define index and columns order
-    param_results.reindex(
-        index=["low", "medium", "high"],
+    param_results = param_results.reindex(
+        index=["high", "medium", "low"],
         columns=["DA", "DA_dyn_EEG", "RTP_w_Caps", "RTP_wo_Caps"],
     )
 

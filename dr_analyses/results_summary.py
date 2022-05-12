@@ -51,7 +51,7 @@ def add_capacity_charges_summary(cont: Container) -> None:
         "CapacityBasedNetworkChargesInEURPerMW"
     ]
     cont.summary["CapacityPaymentBeforeShifting"] = (
-        capacity_charge * cont.summary["PeakLoadAfterShifting"]
+        capacity_charge * cont.summary["PeakLoadBeforeShifting"]
     )
     cont.summary["CapacityPaymentAfterShifting"] = (
         capacity_charge * cont.summary["PeakLoadAfterShifting"]

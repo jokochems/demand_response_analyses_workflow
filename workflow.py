@@ -1,12 +1,13 @@
 from fameio.source.cli import Config
 
 from dr_analyses.container import Container
+from dr_analyses.cross_run_evaluation import read_param_results_for_runs
 from dr_analyses.cross_scenario_evaluation import (
     concat_results,
     evaluate_all_parameter_results,
     read_scenario_result,
 )
-from dr_analyses.plotting import plot_bar_charts
+from dr_analyses.plotting import plot_bar_charts, plot_cross_run_comparison
 from dr_analyses.results_summary import calc_summary_parameters
 from dr_analyses.results_workflow import (
     add_power_payments,
@@ -23,16 +24,25 @@ from dr_analyses.workflow_routines import (
 
 config_workflow = {
     "input_folder": "C:/Users/koch_j0/AMIRIS/asgard/input/demand_response",
+    "scenario_subfolder": "/w_capacity_charge",  # "wo_capacity_charge"
     "output_folder": "./results/",
     "make_scenario": False,
     "run_amiris": False,
     "convert_results": False,
-    "process_results": True,
-    "use_baseline_prices_for_comparison": True,
-    "write_results": True,
-    "aggregate_results": True,
-    "evaluate_cross_scenarios": True,
-    "make_plots": True,
+    "process_results": False,
+    "use_baseline_prices_for_comparison": False,
+    "write_results": False,
+    "aggregate_results": False,
+    "evaluate_cross_scenarios": False,
+    "make_plots": False,
+    "evaluate_cross_runs": True,
+    "runs_to_evaluate": {
+        "Analysis_2022-05-05_price_no_repercussions": (
+            "without capacity charge"
+        ),
+        "Analysis_2022-05-12_capacity_charges": "with capacity charge",
+    },
+    "params_to_evaluate": ["PeakLoadChange", "NetSavings"],
     "baseline_load_file": "C:/Users/koch_j0/AMIRIS/asgard/result/demand_response_eninnov/00_Evaluation/ind_cluster_shift_only_baseline_load.xlsx",  # noqa: E501
 }
 
@@ -58,20 +68,29 @@ config_convert = {
 
 if __name__ == "__main__":
     to_ignore = ["schema.yaml"]
-    scenario_files = get_all_yaml_files_in_folder_except(
-        config_workflow["input_folder"], to_ignore
-    )
-
     # Add baseline scenario (no dr) separately because of different contracts
     baseline_scenario = get_all_yaml_files_in_folder_except(
         config_workflow["input_folder"] + "/baseline", to_ignore
     )
-    scenario_files.extend(baseline_scenario)
+
+    scenario_files = baseline_scenario.copy()
+    scenario_files.extend(
+        get_all_yaml_files_in_folder_except(
+            config_workflow["input_folder"]
+            + config_workflow["scenario_subfolder"],
+            to_ignore,
+        )
+    )
+
     scenario_results = {}
 
     for scenario in scenario_files:
         cont = Container(
-            scenario, config_workflow, config_convert, config_make, baseline_scenario
+            scenario,
+            config_workflow,
+            config_convert,
+            config_make,
+            baseline_scenario,
         )
 
         if config_workflow["make_scenario"]:
@@ -104,3 +123,7 @@ if __name__ == "__main__":
         )
         if config_workflow["make_plots"]:
             plot_bar_charts(config_workflow, all_parameter_results)
+
+    if config_workflow["evaluate_cross_runs"]:
+        param_results = read_param_results_for_runs(config_workflow)
+        plot_cross_run_comparison(config_workflow, param_results)
