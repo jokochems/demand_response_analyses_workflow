@@ -1,13 +1,17 @@
-from fameio.source.cli import Config
+from fameio.source.cli import Options
 
-from dr_analyses.container import Container
+from dr_analyses.container import Container, trim_file_name
 from dr_analyses.cross_run_evaluation import read_param_results_for_runs
 from dr_analyses.cross_scenario_evaluation import (
     concat_results,
     evaluate_all_parameter_results,
     read_scenario_result,
 )
-from dr_analyses.plotting import plot_bar_charts, plot_cross_run_comparison
+from dr_analyses.plotting import (
+    plot_bar_charts,
+    plot_cross_run_comparison,
+    configure_plots,
+)
 from dr_analyses.results_summary import calc_summary_parameters
 from dr_analyses.results_workflow import (
     add_power_payments,
@@ -24,18 +28,18 @@ from dr_analyses.workflow_routines import (
 
 config_workflow = {
     "input_folder": "C:/Users/koch_j0/AMIRIS/asgard/input/demand_response",
-    "scenario_subfolder": "/w_capacity_charge",  # "wo_capacity_charge"
+    "scenario_subfolder": "/wo_capacity_charge",  # "w_capacity_charge"
     "output_folder": "./results/",
     "make_scenario": False,
     "run_amiris": False,
     "convert_results": False,
-    "process_results": False,
-    "use_baseline_prices_for_comparison": False,
+    "process_results": True,
+    "use_baseline_prices_for_comparison": True,
     "write_results": False,
-    "aggregate_results": False,
-    "evaluate_cross_scenarios": False,
-    "make_plots": False,
-    "evaluate_cross_runs": True,
+    "aggregate_results": True,
+    "evaluate_cross_scenarios": True,
+    "make_plots": True,
+    "evaluate_cross_runs": False,
     "runs_to_evaluate": {
         "Analysis_2022-05-05_price_no_repercussions": (
             "without capacity charge"
@@ -46,9 +50,19 @@ config_workflow = {
     "baseline_load_file": "C:/Users/koch_j0/AMIRIS/asgard/result/demand_response_eninnov/00_Evaluation/ind_cluster_shift_only_baseline_load.xlsx",  # noqa: E501
 }
 
+config_plotting = {
+    "small_size": 12,
+    "medium_size": 14,
+    "bigger_size": 15,
+    "figsize": (10, 7),
+    "drop_list": [],
+    "rename_dict": {"columns": {}, "rows": {}, "parameters": {}},
+    "x_label": None,
+}
+
 config_make = {
-    Config.LOG_LEVEL: "error",
-    Config.LOG_FILE: None,
+    Options.LOG_LEVEL: "error",
+    Options.LOG_FILE: None,
     # Config.NUM_PROCESSES: 1,
 }
 
@@ -60,10 +74,10 @@ run_properties = {
 }
 
 config_convert = {
-    Config.LOG_LEVEL: "warn",
-    Config.LOG_FILE: None,
-    Config.AGENT_LIST: None,
-    Config.SINGLE_AGENT_EXPORT: False,
+    Options.LOG_LEVEL: "warn",
+    Options.LOG_FILE: None,
+    Options.AGENT_LIST: None,
+    Options.SINGLE_AGENT_EXPORT: False,
 }
 
 if __name__ == "__main__":
@@ -115,14 +129,15 @@ if __name__ == "__main__":
         if not scenario_results:
             for scenario in scenario_files:
                 scenario_results[
-                    Container.trim_file_name(scenario)
+                    trim_file_name(scenario)
                 ] = read_scenario_result(config_workflow, scenario)
         overall_results = concat_results(scenario_results)
         all_parameter_results = evaluate_all_parameter_results(
             config_workflow, overall_results
         )
         if config_workflow["make_plots"]:
-            plot_bar_charts(config_workflow, all_parameter_results)
+            configure_plots(config_plotting)
+            plot_bar_charts(config_workflow, all_parameter_results, config_plotting)
 
     if config_workflow["evaluate_cross_runs"]:
         param_results = read_param_results_for_runs(config_workflow)

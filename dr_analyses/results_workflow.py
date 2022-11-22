@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from fameio.source.cli import Config
+from fameio.source.cli import Options
 
 from dr_analyses.container import Container
 from dr_analyses.results_subroutines import (
@@ -16,11 +16,11 @@ def calc_basic_load_shifting_results(cont: Container) -> None:
 
     :param Container cont: container object holding configuration
     """
-    cont.config_convert[Config.OUTPUT] = (
+    cont.config_convert[Options.OUTPUT] = (
         cont.config_workflow["output_folder"] + cont.trimmed_scenario
     )
     results = pd.read_csv(
-        f"{cont.config_convert[Config.OUTPUT]}/LoadShiftingTrader.csv", sep=";"
+        f"{cont.config_convert[Options.OUTPUT]}/LoadShiftingTrader.csv", sep=";"
     )
 
     results = (

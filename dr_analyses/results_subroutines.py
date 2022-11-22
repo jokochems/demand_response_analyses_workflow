@@ -2,7 +2,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-from fameio.source.cli import Config
+from fameio.source.cli import Options
 
 from dr_analyses.container import Container
 
@@ -37,7 +37,7 @@ def calculate_dynamic_price_time_series(
         )
     else:
         power_prices = pd.read_csv(
-            cont.config_convert[Config.OUTPUT] + "/EnergyExchange.csv", sep=";"
+            cont.config_convert[Options.OUTPUT] + "/EnergyExchange.csv", sep=";"
         )
 
     power_prices = power_prices[["ElectricityPriceInEURperMWH"]]

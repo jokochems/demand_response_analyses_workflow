@@ -3,7 +3,7 @@ from typing import List, Dict
 
 from fameio.scripts.convert_results import run as convert_results
 from fameio.scripts.make_config import run as make_config
-from fameio.source.cli import Config
+from fameio.source.cli import Options
 
 from dr_analyses.container import Container
 
@@ -29,20 +29,20 @@ def make_scenario_config(cont: Container) -> None:
 def set_config_make_output(cont: Container) -> None:
     """Define output for compiling AMIRIS protobuffer input"""
     cont.config_make[
-        Config.OUTPUT
+        Options.OUTPUT
     ] = f'{cont.config_workflow["input_folder"]}/configs/{cont.trimmed_scenario}.pb'
 
 
 def run_amiris(run_properties: Dict, cont: Container) -> None:
     """Run AMIRIS for given run properties and make configuration"""
-    if Config.OUTPUT not in cont.config_make.keys():
+    if Options.OUTPUT not in cont.config_make.keys():
         set_config_make_output(cont)
 
     call_amiris = "java -ea -Xmx2000M -cp {} {} {} -f {} -s {}".format(
         run_properties["exe"],
         run_properties["logging"],
         run_properties["main"],
-        cont.config_make[Config.OUTPUT],
+        cont.config_make[Options.OUTPUT],
         run_properties["setup"],
     )
     os.system(call_amiris)
@@ -50,7 +50,7 @@ def run_amiris(run_properties: Dict, cont: Container) -> None:
 
 def convert_amiris_results(cont: Container) -> None:
     """Convert AMIRIS results from a previous model run"""
-    cont.config_convert[Config.OUTPUT] = (
+    cont.config_convert[Options.OUTPUT] = (
         cont.config_workflow["output_folder"] + cont.trimmed_scenario
     )
     convert_results(

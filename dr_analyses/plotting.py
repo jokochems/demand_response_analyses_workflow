@@ -5,12 +5,47 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 
+def configure_plots(config_plotting: Dict) -> None:
+    """Update matplotlib plotting paramters"""
+    plt.rc("font", size=config_plotting["small_size"])
+    plt.rc("axes", titlesize=config_plotting["bigger_size"])
+    plt.rc("axes", labelsize=config_plotting["medium_size"])
+    plt.rc("xtick", labelsize=config_plotting["small_size"])
+    plt.rc("ytick", labelsize=config_plotting["small_size"])
+    plt.rc("legend", fontsize=config_plotting["small_size"])
+    plt.rc("figure", titlesize=config_plotting["bigger_size"])
+
+
 def plot_bar_charts(
-    config_workflow: Dict, all_parameter_results: Dict[str, pd.DataFrame]
-):
+    config_workflow: Dict,
+    all_parameter_results: Dict[str, pd.DataFrame],
+    config_plotting: Dict = None,
+) -> None:
     """Plot and save bar charts for the different parameters"""
+    if not config_plotting:
+        config_plotting = {
+            "figsize": (9, 6),
+            "drop_list": [],
+            "rename_dict": {"columns": {}, "rows": {}, "parameters": {}},
+            "x_label": None,
+        }
+
     for param, param_results in all_parameter_results.items():
-        fig, ax = plt.subplots(figsize=(14, 7))
+        # Do what control freak demands (renaming etc.)
+        if len(config_plotting["drop_list"]) > 0:
+            param_results = param_results.drop(
+                columns=config_plotting["drop_list"]
+            )
+        if config_plotting["rename_dict"]:
+            param_results = param_results.rename(
+                index=config_plotting["rename_dict"]["rows"],
+                columns=config_plotting["rename_dict"]["columns"],
+            )
+        if config_plotting["x_label"]:
+            param_results.index.name = config_plotting["x_label"]
+        if param in config_plotting["rename_dict"]["parameters"]:
+            param = config_plotting["rename_dict"]["parameters"][param]
+        fig, ax = plt.subplots(figsize=config_plotting["figsize"])
         _ = param_results.plot(
             kind="bar",
             align="center",
@@ -22,11 +57,14 @@ def plot_bar_charts(
         # _ = ax.set_yticks(determine_yaxis_spacing(param_results))
         _ = ax.set_axisbelow(True)
         _ = ax.grid(axis="y", color="lightgrey")
+        # _ = plt.legend(
+        #     bbox_to_anchor=(1.01, 1),
+        #     loc="upper left",
+        #     borderaxespad=0.0,
+        #     ncol=1,
+        # )
         _ = plt.legend(
-            bbox_to_anchor=(1.01, 1),
-            loc="upper left",
-            borderaxespad=0.0,
-            ncol=1,
+            bbox_to_anchor=(0.01, 0.98), loc="upper left", fancybox=False, shadow=False, ncol=3
         )
         _ = ax.set_ylabel(param)
         _ = plt.tight_layout()

@@ -1,5 +1,5 @@
 import pandas as pd
-from fameio.source.cli import Config
+from fameio.source.cli import Options
 from fameio.source.loader import load_yaml
 
 
@@ -93,13 +93,13 @@ class Container:
 
     def write_results(self):
         self.results.to_csv(
-            self.config_convert[Config.OUTPUT] + "/LoadShiftingTraderExtended.csv",
+            self.config_convert[Options.OUTPUT] + "/LoadShiftingTraderExtended.csv",
             sep=";",
         )
 
     def write_power_prices(self):
         self.power_prices.to_csv(
-            self.config_convert[Config.OUTPUT] + "/ConsumerPowerPrices.csv", sep=";"
+            self.config_convert[Options.OUTPUT] + "/ConsumerPowerPrices.csv", sep=";"
         )
 
     def initialize_summary(self):
@@ -111,6 +111,6 @@ class Container:
     def write_summary(self):
         """Write parameter summary to disk"""
         self.summary_series.to_csv(
-            self.config_convert[Config.OUTPUT] + "/parameter_summary.csv",
+            self.config_convert[Options.OUTPUT] + "/parameter_summary.csv",
             sep=";",
         )
