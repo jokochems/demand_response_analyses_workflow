@@ -36,7 +36,7 @@ class Container:
         self.config_convert = config_convert
         self.config_make = config_make
         self.trimmed_scenario = trim_file_name(scenario)
-        self.trimmed_baseline_scenario = trim_file_name(baseline_scenario[0])
+        self.trimmed_baseline_scenario = trim_file_name(baseline_scenario)
         self.results = None
         self.power_prices = None
         self.baseline_power_prices = None

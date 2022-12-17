@@ -1,3 +1,5 @@
+import shutil
+
 from fameio.source.cli import Options
 
 from dr_analyses.container import Container, trim_file_name
@@ -24,22 +26,24 @@ from dr_analyses.workflow_routines import (
     get_all_yaml_files_in_folder_except,
     make_scenario_config,
     run_amiris,
+    make_directory_if_missing,
 )
 
 config_workflow = {
-    "input_folder": "C:/Users/koch_j0/AMIRIS/asgard/input/demand_response",
-    "scenario_subfolder": "/wo_capacity_charge",  # "w_capacity_charge"
+    "input_folder": "./inputs/",
+    "template_folder": "./template/",
+    # "scenario_subfolder": "/w_capacity_charge",  # "wo_capacity_charge"
     "output_folder": "./results/",
-    "make_scenario": False,
-    "run_amiris": False,
-    "convert_results": False,
+    "make_scenario": True,
+    "run_amiris": True,
+    "convert_results": True,
     "process_results": True,
     "use_baseline_prices_for_comparison": True,
     "write_results": False,
     "aggregate_results": True,
     "evaluate_cross_scenarios": True,
     "make_plots": True,
-    "evaluate_cross_runs": False,
+    "evaluate_cross_runs": True,
     "runs_to_evaluate": {
         "Analysis_2022-05-05_price_no_repercussions": (
             "without capacity charge"
@@ -67,7 +71,7 @@ config_make = {
 }
 
 run_properties = {
-    "exe": "amiris/amiris-core_1.2-jar-with-dependencies.jar",
+    "exe": "amiris/amiris-core_1.2.6-jar-with-dependencies.jar -Xmx16000M",
     "logging": "-Dlog4j.configuration=file:amiris/log4j.properties",
     "main": "de.dlr.gitlab.fame.setup.FameRunner",
     "setup": "amiris/fameSetup.yaml",
@@ -81,20 +85,24 @@ config_convert = {
 }
 
 if __name__ == "__main__":
-    to_ignore = ["schema.yaml"]
     # Add baseline scenario (no dr) separately because of different contracts
-    baseline_scenario = get_all_yaml_files_in_folder_except(
-        config_workflow["input_folder"] + "/baseline", to_ignore
+    make_directory_if_missing(f"{config_workflow['input_folder']}/baseline/")
+    shutil.copyfile(
+        f"{config_workflow['template_folder']}/scenario_template_wo_dr.yaml",
+        f"{config_workflow['input_folder']}/baseline/scenario_wo_dr.yaml",
+    )
+    baseline_scenario = (
+        f"{config_workflow['input_folder']}/baseline/scenario_wo_dr.yaml"
     )
 
-    scenario_files = baseline_scenario.copy()
-    scenario_files.extend(
-        get_all_yaml_files_in_folder_except(
-            config_workflow["input_folder"]
-            + config_workflow["scenario_subfolder"],
-            to_ignore,
-        )
-    )
+    scenario_files = [baseline_scenario]
+    # scenario_files.extend(
+    #     get_all_yaml_files_in_folder_except(
+    #         config_workflow["input_folder"]
+    #         + config_workflow["scenario_subfolder"],
+    #         to_ignore,
+    #     )
+    # )
 
     scenario_results = {}
 
@@ -137,7 +145,9 @@ if __name__ == "__main__":
         )
         if config_workflow["make_plots"]:
             configure_plots(config_plotting)
-            plot_bar_charts(config_workflow, all_parameter_results, config_plotting)
+            plot_bar_charts(
+                config_workflow, all_parameter_results, config_plotting
+            )
 
     if config_workflow["evaluate_cross_runs"]:
         param_results = read_param_results_for_runs(config_workflow)

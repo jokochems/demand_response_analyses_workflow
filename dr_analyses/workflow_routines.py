@@ -8,7 +8,24 @@ from fameio.source.cli import Options
 from dr_analyses.container import Container
 
 
-def get_all_yaml_files_in_folder_except(folder: str, file_list: List[str]) -> List[str]:
+def make_directory_if_missing(folder: str) -> None:
+    """Add directories if missing; works with at maximum 2 sub-levels"""
+    if os.path.exists(folder):
+        pass
+    else:
+        if os.path.exists(folder.rsplit("/", 2)[0]):
+            path = "./" + folder
+            os.mkdir(path)
+        else:
+            path = "./" + folder.rsplit("/", 2)[0]
+            os.mkdir(path)
+            subpath = folder
+            os.mkdir(subpath)
+
+
+def get_all_yaml_files_in_folder_except(
+    folder: str, file_list: List[str]
+) -> List[str]:
     """Returns all .yaml files in given folder but not given ones"""
     return [
         folder + "/" + file
@@ -28,6 +45,7 @@ def make_scenario_config(cont: Container) -> None:
 
 def set_config_make_output(cont: Container) -> None:
     """Define output for compiling AMIRIS protobuffer input"""
+    make_directory_if_missing(f"{cont.config_workflow['input_folder']}/configs/")
     cont.config_make[
         Options.OUTPUT
     ] = f'{cont.config_workflow["input_folder"]}/configs/{cont.trimmed_scenario}.pb'
