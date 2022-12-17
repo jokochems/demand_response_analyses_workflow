@@ -1,0 +1,611 @@
+# AMIRIS simulation using inputs from pommesinvest for parameterization
+# Simulating a 20 year horizon
+
+Schema: !include "../../template/schema.yaml"
+
+GeneralProperties:
+  RunId: 1
+  Simulation:
+    StartTime: 2019-12-31_23:58:00
+    StopTime: 2040-12-30_23:58:00
+    RandomSeed: 1
+  Output:
+    Interval: 100
+    Process: 0
+
+Variables:
+  - &portfolioBuildingOffset 60
+
+Agents:
+  - Type: EnergyExchangeMulti
+    Id: 1
+    Attributes:
+      DistributionMethod: SAME_SHARES
+      GateClosureInfoOffsetInSeconds: 11
+
+  - Type: CarbonMarket
+    Id: 3
+    Attributes:
+      OperationMode: FIXED
+      Co2Prices: "./inputs/data/all_scenarios/emissions_costs_nominal_value.csv"
+
+  - Type: FuelsMarket
+    Id: 4
+    Attributes:
+      FuelPrices:
+        - FuelType: NUCLEAR
+          Price: "./inputs/data/all_scenarios/fuel_prices_DE_source_uranium.csv"
+          ConversionFactor: 1.0
+        - FuelType: LIGNITE
+          Price: "./inputs/data/all_scenarios/fuel_prices_DE_source_lignite.csv"
+          ConversionFactor: 1.0
+        - FuelType: HARD_COAL
+          Price: "./inputs/data/all_scenarios/fuel_prices_DE_source_hardcoal.csv"
+          ConversionFactor: 1.0
+        - FuelType: NATURAL_GAS
+          Price: "./inputs/data/all_scenarios/fuel_prices_DE_source_natgas.csv"
+          ConversionFactor: 1.0
+        - FuelType: OIL
+          Price: "./inputs/data/all_scenarios/fuel_prices_DE_source_oil.csv"
+          ConversionFactor: 1.0
+        - FuelType: WASTE
+          Price: "./inputs/data/all_scenarios/fuel_prices_DE_source_waste.csv"
+          ConversionFactor: 1.0
+        - FuelType: HYDROGEN
+          Price: "./inputs/data/all_scenarios/fuel_prices_DE_source_hydrogen.csv"
+          ConversionFactor: 1.0
+        - FuelType: BIOMASS
+          Price: "./inputs/data/all_scenarios/fuel_prices_DE_source_biomass.csv"
+          ConversionFactor: 1.0
+        - FuelType: OTHER  # otherfossil
+          Price: "./inputs/data/all_scenarios/fuel_prices_DE_source_otherfossil.csv"
+          ConversionFactor: 1.0
+        - FuelType: MIXED  # mixed fuels
+          Price: "./inputs/data/all_scenarios/fuel_prices_DE_source_mixedfuels.csv"
+          ConversionFactor: 1.0
+
+  - Type: DemandTrader
+    Id: 100
+    Attributes:
+      Loads:
+        - ValueOfLostLoad: 3000.0
+          DemandSeries: "./inputs/data/none/demand_after_flex_ts.csv"
+
+  # - Type: MeritOrderForecaster
+    # Id: 6
+    # Attributes:
+      # DistributionMethod: SAME_SHARES
+      # ForecastPeriodInHours: 8760
+      # ForecastRequestOffsetInSeconds: 27
+  
+  # Use price forecaster, i.e. not consider price repercussion
+  - Type: PriceForecaster
+    Id: 6
+    Attributes:
+      DistributionMethod: SAME_SHARES
+      ForecastPeriodInHours: 8760
+      ForecastRequestOffsetInSeconds: 27
+
+  # Include LoadShiftingTrader for cases considering demand response
+
+  - Type: NoSupportTrader
+    Id: 12
+    Attributes:
+      ShareOfRevenues: 0.0
+
+  - Type: ConventionalPlantOperator
+    Id: 500
+
+  - Type: PredefinedPlantBuilder
+    Id: 2000
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: NUCLEAR
+        SpecificCo2EmissionsInTperMWH: 0.0
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_ST_uranium.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/ST_uranium_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_uranium_efficiency_max.csv"
+      BlockSizeInMW: 900.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_uranium_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1000
+    Attributes:
+      minMarkup: -150
+      maxMarkup: -90
+
+  - Type: ConventionalPlantOperator
+    Id: 501
+
+  - Type: PredefinedPlantBuilder
+    Id: 2001
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: LIGNITE
+        SpecificCo2EmissionsInTperMWH: 0.364
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_ST_lignite.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/ST_lignite_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_lignite_efficiency_max.csv"
+      BlockSizeInMW: 500.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_lignite_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1001
+    Attributes:
+      minMarkup: -80
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 502
+
+  - Type: PredefinedPlantBuilder
+    Id: 2002
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: HARD_COAL
+        SpecificCo2EmissionsInTperMWH: 0.341
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_ST_hardcoal.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/ST_hardcoal_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_hardcoal_efficiency_max.csv"
+      BlockSizeInMW: 300.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_hardcoal_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1002
+    Attributes:
+      minMarkup: -10
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 503
+
+  - Type: PredefinedPlantBuilder
+    Id: 2003
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: NATURAL_GAS  # gas CC
+        SpecificCo2EmissionsInTperMWH: 0.201
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_CC_natgas.csv"
+        CyclingCostInEURperMW: 0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/CC_natgas_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/CC_natgas_efficiency_max.csv"
+      BlockSizeInMW: 200.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/CC_natgas_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1003
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 100
+
+  - Type: ConventionalPlantOperator
+    Id: 504
+
+  - Type: PredefinedPlantBuilder
+    Id: 2004
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: NATURAL_GAS  # gas turbine
+        SpecificCo2EmissionsInTperMWH: 0.201
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_GT_natgas.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/GT_natgas_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_natgas_efficiency_max.csv"
+      BlockSizeInMW: 100.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_natgas_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1004
+    Attributes:
+      minMarkup: -20
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 505
+
+  - Type: PredefinedPlantBuilder
+    Id: 2005
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: NATURAL_GAS  # gas motor
+        SpecificCo2EmissionsInTperMWH: 0.201
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_M_natgas.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/M_natgas_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/M_natgas_efficiency_max.csv"
+      BlockSizeInMW: 30.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/M_natgas_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1005
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 506
+
+  - Type: PredefinedPlantBuilder
+    Id: 2006
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: NATURAL_GAS  # gas steam turbine (very inefficient plants)
+        SpecificCo2EmissionsInTperMWH: 0.201
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_ST_natgas.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/ST_natgas_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_natgas_efficiency_max.csv"
+      BlockSizeInMW: 100.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_natgas_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1006
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 507
+
+  - Type: PredefinedPlantBuilder
+    Id: 2007
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: OIL   # oil CC
+        SpecificCo2EmissionsInTperMWH: 0.264
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_CC_oil.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/CC_oil_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/CC_oil_efficiency_max.csv"
+      BlockSizeInMW: 100.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/CC_oil_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1007
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 508
+
+  - Type: PredefinedPlantBuilder
+    Id: 2008
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: OIL   # oil gas turbine
+        SpecificCo2EmissionsInTperMWH: 0.264
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_GT_oil.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/GT_oil_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_oil_efficiency_max.csv"
+      BlockSizeInMW: 100.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_oil_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1008
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 509
+
+  - Type: PredefinedPlantBuilder
+    Id: 2009
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: OIL   # oil steam turbine (very inefficient plants)
+        SpecificCo2EmissionsInTperMWH: 0.264
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_ST_oil.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/ST_oil_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_oil_efficiency_max.csv"
+      BlockSizeInMW: 100.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_oil_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1009
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 510
+
+  - Type: PredefinedPlantBuilder
+    Id: 2010
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: BIOMASS   # biomass gas turbine
+        SpecificCo2EmissionsInTperMWH: 0
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_GT_biomass.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/GT_biomass_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_biomass_efficiency_max.csv"
+      BlockSizeInMW: 100.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_biomass_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1010
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 511
+
+  - Type: PredefinedPlantBuilder
+    Id: 2011
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: BIOMASS   # biomass steam turbine (inefficient plants)
+        SpecificCo2EmissionsInTperMWH: 0
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_ST_biomass.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/ST_biomass_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_biomass_efficiency_max.csv"
+      BlockSizeInMW: 100.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_biomass_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1011
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 512
+
+  - Type: PredefinedPlantBuilder
+    Id: 2012
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: HYDROGEN   # hydrogen gas turbine
+        SpecificCo2EmissionsInTperMWH: 0
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_GT_hydrogen.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/GT_hydrogen_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_hydrogen_efficiency_max.csv"
+      BlockSizeInMW: 100.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_hydrogen_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1012
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 513
+
+  - Type: PredefinedPlantBuilder
+    Id: 2013
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: WASTE
+        SpecificCo2EmissionsInTperMWH: 0
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_ST_waste.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/ST_waste_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_waste_efficiency_max.csv"
+      BlockSizeInMW: 100.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_waste_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1013
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 514
+
+  - Type: PredefinedPlantBuilder
+    Id: 2014
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: OTHER  # otherfossil steam turbine
+        SpecificCo2EmissionsInTperMWH: 0.2452248
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_ST_otherfossil.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/ST_otherfossil_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_otherfossil_efficiency_max.csv"
+      BlockSizeInMW: 100.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_otherfossil_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1014
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 515
+
+  - Type: PredefinedPlantBuilder
+    Id: 2015
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: OTHER  # otherfossil gas turbine
+        SpecificCo2EmissionsInTperMWH: 0.2452248
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_GT_otherfossil.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/GT_otherfossil_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_otherfossil_efficiency_max.csv"
+      BlockSizeInMW: 100.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_otherfossil_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1015
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
+  - Type: ConventionalPlantOperator
+    Id: 516
+
+  - Type: PredefinedPlantBuilder
+    Id: 2016
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: MIXED  # mixedfuels
+        SpecificCo2EmissionsInTperMWH: 0.314
+        PlannedAvailability: "./inputs/data/all_scenarios/availabilities_values.csv"
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_ST_mixedfuels.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/ST_mixedfuels_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_mixedfuels_efficiency_max.csv"
+      BlockSizeInMW: 100.0
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_mixedfuels_installed_cap.csv"
+
+  - Type: ConventionalTrader
+    Id: 1016
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
+  - Type: VariableRenewableOperator
+    Id: 10
+    Attributes:
+      EnergyCarrier: PV
+      InstalledPowerInMW: 52540.283907
+      OpexVarInEURperMWH: 0.0
+      YieldProfile: "./inputs/data/all_scenarios/res_generation_ts_DE_source_solarPV.csv"
+
+  - Type: VariableRenewableOperator
+    Id: 20
+    Attributes:
+      EnergyCarrier: WindOn
+      InstalledPowerInMW: 54508.250728
+      OpexVarInEURperMWH: 0.0
+      YieldProfile: "./inputs/data/all_scenarios/res_generation_ts_DE_source_windonshore.csv"
+
+  - Type: VariableRenewableOperator
+    Id: 30
+    Attributes:
+      EnergyCarrier: WindOff
+      InstalledPowerInMW: 7774.218
+      OpexVarInEURperMWH: 0.0
+      YieldProfile: "./inputs/data/all_scenarios/res_generation_ts_DE_source_windoffshore.csv"
+
+  - Type: VariableRenewableOperator
+    Id: 40
+    Attributes:
+      EnergyCarrier: RunOfRiver
+      InstalledPowerInMW: 1637.057118
+      OpexVarInEURperMWH: 0.0
+      YieldProfile: "./inputs/data/all_scenarios/res_generation_ts_DE_source_ROR.csv"
+
+  - Type: Biogas
+    Id: 50
+    Attributes:
+      EnergyCarrier: Biogas
+      InstalledPowerInMW: 8418.189656999999
+      OpexVarInEURperMWH: 0.0
+      DispatchTimeSeries: "./inputs/data/all_scenarios/res_generation_ts_DE_source_biomassEEG.csv"
+      OperationMode: FROM_FILE
+
+  - Type: VariableRenewableOperator
+    Id: 60
+    Attributes:
+      EnergyCarrier: Other  # geothermal energy
+      InstalledPowerInMW: 43.462
+      OpexVarInEURperMWH: 0.0
+      YieldProfile: "./inputs/data/all_scenarios/res_generation_ts_DE_source_geothermal.csv"
+
+  - Type: VariableRenewableOperator
+    Id: 70
+    Attributes:
+      EnergyCarrier: Other  # landfill gas
+      InstalledPowerInMW: 156.31772
+      OpexVarInEURperMWH: 0.0
+      YieldProfile: "./inputs/data/all_scenarios/res_generation_ts_DE_source_landfillgas.csv"
+
+  - Type: VariableRenewableOperator
+    Id: 80
+    Attributes:
+      EnergyCarrier: Other  # mine gas
+      InstalledPowerInMW: 182.792
+      OpexVarInEURperMWH: 0.0
+      YieldProfile: "./inputs/data/all_scenarios/res_generation_ts_DE_source_minegas.csv"
+
+  - Type: VariableRenewableOperator
+    Id: 90
+    Attributes:
+      EnergyCarrier: Other  # larga
+      InstalledPowerInMW: 76.9112
+      OpexVarInEURperMWH: 0.0
+      YieldProfile: "./inputs/data/all_scenarios/res_generation_ts_DE_source_larga.csv"
+
+Contracts: !include ["../contracts_wo_dr/*.yaml", "Contracts"]

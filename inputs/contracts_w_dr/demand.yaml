@@ -1,0 +1,40 @@
+AgentGroups:
+  - &exchange 1
+  - &forecaster 6
+  - &demandTrader 100
+
+Times:
+  - &hourly 3600
+  - &monthly 2628000
+  - &yearly 31536000
+
+Contracts:
+  - SenderId: *forecaster
+    ReceiverId: *demandTrader
+    ProductName: ForecastRequest
+    FirstDeliveryTime: -26
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *demandTrader
+    ReceiverId: *forecaster
+    ProductName: BidsForecast
+    FirstDeliveryTime: -21
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *exchange
+    ReceiverId: *demandTrader
+    ProductName: GateClosureInfo
+    FirstDeliveryTime: -10
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *demandTrader
+    ReceiverId: *exchange
+    ProductName: Bids
+    FirstDeliveryTime: 0
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *exchange
+    ReceiverId: *demandTrader
+    ProductName: Awards
+    FirstDeliveryTime: 4
+    DeliveryIntervalInSteps: *hourly
