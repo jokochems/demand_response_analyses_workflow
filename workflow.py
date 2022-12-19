@@ -88,7 +88,7 @@ config_convert = {
 }
 
 if __name__ == "__main__":
-    # Add baseline scenario (no dr) separately because of different contracts
+    # Add baseline scenario (wo dr) separately because of different contracts
     make_directory_if_missing(f"{config_workflow['input_folder']}/baseline/")
     shutil.copyfile(
         f"{config_workflow['template_folder']}/scenario_template_wo_dr.yaml",
