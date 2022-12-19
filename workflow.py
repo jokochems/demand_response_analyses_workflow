@@ -1,6 +1,6 @@
 import shutil
 
-from fameio.source.cli import Options
+from fameio.source.cli import Options, ResolveOptions
 
 from dr_analyses.container import Container, trim_file_name
 from dr_analyses.cross_run_evaluation import read_param_results_for_runs
@@ -34,7 +34,7 @@ config_workflow = {
     "template_folder": "./template/",
     # "scenario_subfolder": "/w_capacity_charge",  # "wo_capacity_charge"
     "output_folder": "./results/",
-    "make_scenario": True,
+    "make_scenario": False,
     "run_amiris": True,
     "convert_results": True,
     "process_results": True,
@@ -81,7 +81,10 @@ config_convert = {
     Options.LOG_LEVEL: "warn",
     Options.LOG_FILE: None,
     Options.AGENT_LIST: None,
+    Options.OUTPUT: None,  # is set in workflow
     Options.SINGLE_AGENT_EXPORT: False,
+    Options.MEMORY_SAVING: False,
+    Options.RESOLVE_COMPLEX_FIELD: ResolveOptions.SPLIT,
 }
 
 if __name__ == "__main__":
@@ -121,7 +124,7 @@ if __name__ == "__main__":
             run_amiris(run_properties, cont)
         if config_workflow["convert_results"]:
             convert_amiris_results(cont)
-        if config_workflow["process_results"] and "_no_dr" not in scenario:
+        if config_workflow["process_results"] and "_wo_dr" not in scenario:
             calc_basic_load_shifting_results(cont)
             obtain_scenario_and_baseline_prices(cont)
             add_power_payments(
@@ -129,7 +132,7 @@ if __name__ == "__main__":
             )
             if config_workflow["write_results"]:
                 write_results(cont)
-        if config_workflow["aggregate_results"] and "_no_dr" not in scenario:
+        if config_workflow["aggregate_results"] and "_wo_dr" not in scenario:
             calc_summary_parameters(cont)
             scenario_results[cont.trimmed_scenario] = cont.summary_series
 
