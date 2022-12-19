@@ -1,12 +1,8 @@
 Configs:
-  - Name: 0_dynamic_0_LP
-    AverageMarketPriceInEURPerMWH: 10
-    CapacityBasedNetworkChargesInEURPerMW: 0
-    DynamicTariffComponents: []
-
   - Name: 20_dynamic_0_LP
     AverageMarketPriceInEURPerMWH: 10
-    CapacityBasedNetworkChargesInEURPerMW: 0
+    OtherSurchargesInEURPerMWH: 10
+    CapacityBasedNetworkChargesInEURPerMW: 50
     DynamicTariffComponents:
       - ComponentName: POWER_PRICE
         Multiplier: 0.2
@@ -17,7 +13,14 @@ Configs:
         LowerBound: -500.0
         UpperBound: 3000.0
 
+  - Name: 0_dynamic_0_LP
+    AverageMarketPriceInEURPerMWH: 10
+    OtherSurchargesInEURPerMWH: 10
+    CapacityBasedNetworkChargesInEURPerMW: 0
+    DynamicTariffComponents: []
+
   - Name: 0_dynamic_20_LP
     AverageMarketPriceInEURPerMWH: 8
+    OtherSurchargesInEURPerMWH: 10
     CapacityBasedNetworkChargesInEURPerMW: 1000
     DynamicTariffComponents: []
