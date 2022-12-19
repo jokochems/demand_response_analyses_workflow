@@ -4,6 +4,7 @@ from typing import List, Dict
 from fameio.scripts.convert_results import run as convert_results
 from fameio.scripts.make_config import run as make_config
 from fameio.source.cli import Options
+from fameio.source.loader import load_yaml
 
 from dr_analyses.container import Container
 
@@ -35,6 +36,13 @@ def get_all_yaml_files_in_folder_except(
     ]
 
 
+def obtain_load_shifting_tariff_configs(config: Dict):
+    """Read and return load shifting tariff model configs"""
+    return load_yaml(f"{config['template_folder']}tariff_model_configs.yaml")[
+        "Configs"
+    ]
+
+
 def make_scenario_config(cont: Container) -> None:
     """Make a config for a given scenario with absolute path"""
     print(f"Compiling scenario {cont.trimmed_scenario}")
@@ -45,7 +53,9 @@ def make_scenario_config(cont: Container) -> None:
 
 def set_config_make_output(cont: Container) -> None:
     """Define output for compiling AMIRIS protobuffer input"""
-    make_directory_if_missing(f"{cont.config_workflow['input_folder']}/configs/")
+    make_directory_if_missing(
+        f"{cont.config_workflow['input_folder']}/configs/"
+    )
     cont.config_make[
         Options.OUTPUT
     ] = f'{cont.config_workflow["input_folder"]}/configs/{cont.trimmed_scenario}.pb'

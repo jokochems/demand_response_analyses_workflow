@@ -23,17 +23,23 @@ from dr_analyses.results_workflow import (
 )
 from dr_analyses.workflow_routines import (
     convert_amiris_results,
-    get_all_yaml_files_in_folder_except,
     make_scenario_config,
     run_amiris,
     make_directory_if_missing,
+    obtain_load_shifting_tariff_configs,
 )
 
 config_workflow = {
-    "input_folder": "./inputs/",
     "template_folder": "./template/",
-    # "scenario_subfolder": "/w_capacity_charge",  # "wo_capacity_charge"
+    "input_folder": "./inputs/",
+    "scenario_sub_folder": "scenarios",
     "output_folder": "./results/",
+    "demand_response_scenarios": {
+        "none": "scenario_wo_dr",
+        "5": "scenario_w_dr_5",
+        "50": "scenario_w_dr_50",
+        "95": "scenario_w_dr_95",
+    },
     "make_scenario": False,
     "run_amiris": True,
     "convert_results": True,
@@ -81,35 +87,51 @@ config_convert = {
     Options.LOG_LEVEL: "warn",
     Options.LOG_FILE: None,
     Options.AGENT_LIST: None,
-    Options.OUTPUT: None,  # is set in workflow
+    Options.OUTPUT: None,  # set in workflow
     Options.SINGLE_AGENT_EXPORT: False,
     Options.MEMORY_SAVING: False,
     Options.RESOLVE_COMPLEX_FIELD: ResolveOptions.SPLIT,
 }
 
 if __name__ == "__main__":
-    # Add baseline scenario (wo dr) separately because of different contracts
-    make_directory_if_missing(f"{config_workflow['input_folder']}/baseline/")
-    shutil.copyfile(
-        f"{config_workflow['template_folder']}/scenario_template_wo_dr.yaml",
-        f"{config_workflow['input_folder']}/baseline/scenario_wo_dr.yaml",
-    )
-    baseline_scenario = (
-        f"{config_workflow['input_folder']}/baseline/scenario_wo_dr.yaml"
-    )
+    make_directory_if_missing(f"{config_workflow['input_folder']}/scenarios/")
+    tariffs = obtain_load_shifting_tariff_configs(config_workflow)
 
-    scenario_files = [baseline_scenario]
-    # scenario_files.extend(
-    #     get_all_yaml_files_in_folder_except(
-    #         config_workflow["input_folder"]
-    #         + config_workflow["scenario_subfolder"],
-    #         to_ignore,
-    #     )
-    # )
+    scenario_files = {}
+    baseline_scenario = None
+    for dr_scen, dr_scen_name in config_workflow[
+        "demand_response_scenarios"
+    ].items():
+        if dr_scen != "none":
+            for tariff in tariffs:
+                tariff_name = tariff["Name"]
+
+                scenario = (
+                    f"{config_workflow['input_folder']}/"
+                    f"{config_workflow['scenario_sub_folder']}/"
+                    f"{dr_scen_name}_{tariff_name}.yaml"
+                )
+                shutil.copyfile(
+                    f"{config_workflow['template_folder']}/scenario_template_wo_dr.yaml",
+                    scenario,
+                )
+                scenario_files[f"{dr_scen}_{tariff_name}"] = scenario
+
+        else:
+            scenario = (
+                f"{config_workflow['input_folder']}/"
+                f"{config_workflow['scenario_sub_folder']}/{dr_scen_name}.yaml"
+            )
+            shutil.copyfile(
+                f"{config_workflow['template_folder']}/scenario_template_wo_dr.yaml",
+                scenario,
+            )
+            scenario_files[dr_scen] = scenario
+            baseline_scenario = scenario
 
     scenario_results = {}
 
-    for scenario in scenario_files:
+    for dr_scen, scenario in scenario_files.items():
         cont = Container(
             scenario,
             config_workflow,
@@ -117,6 +139,14 @@ if __name__ == "__main__":
             config_make,
             baseline_scenario,
         )
+
+        if scenario != baseline_scenario:
+            cont.add_load_shifting_config(dr_scen, tariffs)
+            cont.update_config_for_scenario(dr_scen)
+
+        else:
+            # No need to change config for baseline scenario
+            continue
 
         if config_workflow["make_scenario"]:
             make_scenario_config(cont)
