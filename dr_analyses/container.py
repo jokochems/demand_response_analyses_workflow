@@ -1,4 +1,5 @@
 import math
+import os
 from typing import Dict, List
 
 import pandas as pd
@@ -362,7 +363,9 @@ class Container:
         predefined_builders = self.get_agents_by_type("PredefinedPlantBuilder")
         self.update_demand_trader(demand_trader, key, load_shedding_template)
         update_plant_builders(predefined_builders, key)
-        self.update_contracts_location()
+        self.change_contract_location(
+            f"{self.config_workflow['input_folder']}/contracts_w_dr"
+        )
 
     def get_agents_by_type(self, agent_type: str) -> List[Dict]:
         """Returns list of agents of given type"""
@@ -408,9 +411,17 @@ class Container:
             group="Loads",
         )
 
-    def update_contracts_location(self):
-        """Update contract location to include load shedding into the analyses"""
-        pass
+    def change_contract_location(self, path_to_new_contracts: str) -> None:
+        """Change the contract location to one of the subfolders in order to account for changes"""
+        contracts = []
+        contract_files = [
+            path_to_new_contracts + "/" + file
+            for file in os.listdir(path_to_new_contracts)
+            if "IGNORE_" not in file and file.endswith(".yaml")
+        ]
+        for file in contract_files:
+            contracts.extend(load_yaml(file)["Contracts"])
+        self.scenario_yaml["Contracts"] = contracts
 
     def save_scenario_yaml(self) -> None:
         """Save 'scenario_yaml' attribute to yaml file"""
