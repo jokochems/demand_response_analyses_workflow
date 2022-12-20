@@ -149,9 +149,7 @@ if __name__ == "__main__":
 
         if scenario != baseline_scenario:
             cont.add_load_shifting_config(dr_scen, templates)
-            cont.update_config_for_scenario(dr_scen)
-
-            print("So far, so good.")
+            cont.update_config_for_scenario(dr_scen, templates["load_shedding"])
 
         else:
             # No need to change config for baseline scenario

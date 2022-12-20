@@ -29,28 +29,40 @@ def replace_yaml_entries(
       replace entries for keys by the given values.
     """
     if not group:
-        iter_dict = agent["Attributes"]
+        to_iterate = agent["Attributes"]
     elif group and not subgroup:
-        iter_dict = agent["Attributes"][group]
+        to_iterate = agent["Attributes"][group]
     else:
         if not group:
             raise ValueError(
                 "When replacing values for a sub group, "
                 "group must also be given!"
             )
-        iter_dict = agent["Attributes"][group][subgroup]
+        to_iterate = agent["Attributes"][group][subgroup]
 
-    if isinstance(entries, list):
-        replace_path_for_list_entries(iter_dict, entries, key)
-    elif isinstance(entries, dict):
-        replace_using_dict_values(iter_dict, entries, key)
+    if isinstance(to_iterate, dict):
+        if isinstance(entries, list):
+            replace_path_for_list_entries(to_iterate, entries, key)
+        elif isinstance(entries, dict):
+            replace_using_dict_values(to_iterate, entries)
+        else:
+            raise ValueError(
+                "Parameter 'entries' must be of type list or dict."
+            )
+    elif isinstance(to_iterate, list):
+        replace_path_within_list(to_iterate, entries, key)
     else:
-        raise ValueError("Entries must be of type list or dict.")
+        raise ValueError(
+            "Extraction lead to invalid type. "
+            "Cannot replace yaml entries."
+        )
 
 
-def replace_path_for_list_entries(iter_dict: Dict, entries: List, key: str):
+def replace_path_for_list_entries(
+    to_iterate: Dict, entries: List, key: str
+) -> None:
     """Replace the pointer to a dedicated file by using key"""
-    for k, v in iter_dict.items():
+    for k, v in to_iterate.items():
         for entry in entries:
             if entry == k:
                 new_value = (
@@ -58,22 +70,58 @@ def replace_path_for_list_entries(iter_dict: Dict, entries: List, key: str):
                     f"{v.rsplit('/', 2)[-1]}"
                 )
                 # Update with value from respective scenario
-                iter_dict[k] = new_value
+                to_iterate[k] = new_value
 
 
-def replace_using_dict_values(iter_dict: Dict, entries: Dict, key: str):
+def replace_using_dict_values(to_iterate: Dict, entries: Dict) -> None:
     """Replace previous entries by the once in given dict entries"""
-    for k, v in iter_dict.items():
+    for k, v in to_iterate.items():
         for entry, value in entries.items():
             if entry == k:
                 new_value = value
                 # Update with value from respective scenario
-                iter_dict[k] = new_value
+                to_iterate[k] = new_value
+
+
+def replace_path_within_list(
+    to_iterate: List[Dict], entries: List, key: str
+) -> None:
+    for el in to_iterate:
+        for k, v in el.items():
+            for entry in entries:
+                if entry == k:
+                    try:
+                        new_value = (
+                            f"{v.rsplit('/', 2)[0]}/{key.split('_', 1)[0]}/"
+                            f"{v.rsplit('/', 2)[-1]}"
+                        )
+                        # Update with value from respective scenario
+                        el[k] = new_value
+                    except AttributeError:
+                        continue
+
+
+def add_load_shifting_agent(load_shifting_config: Dict, key: str) -> None:
+    """Add load shifting agent sceleton incl. correct technical parameters"""
+    replace_yaml_entries(
+        load_shifting_config,
+        key,
+        entries=[
+            "PowerInMW",
+            "PowerUpAvailability",
+            "PowerDownAvailability",
+            "MaximumShiftTimeInHours",
+            "BaselineLoadTimeSeries",
+            "BaselinePeakLoadInMW",
+            "InterferenceTimeInHours",
+        ],
+        group="LoadShiftingPortfolio",
+    )
 
 
 def add_load_shifting_tariff(
     tariff_configs: List, load_shifting_agent: Dict, key: str
-):
+) -> None:
     """Add load shifting tariff for the respective scenario"""
     for tariff in tariff_configs:
         if key.split("_", 1)[-1] == tariff["Name"]:
@@ -112,8 +160,23 @@ def update_plant_builders(builders: List[Dict], key: str) -> None:
         )
 
 
-def update_demand_trader(demand_trader: Dict, key: str) -> None:
+def update_demand_trader(
+    demand_trader: Dict, key: str, load_shedding_template
+) -> None:
     """Update DemandTrader with load shedding information of resp. scenario"""
+    # replace config with the one including price-based shedding
+    replace_yaml_entries(
+        demand_trader,
+        key,
+        entries=load_shedding_template,
+    )
+    # adjust values to respective scenario
+    replace_yaml_entries(
+        demand_trader,
+        key,
+        entries=["ValueOfLostLoad", "DemandSeries"],
+        group="Loads",
+    )
 
 
 class Container:
@@ -232,32 +295,21 @@ class Container:
             sep=";",
         )
 
-    def add_load_shifting_config(
-        self, key: str, templates: Dict
-    ) -> None:
+    def add_load_shifting_config(self, key: str, templates: Dict) -> None:
         """Add a load shifting agent to scenario and adjust its configuration"""
-        replace_yaml_entries(
-            templates["load_shifting"],
-            key,
-            entries=[
-                "PowerInMW",
-                "PowerUpAvailability",
-                "PowerDownAvailability",
-                "MaximumShiftTimeInHours",
-                "BaselineLoadTimeSeries",
-                "BaselinePeakLoadInMW",
-                "InterferenceTimeInHours",
-            ],
-            group="LoadShiftingPortfolio",
+        add_load_shifting_agent(templates["load_shifting"], key)
+        add_load_shifting_tariff(
+            templates["tariffs"], templates["load_shifting"], key
         )
-        add_load_shifting_tariff(templates["tariffs"], templates["load_shifting"], key)
         self.scenario_yaml["Agents"].append(templates["load_shifting"])
 
-    def update_config_for_scenario(self, key: str) -> None:
+    def update_config_for_scenario(
+        self, key: str, load_shedding_template: Dict
+    ) -> None:
         """Update time series values for a given scenario"""
         demand_trader = self.get_agents_by_type("DemandTrader")[0]  # only one
         predefined_builders = self.get_agents_by_type("PredefinedPlantBuilder")
-        update_demand_trader(demand_trader, key)
+        update_demand_trader(demand_trader, key, load_shedding_template)
         update_plant_builders(predefined_builders, key)
 
     def get_agents_by_type(self, agent_type: str) -> List[Dict]:
