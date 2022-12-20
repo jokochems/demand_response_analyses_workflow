@@ -1,0 +1,58 @@
+AgentGroups:
+  - &exchange 1
+  - &forecaster 6
+  - &loadshift 8
+
+Times:
+  - &hourly 3600
+  - &monthly 2628000
+  - &yearly 31536000
+
+Contracts:
+##########################
+# -- Forecasting -- #
+##########################
+  - SenderId: *loadshift
+    ReceiverId: *forecaster
+    ProductName: PriceForecastRequest
+    FirstDeliveryTime: -21
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *forecaster
+    ReceiverId: *loadshift
+    ProductName: PriceForecast
+    FirstDeliveryTime: -19
+    DeliveryIntervalInSteps: *hourly
+
+#  - SenderId: *loadshift
+#    ReceiverId: *forecaster
+#    ProductName: MeritOrderForecastRequest
+#    FirstDeliveryTime: -21
+#    DeliveryIntervalInSteps: *hourly
+#
+#  - SenderId: *forecaster
+#    ReceiverId: *loadshift
+#    ProductName: MeritOrderForecast
+#    FirstDeliveryTime: -19
+#    DeliveryIntervalInSteps: *hourly
+
+###############################
+# -- Bidding --               #
+###############################
+  - SenderId: *exchange
+    ReceiverId: *loadshift
+    ProductName: GateClosureInfo
+    FirstDeliveryTime: -10
+    DeliveryIntervalInSteps: *hourly
+ 
+  - SenderId: *loadshift
+    ReceiverId: *exchange
+    ProductName: Bids
+    FirstDeliveryTime: 0
+    DeliveryIntervalInSteps: *hourly
+ 
+  - SenderId: *exchange
+    ReceiverId: *loadshift
+    ProductName: Awards
+    FirstDeliveryTime: 4
+    DeliveryIntervalInSteps: *hourly

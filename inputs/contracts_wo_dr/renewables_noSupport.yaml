@@ -1,0 +1,95 @@
+AgentGroups:
+  - &exchange 1
+  - &forecaster 6
+  - &marketer 12
+  - &renewables [10, 20, 30, 40, 50, 60, 70, 80, 90]
+
+Times:
+  - &hourly 3600
+  - &monthly 2628000
+  - &yearly 31536000
+
+Contracts:
+#################################
+# -- Registration --            #
+#################################
+  - SenderId: *renewables
+    ReceiverId: *marketer
+    ProductName: SetRegistration
+    FirstDeliveryTime: -37
+    DeliveryIntervalInSteps: *yearly
+
+#################################
+# -- Forecasting --             #
+#################################
+  - SenderId: *forecaster
+    ReceiverId: *marketer
+    ProductName: ForecastRequest
+    FirstDeliveryTime: -26
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *marketer
+    ReceiverId: *renewables
+    ProductName: ForecastRequestForward
+    FirstDeliveryTime: -25
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *renewables
+    ReceiverId: *marketer
+    ProductName: MarginalCostForecast
+    FirstDeliveryTime: -22
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *marketer
+    ReceiverId: *forecaster
+    ProductName: BidsForecast
+    FirstDeliveryTime: -21
+    DeliveryIntervalInSteps: *hourly
+
+#################################
+# -- Bidding --                 #
+#################################
+  - SenderId: *exchange
+    ReceiverId: *marketer
+    ProductName: GateClosureInfo
+    FirstDeliveryTime: -10
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *marketer
+    ReceiverId: *renewables
+    ProductName: GateClosureForward
+    FirstDeliveryTime: -9
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *renewables
+    ReceiverId: *marketer
+    ProductName: MarginalCost
+    FirstDeliveryTime: -1
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *marketer
+    ReceiverId: *exchange
+    ProductName: Bids
+    FirstDeliveryTime: 0
+    DeliveryIntervalInSteps: *hourly
+
+#################################
+# -- Dispatch & Payment --      #
+#################################
+  - SenderId: *exchange
+    ReceiverId: *marketer
+    ProductName: Awards
+    FirstDeliveryTime: 4
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *marketer
+    ReceiverId: *renewables
+    ProductName: DispatchAssignment
+    FirstDeliveryTime: 5
+    DeliveryIntervalInSteps: *hourly
+
+  - SenderId: *marketer
+    ReceiverId: *renewables
+    ProductName: Payout
+    FirstDeliveryTime: 2626204
+    DeliveryIntervalInSteps: *monthly

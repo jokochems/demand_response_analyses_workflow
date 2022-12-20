@@ -1,0 +1,43 @@
+Agents:
+  - Type: LoadShiftingTrader
+    Id: 8
+    Attributes:
+      ForecastRequestOffsetInSeconds: 22
+      LoadShiftingPortfolio:
+        InitialEnergyLevelInMWH: 0.0
+        InitialShiftTimeInHours: 0
+        PowerInMW: 0
+        PowerUpAvailability: "./inputs/data/50/availability_shifting_neg_ind_cluster_shift_only.csv" # normalized to PowerInMW; TODO: check!
+        PowerDownAvailability: "./inputs/data/50/availability_shifting_pos_ind_cluster_shift_only.csv" # normalized to PowerInMW; TODO: check!
+        EnergyResolutionInMWH: 1000.0  # Not used
+        EnergyLimitUpInMWH: 1000.0  # Not used
+        EnergyLimitDownInMWH: 1000.0  # Not used
+        MaximumShiftTimeInHours: 0  # shifting_duration
+        VariableShiftCostsInEURPerMWH: 0
+        BaselineLoadTimeSeries: "./inputs/data/50/baseline_load_profile_ind_cluster_shift_only.csv" # normalized to PeakLoadInMW
+        BaselinePeakLoadInMW: 0  # max_cap (assumed simultaneity of industrial loads is 90%)
+        Efficiency: 1.0
+        InterferenceTimeInHours: 0
+      Strategy:
+        # SINGLE_AGENT_MAX_PROFIT, SINGLE_AGENT_MIN_SYSTEM_COST, MULTI_AGENT_SIMPLE, DISPATCH_FILE, SINGLE_AGENT_MAX_PROFIT_TARIFFS, SINGLE_AGENT_MAX_PROFIT_EXTERNAL
+        StrategistType: SINGLE_AGENT_MAX_PROFIT_EXTERNAL
+        ForecastPeriodInHours: 168
+        ScheduleDurationInHours: 24
+        SingleAgent:
+          PurchaseLeviesAndTaxesInEURperMWH: 0.0
+        Api:
+          ServiceUrl: http://127.0.0.1:8000/load_shift/
+          UseAnnualLimit: 0
+          Solver: gurobi
+      Policy:
+        EEGSurchargeInEURPerMWH: 0.0
+        VolumetricNetworkChargeInEURPerMWH: 0.0
+        ElectricityTaxInEURPerMWH: 0.0
+        OtherSurchargesInEURPerMWH: 0.0
+        DynamicTariffComponents: []
+        VAT: 1.19
+        CapacityBasedNetworkChargesInEURPerMW: 0.0
+        FixedNetworkChargesInEURPerYear: 0.0
+      BusinessModel:
+        ProfitMarginInEURPerMWH: 0.0
+        AverageMarketPriceInEURPerMWH: 0.0

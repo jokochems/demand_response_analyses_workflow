@@ -1,4 +1,6 @@
-from fameio.source.cli import Options
+import shutil
+
+from fameio.source.cli import Options, ResolveOptions
 
 from dr_analyses.container import Container, trim_file_name
 from dr_analyses.cross_run_evaluation import read_param_results_for_runs
@@ -21,25 +23,41 @@ from dr_analyses.results_workflow import (
 )
 from dr_analyses.workflow_routines import (
     convert_amiris_results,
-    get_all_yaml_files_in_folder_except,
     make_scenario_config,
     run_amiris,
+    make_directory_if_missing,
+    read_tariff_configs,
+    read_load_shifting_template,
+    read_load_shedding_template,
 )
 
 config_workflow = {
-    "input_folder": "C:/Users/koch_j0/AMIRIS/asgard/input/demand_response",
-    "scenario_subfolder": "/wo_capacity_charge",  # "w_capacity_charge"
+    "template_folder": "./template/",
+    "input_folder": "./inputs/",
+    "scenario_sub_folder": "scenarios",
     "output_folder": "./results/",
-    "make_scenario": False,
-    "run_amiris": False,
-    "convert_results": False,
+    "demand_response_scenarios": {
+        "none": "scenario_wo_dr",
+        "5": "scenario_w_dr_5",
+        "50": "scenario_w_dr_50",
+        "95": "scenario_w_dr_95",
+    },
+    "load_shifting_focus_cluster": "ind_cluster_shift_only",
+    "load_shedding_clusters": [
+        "ind_cluster_shed_only",
+        "ind_cluster_shift_shed",
+        "hoho_cluster_shift_shed",
+    ],
+    "make_scenario": True,
+    "run_amiris": True,
+    "convert_results": True,
     "process_results": True,
     "use_baseline_prices_for_comparison": True,
-    "write_results": False,
+    "write_results": True,
     "aggregate_results": True,
     "evaluate_cross_scenarios": True,
     "make_plots": True,
-    "evaluate_cross_runs": False,
+    "evaluate_cross_runs": True,
     "runs_to_evaluate": {
         "Analysis_2022-05-05_price_no_repercussions": (
             "without capacity charge"
@@ -67,7 +85,7 @@ config_make = {
 }
 
 run_properties = {
-    "exe": "amiris/amiris-core_1.2-jar-with-dependencies.jar",
+    "exe": "amiris/amiris-core_1.2.6-jar-with-dependencies.jar -Xmx16000M",
     "logging": "-Dlog4j.configuration=file:amiris/log4j.properties",
     "main": "de.dlr.gitlab.fame.setup.FameRunner",
     "setup": "amiris/fameSetup.yaml",
@@ -77,28 +95,56 @@ config_convert = {
     Options.LOG_LEVEL: "warn",
     Options.LOG_FILE: None,
     Options.AGENT_LIST: None,
+    Options.OUTPUT: None,  # set in workflow
     Options.SINGLE_AGENT_EXPORT: False,
+    Options.MEMORY_SAVING: False,
+    Options.RESOLVE_COMPLEX_FIELD: ResolveOptions.SPLIT,
 }
 
 if __name__ == "__main__":
-    to_ignore = ["schema.yaml"]
-    # Add baseline scenario (no dr) separately because of different contracts
-    baseline_scenario = get_all_yaml_files_in_folder_except(
-        config_workflow["input_folder"] + "/baseline", to_ignore
-    )
+    make_directory_if_missing(f"{config_workflow['input_folder']}/scenarios/")
+    # Store templates for reuse
+    templates = {
+        "tariffs": read_tariff_configs(config_workflow),
+        "load_shifting": read_load_shifting_template(config_workflow),
+        "load_shedding": read_load_shedding_template(config_workflow),
+    }
 
-    scenario_files = baseline_scenario.copy()
-    scenario_files.extend(
-        get_all_yaml_files_in_folder_except(
-            config_workflow["input_folder"]
-            + config_workflow["scenario_subfolder"],
-            to_ignore,
-        )
-    )
+    scenario_files = {}
+    baseline_scenario = None
+    for dr_scen, dr_scen_name in config_workflow[
+        "demand_response_scenarios"
+    ].items():
+        if dr_scen != "none":
+            for tariff in templates["tariffs"]:
+                tariff_name = tariff["Name"]
+
+                scenario = (
+                    f"{config_workflow['input_folder']}/"
+                    f"{config_workflow['scenario_sub_folder']}/"
+                    f"{dr_scen_name}_{tariff_name}.yaml"
+                )
+                shutil.copyfile(
+                    f"{config_workflow['template_folder']}/scenario_template_wo_dr.yaml",
+                    scenario,
+                )
+                scenario_files[f"{dr_scen}_{tariff_name}"] = scenario
+
+        else:
+            scenario = (
+                f"{config_workflow['input_folder']}/"
+                f"{config_workflow['scenario_sub_folder']}/{dr_scen_name}.yaml"
+            )
+            shutil.copyfile(
+                f"{config_workflow['template_folder']}/scenario_template_wo_dr.yaml",
+                scenario,
+            )
+            scenario_files[dr_scen] = scenario
+            baseline_scenario = scenario
 
     scenario_results = {}
 
-    for scenario in scenario_files:
+    for dr_scen, scenario in scenario_files.items():
         cont = Container(
             scenario,
             config_workflow,
@@ -107,13 +153,24 @@ if __name__ == "__main__":
             baseline_scenario,
         )
 
+        if scenario != baseline_scenario:
+            cont.add_load_shifting_config(dr_scen, templates)
+            cont.update_config_for_scenario(
+                dr_scen, templates["load_shedding"]
+            )
+            cont.save_scenario_yaml()
+
+        else:
+            # No need to change config for baseline scenario
+            continue
+
         if config_workflow["make_scenario"]:
             make_scenario_config(cont)
         if config_workflow["run_amiris"]:
             run_amiris(run_properties, cont)
         if config_workflow["convert_results"]:
             convert_amiris_results(cont)
-        if config_workflow["process_results"] and "_no_dr" not in scenario:
+        if config_workflow["process_results"] and "_wo_dr" not in scenario:
             calc_basic_load_shifting_results(cont)
             obtain_scenario_and_baseline_prices(cont)
             add_power_payments(
@@ -121,7 +178,7 @@ if __name__ == "__main__":
             )
             if config_workflow["write_results"]:
                 write_results(cont)
-        if config_workflow["aggregate_results"] and "_no_dr" not in scenario:
+        if config_workflow["aggregate_results"] and "_wo_dr" not in scenario:
             calc_summary_parameters(cont)
             scenario_results[cont.trimmed_scenario] = cont.summary_series
 
@@ -137,7 +194,9 @@ if __name__ == "__main__":
         )
         if config_workflow["make_plots"]:
             configure_plots(config_plotting)
-            plot_bar_charts(config_workflow, all_parameter_results, config_plotting)
+            plot_bar_charts(
+                config_workflow, all_parameter_results, config_plotting
+            )
 
     if config_workflow["evaluate_cross_runs"]:
         param_results = read_param_results_for_runs(config_workflow)

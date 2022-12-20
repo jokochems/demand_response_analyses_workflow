@@ -4,11 +4,29 @@ from typing import List, Dict
 from fameio.scripts.convert_results import run as convert_results
 from fameio.scripts.make_config import run as make_config
 from fameio.source.cli import Options
+from fameio.source.loader import load_yaml
 
 from dr_analyses.container import Container
 
 
-def get_all_yaml_files_in_folder_except(folder: str, file_list: List[str]) -> List[str]:
+def make_directory_if_missing(folder: str) -> None:
+    """Add directories if missing; works with at maximum 2 sub-levels"""
+    if os.path.exists(folder):
+        pass
+    else:
+        if os.path.exists(folder.rsplit("/", 2)[0]):
+            path = "./" + folder
+            os.mkdir(path)
+        else:
+            path = "./" + folder.rsplit("/", 2)[0]
+            os.mkdir(path)
+            subpath = folder
+            os.mkdir(subpath)
+
+
+def get_all_yaml_files_in_folder_except(
+    folder: str, file_list: List[str]
+) -> List[str]:
     """Returns all .yaml files in given folder but not given ones"""
     return [
         folder + "/" + file
@@ -16,6 +34,27 @@ def get_all_yaml_files_in_folder_except(folder: str, file_list: List[str]) -> Li
         if file.endswith(".yaml")
         if file not in file_list
     ]
+
+
+def read_tariff_configs(config: Dict):
+    """Read and return load shifting tariff model configs"""
+    return load_yaml(f"{config['template_folder']}tariff_model_configs.yaml")[
+        "Configs"
+    ]
+
+
+def read_load_shifting_template(config: Dict):
+    """Read and return load shifting tariff model configs"""
+    return load_yaml(
+        f"{config['template_folder']}" f"load_shifting_config_template.yaml"
+    )["Agents"][0]
+
+
+def read_load_shedding_template(config: Dict):
+    """Read and return load shifting tariff model configs"""
+    return load_yaml(
+        f"{config['template_folder']}" f"load_shedding_config_template.yaml"
+    )["Attributes"]
 
 
 def make_scenario_config(cont: Container) -> None:
@@ -28,6 +67,9 @@ def make_scenario_config(cont: Container) -> None:
 
 def set_config_make_output(cont: Container) -> None:
     """Define output for compiling AMIRIS protobuffer input"""
+    make_directory_if_missing(
+        f"{cont.config_workflow['input_folder']}/configs/"
+    )
     cont.config_make[
         Options.OUTPUT
     ] = f'{cont.config_workflow["input_folder"]}/configs/{cont.trimmed_scenario}.pb'
