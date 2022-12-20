@@ -36,11 +36,25 @@ def get_all_yaml_files_in_folder_except(
     ]
 
 
-def obtain_load_shifting_tariff_configs(config: Dict):
+def read_tariff_configs(config: Dict):
     """Read and return load shifting tariff model configs"""
     return load_yaml(f"{config['template_folder']}tariff_model_configs.yaml")[
         "Configs"
     ]
+
+
+def read_load_shifting_template(config: Dict):
+    """Read and return load shifting tariff model configs"""
+    return load_yaml(
+        f"{config['template_folder']}" f"load_shifting_config_template.yaml"
+    )["Agents"][0]
+
+
+def read_load_shedding_template(config: Dict):
+    """Read and return load shifting tariff model configs"""
+    return load_yaml(
+        f"{config['template_folder']}" f"load_shedding_config_template.yaml"
+    )["Attributes"]
 
 
 def make_scenario_config(cont: Container) -> None:

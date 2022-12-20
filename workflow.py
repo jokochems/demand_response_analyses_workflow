@@ -26,7 +26,9 @@ from dr_analyses.workflow_routines import (
     make_scenario_config,
     run_amiris,
     make_directory_if_missing,
-    obtain_load_shifting_tariff_configs,
+    read_tariff_configs,
+    read_load_shifting_template,
+    read_load_shedding_template,
 )
 
 config_workflow = {
@@ -95,7 +97,12 @@ config_convert = {
 
 if __name__ == "__main__":
     make_directory_if_missing(f"{config_workflow['input_folder']}/scenarios/")
-    tariffs = obtain_load_shifting_tariff_configs(config_workflow)
+    # Store templates for reuse
+    templates = {
+        "tariffs": read_tariff_configs(config_workflow),
+        "load_shifting": read_load_shifting_template(config_workflow),
+        "load_shedding": read_load_shedding_template(config_workflow),
+    }
 
     scenario_files = {}
     baseline_scenario = None
@@ -103,7 +110,7 @@ if __name__ == "__main__":
         "demand_response_scenarios"
     ].items():
         if dr_scen != "none":
-            for tariff in tariffs:
+            for tariff in templates["tariffs"]:
                 tariff_name = tariff["Name"]
 
                 scenario = (
@@ -141,8 +148,10 @@ if __name__ == "__main__":
         )
 
         if scenario != baseline_scenario:
-            cont.add_load_shifting_config(dr_scen, tariffs)
+            cont.add_load_shifting_config(dr_scen, templates)
             cont.update_config_for_scenario(dr_scen)
+
+            print("So far, so good.")
 
         else:
             # No need to change config for baseline scenario

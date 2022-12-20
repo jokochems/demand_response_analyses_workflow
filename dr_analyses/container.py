@@ -101,6 +101,21 @@ def add_load_shifting_tariff(
             )
 
 
+def update_plant_builders(builders: List[Dict], key: str) -> None:
+    """Update PredefinedPlantBuilders with information of resp. scenario"""
+    for builder in builders:
+        replace_yaml_entries(
+            builder,
+            key,
+            entries=["OpexVarInEURperMWH"],
+            group="Prototype",
+        )
+
+
+def update_demand_trader(demand_trader: Dict, key: str) -> None:
+    """Update DemandTrader with load shedding information of resp. scenario"""
+
+
 class Container:
     """Class holding Container objects with config and results information
 
@@ -145,7 +160,7 @@ class Container:
         self.summary_series = None
         self._define_components_mapping()
 
-    def _define_components_mapping(self):
+    def _define_components_mapping(self) -> None:
         """Map dynamic identifier to static component value"""
         self.price_components = {
             "POWER_PRICE": {
@@ -169,16 +184,18 @@ class Container:
             },
         }
 
-    def set_results(self, results: pd.DataFrame):
+    def set_results(self, results: pd.DataFrame) -> None:
         self.results = results
 
-    def set_power_prices(self, power_prices: pd.DataFrame):
+    def set_power_prices(self, power_prices: pd.DataFrame) -> None:
         self.power_prices = power_prices
 
-    def set_baseline_power_prices(self, baseline_power_prices: pd.DataFrame):
+    def set_baseline_power_prices(
+        self, baseline_power_prices: pd.DataFrame
+    ) -> None:
         self.baseline_power_prices = baseline_power_prices
 
-    def set_load_shifting_data_and_dynamic_components(self):
+    def set_load_shifting_data_and_dynamic_components(self) -> None:
         """Retrieve load shifting config including dynamic tarrif components from input yaml"""
         self.load_shifting_data = [
             agent
@@ -189,41 +206,38 @@ class Container:
             "Policy"
         ]["DynamicTariffComponents"]
 
-    def write_results(self):
+    def write_results(self) -> None:
         self.results.to_csv(
             self.config_convert[Options.OUTPUT]
             + "/LoadShiftingTraderExtended.csv",
             sep=";",
         )
 
-    def write_power_prices(self):
+    def write_power_prices(self) -> None:
         self.power_prices.to_csv(
             self.config_convert[Options.OUTPUT] + "/ConsumerPowerPrices.csv",
             sep=";",
         )
 
-    def initialize_summary(self):
+    def initialize_summary(self) -> None:
         self.summary = {}
 
-    def set_summary_series(self):
+    def set_summary_series(self) -> None:
         self.summary_series = pd.Series(self.summary, name="Summary")
 
-    def write_summary(self):
+    def write_summary(self) -> None:
         """Write parameter summary to disk"""
         self.summary_series.to_csv(
             self.config_convert[Options.OUTPUT] + "/parameter_summary.csv",
             sep=";",
         )
 
-    def add_load_shifting_config(self, key: str, tariff_configs: List[Dict]):
+    def add_load_shifting_config(
+        self, key: str, templates: Dict
+    ) -> None:
         """Add a load shifting agent to scenario and adjust its configuration"""
-        load_shifting_agent = load_yaml(
-            f"{self.config_workflow['template_folder']}"
-            f"demand_response_config_template.yaml"
-        )["Agents"][0]
-
         replace_yaml_entries(
-            load_shifting_agent,
+            templates["load_shifting"],
             key,
             entries=[
                 "PowerInMW",
@@ -236,13 +250,15 @@ class Container:
             ],
             group="LoadShiftingPortfolio",
         )
-        add_load_shifting_tariff(tariff_configs, load_shifting_agent, key)
-        self.scenario_yaml["Agents"].append(load_shifting_agent)
+        add_load_shifting_tariff(templates["tariffs"], templates["load_shifting"], key)
+        self.scenario_yaml["Agents"].append(templates["load_shifting"])
 
-    def update_config_for_scenario(self):
+    def update_config_for_scenario(self, key: str) -> None:
         """Update time series values for a given scenario"""
-        demand_traders = self.get_agents_by_type("DemandTrader")
-        predefined_builder = self.get_agents_by_type("PredefinedPlantBuilder")
+        demand_trader = self.get_agents_by_type("DemandTrader")[0]  # only one
+        predefined_builders = self.get_agents_by_type("PredefinedPlantBuilder")
+        update_demand_trader(demand_trader, key)
+        update_plant_builders(predefined_builders, key)
 
     def get_agents_by_type(self, agent_type: str) -> List[Dict]:
         """Returns list of agents of given type"""
