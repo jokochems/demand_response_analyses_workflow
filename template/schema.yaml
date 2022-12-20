@@ -344,6 +344,14 @@ AgentTypes:
             AttributeType: double
             Mandatory: true
             List: false
+          Efficiency:
+            AttributeType: double
+            Mandatory: false
+            List: false
+          InterferenceTimeInHours:
+            AttributeType: integer
+            Mandatory: false
+            List: false
       Strategy:
         AttributeType: block
         Mandatory: true
@@ -353,7 +361,7 @@ AgentTypes:
             AttributeType: enum
             Mandatory: true
             List: false
-            Values: [ 'SINGLE_AGENT_MAX_PROFIT', 'SINGLE_AGENT_MIN_SYSTEM_COST', 'MULTI_AGENT_SIMPLE', 'DISPATCH_FILE', 'SINGLE_AGENT_MAX_PROFIT_TARIFFS' ]          
+            Values: [ 'SINGLE_AGENT_MAX_PROFIT', 'SINGLE_AGENT_MIN_SYSTEM_COST', 'MULTI_AGENT_SIMPLE', 'DISPATCH_FILE', 'SINGLE_AGENT_MAX_PROFIT_TARIFFS', 'SINGLE_AGENT_MAX_PROFIT_EXTERNAL' ]          
           ForecastPeriodInHours:
             AttributeType: integer
             Mandatory: true
@@ -370,16 +378,7 @@ AgentTypes:
               PurchaseLeviesAndTaxesInEURperMWH:
                 AttributeType: double
                 Mandatory: false
-                List: false
-          MultiAgent:
-            AttributeType: block
-            Mandatory: false
-            List: false
-            NestedAttributes:
-              AssessmentFunctionPrefactors:
-                AttributeType: double
-                Mandatory: false
-                List: true          
+                List: false        
           FixedDispatch:
             AttributeType: block
             Mandatory: false
@@ -393,6 +392,24 @@ AgentTypes:
                 AttributeType: time_series
                 Mandatory: false
                 List: false
+          Api:
+            AttributeType: block
+            Mandatory: true
+            List: false
+            NestedAttributes:
+              ServiceUrl:
+                AttributeType: string
+                Mandatory: false
+                List: false
+              UseAnnualLimit:
+                AttributeType: integer
+                Mandatory: false
+                List: false
+              Solver:
+                AttributeType: enum
+                Mandatory: false
+                List: false
+                Values: [ 'gurobi', 'cplex', 'cbc' ]
       Policy:
         AttributeType: block
         Mandatory: false
