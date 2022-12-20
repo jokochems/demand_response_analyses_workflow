@@ -6,18 +6,18 @@ Agents:
       LoadShiftingPortfolio:
         InitialEnergyLevelInMWH: 0.0
         InitialShiftTimeInHours: 0
-        PowerInMW: "./inputs/data/50/installed_capacity_ts_ind_cluster_shift_only.csv" # TODO: Think of whether to place scalar over time series here!
+        PowerInMW: 0
         PowerUpAvailability: "./inputs/data/50/availability_shifting_neg_ind_cluster_shift_only.csv" # normalized to PowerInMW; TODO: check!
         PowerDownAvailability: "./inputs/data/50/availability_shifting_pos_ind_cluster_shift_only.csv" # normalized to PowerInMW; TODO: check!
         EnergyResolutionInMWH: 1000.0  # Not used
         EnergyLimitUpInMWH: 1000.0  # Not used
         EnergyLimitDownInMWH: 1000.0  # Not used
-        MaximumShiftTimeInHours: "./inputs/data/50/ind_cluster_shift_only_shifting_duration_pos.csv"  # shifting_duration
-        VariableShiftCostsInEURPerMWH: 20.0  # actual value: 160.4 €/MWh; probably won't see any activity here ...
+        MaximumShiftTimeInHours: 0  # shifting_duration
+        VariableShiftCostsInEURPerMWH: 0
         BaselineLoadTimeSeries: "./inputs/data/50/baseline_load_profile_ind_cluster_shift_only.csv" # normalized to PeakLoadInMW
-        BaselinePeakLoadInMW: "./inputs/data/50/ind_cluster_shift_only_max_cap.csv"  # max_cap (assumed simultaneity of industrial loads is 90%)
+        BaselinePeakLoadInMW: 0  # max_cap (assumed simultaneity of industrial loads is 90%)
         Efficiency: 1.0
-        InterferenceTimeInHours: "./inputs/data/50/ind_cluster_shift_only_interference_duration_pos.csv"
+        InterferenceTimeInHours: 0
       Strategy:
         # SINGLE_AGENT_MAX_PROFIT, SINGLE_AGENT_MIN_SYSTEM_COST, MULTI_AGENT_SIMPLE, DISPATCH_FILE, SINGLE_AGENT_MAX_PROFIT_TARIFFS, SINGLE_AGENT_MAX_PROFIT_EXTERNAL
         StrategistType: SINGLE_AGENT_MAX_PROFIT_EXTERNAL
