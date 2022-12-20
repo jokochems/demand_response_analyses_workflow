@@ -1,6 +1,8 @@
+import math
 from typing import Dict, List
 
 import pandas as pd
+import yaml
 from fameio.source.cli import Options
 from fameio.source.loader import load_yaml
 
@@ -50,11 +52,17 @@ def replace_yaml_entries(
                 "Parameter 'entries' must be of type list or dict."
             )
     elif isinstance(to_iterate, list):
-        replace_path_within_list(to_iterate, entries, key)
+        if isinstance(entries, list):
+            replace_path_within_list(to_iterate, entries, key)
+        elif isinstance(entries, dict):
+            replace_values_within_list(to_iterate, entries)
+        else:
+            raise ValueError(
+                "Parameter 'entries' must be of type list or dict."
+            )
     else:
         raise ValueError(
-            "Extraction lead to invalid type. "
-            "Cannot replace yaml entries."
+            "Extraction lead to invalid type. Cannot replace yaml entries."
         )
 
 
@@ -86,6 +94,7 @@ def replace_using_dict_values(to_iterate: Dict, entries: Dict) -> None:
 def replace_path_within_list(
     to_iterate: List[Dict], entries: List, key: str
 ) -> None:
+    """Replace values of list-structured attribute by replacing path"""
     for el in to_iterate:
         for k, v in el.items():
             for entry in entries:
@@ -101,22 +110,18 @@ def replace_path_within_list(
                         continue
 
 
-def add_load_shifting_agent(load_shifting_config: Dict, key: str) -> None:
-    """Add load shifting agent sceleton incl. correct technical parameters"""
-    replace_yaml_entries(
-        load_shifting_config,
-        key,
-        entries=[
-            "PowerInMW",
-            "PowerUpAvailability",
-            "PowerDownAvailability",
-            "MaximumShiftTimeInHours",
-            "BaselineLoadTimeSeries",
-            "BaselinePeakLoadInMW",
-            "InterferenceTimeInHours",
-        ],
-        group="LoadShiftingPortfolio",
-    )
+def replace_values_within_list(to_iterate: List[Dict], entries: Dict) -> None:
+    """Replace values of list-structured attribute by replacing based on dict entries"""
+    for el in to_iterate:
+        for k, v in el.items():
+            for entry, entry_val in entries.items():
+                if not isinstance(v, float):
+                    if entry in v and k in entry_val:
+                        new_value = entry_val[k]
+                        # Update with value from respective scenario
+                        el[k] = new_value
+                else:
+                    continue
 
 
 def add_load_shifting_tariff(
@@ -160,25 +165,6 @@ def update_plant_builders(builders: List[Dict], key: str) -> None:
         )
 
 
-def update_demand_trader(
-    demand_trader: Dict, key: str, load_shedding_template
-) -> None:
-    """Update DemandTrader with load shedding information of resp. scenario"""
-    # replace config with the one including price-based shedding
-    replace_yaml_entries(
-        demand_trader,
-        key,
-        entries=load_shedding_template,
-    )
-    # adjust values to respective scenario
-    replace_yaml_entries(
-        demand_trader,
-        key,
-        entries=["ValueOfLostLoad", "DemandSeries"],
-        group="Loads",
-    )
-
-
 class Container:
     """Class holding Container objects with config and results information
 
@@ -194,7 +180,7 @@ class Container:
     :attr pd.DataFrame or NoneType baseline_power_prices: end consumer power price
     time series for the baseline load case (no price repercussions due to shifting)
     :attr dict or NoneType load_shifting_data: load shifting config from yaml
-    :attr list dynamic_components: dynamic tarrif components
+    :attr list dynamic_components: dynamic tariff components
     :attr dict or NoneType summary: parameter summary retrieved from results
     :attr dict or pd.Series summary_series: parameter summary as Series
     """
@@ -259,7 +245,7 @@ class Container:
         self.baseline_power_prices = baseline_power_prices
 
     def set_load_shifting_data_and_dynamic_components(self) -> None:
-        """Retrieve load shifting config including dynamic tarrif components from input yaml"""
+        """Retrieve load shifting config incl. dynamic tariff components from input yaml"""
         self.load_shifting_data = [
             agent
             for agent in self.scenario_yaml["Agents"]
@@ -296,12 +282,77 @@ class Container:
         )
 
     def add_load_shifting_config(self, key: str, templates: Dict) -> None:
-        """Add a load shifting agent to scenario and adjust its configuration"""
-        add_load_shifting_agent(templates["load_shifting"], key)
+        """Add a load shifting agent to scenario and adjust configuration"""
+        self.add_load_shifting_agent(templates["load_shifting"], key)
         add_load_shifting_tariff(
             templates["tariffs"], templates["load_shifting"], key
         )
         self.scenario_yaml["Agents"].append(templates["load_shifting"])
+
+    def add_load_shifting_agent(
+        self, load_shifting_config: Dict, key: str
+    ) -> None:
+        """Add load shifting agent sceleton incl. technical parameters"""
+        # Update time series information
+        replace_yaml_entries(
+            load_shifting_config,
+            key,
+            entries=[
+                "PowerUpAvailability",
+                "PowerDownAvailability",
+                "BaselineLoadTimeSeries",
+            ],
+            group="LoadShiftingPortfolio",
+        )
+        # Update scalar information with information from file
+        potential_parameters = self.read_parameter_info(
+            key,
+            (
+                f"{self.config_workflow['load_shifting_focus_cluster']}"
+                f"_potential_parameters_2020.csv"
+            ),
+        )
+        costs_parameters = self.read_parameter_info(
+            key,
+            (
+                f"{self.config_workflow['load_shifting_focus_cluster']}"
+                f"_variable_costs_2020.csv"
+            ),
+        )
+        parameters = {
+            "PowerInMW": max(
+                float(potential_parameters["potential_neg_overall"]),
+                float(potential_parameters["potential_pos_overall"]),
+            ),
+            "MaximumShiftTimeInHours": math.ceil(
+                float(potential_parameters["shifting_duration"])
+            ),
+            "InterferenceTimeInHours": math.ceil(
+                min(
+                    float(potential_parameters["interference_duration_neg"]),
+                    float(potential_parameters["interference_duration_pos"]),
+                )
+            ),
+            "BaselinePeakLoadInMW": float(potential_parameters["max_cap"]),
+            "VariableShiftCostsInEURPerMWH": float(
+                costs_parameters["variable_costs"]
+            ),
+        }
+        replace_yaml_entries(
+            load_shifting_config,
+            key,
+            entries=parameters,
+            group="LoadShiftingPortfolio",
+        )
+
+    def read_parameter_info(self, key: str, file_name: str) -> Dict:
+        """Read and return parameter info"""
+        return pd.read_csv(
+            f"{self.config_workflow['input_folder']}/data/"
+            f"{key.split('_', 1)[0]}/"
+            f"{file_name}",
+            index_col=0,
+        ).to_dict()["2020"]
 
     def update_config_for_scenario(
         self, key: str, load_shedding_template: Dict
@@ -309,8 +360,9 @@ class Container:
         """Update time series values for a given scenario"""
         demand_trader = self.get_agents_by_type("DemandTrader")[0]  # only one
         predefined_builders = self.get_agents_by_type("PredefinedPlantBuilder")
-        update_demand_trader(demand_trader, key, load_shedding_template)
+        self.update_demand_trader(demand_trader, key, load_shedding_template)
         update_plant_builders(predefined_builders, key)
+        self.update_contracts_location()
 
     def get_agents_by_type(self, agent_type: str) -> List[Dict]:
         """Returns list of agents of given type"""
@@ -319,3 +371,48 @@ class Container:
             for agent in self.scenario_yaml["Agents"]
             if agent["Type"] == agent_type
         ]
+
+    def update_demand_trader(
+        self, demand_trader: Dict, key: str, load_shedding_template
+    ) -> None:
+        """Update DemandTrader with load shedding information of resp. scenario"""
+        # replace config with the one including price-based shedding
+        replace_yaml_entries(
+            demand_trader,
+            key,
+            entries=load_shedding_template,
+        )
+        # adjust values to respective scenario
+        replace_yaml_entries(
+            demand_trader,
+            key,
+            entries=["DemandSeries"],
+            group="Loads",
+        )
+        # Update scalar VOLL information with information from file
+        parameters = {}
+        for shedding_cluster in self.config_workflow["load_shedding_clusters"]:
+            parameters[shedding_cluster] = {}
+            costs_parameters = self.read_parameter_info(
+                key,
+                f"{shedding_cluster}_variable_costs_2020.csv",
+            )
+            parameters[shedding_cluster]["ValueOfLostLoad"] = float(
+                costs_parameters["variable_costs_shed"]
+            )
+
+        replace_yaml_entries(
+            demand_trader,
+            key,
+            entries=parameters,
+            group="Loads",
+        )
+
+    def update_contracts_location(self):
+        """Update contract location to include load shedding into the analyses"""
+        pass
+
+    def save_scenario_yaml(self) -> None:
+        """Save 'scenario_yaml' attribute to yaml file"""
+        with open(self.scenario, "w") as file:
+            yaml.dump(self.scenario_yaml, file, sort_keys=False)

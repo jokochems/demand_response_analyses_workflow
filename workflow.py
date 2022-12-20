@@ -42,12 +42,18 @@ config_workflow = {
         "50": "scenario_w_dr_50",
         "95": "scenario_w_dr_95",
     },
-    "make_scenario": False,
+    "load_shifting_focus_cluster": "ind_cluster_shift_only",
+    "load_shedding_clusters": [
+        "ind_cluster_shed_only",
+        "ind_cluster_shift_shed",
+        "hoho_cluster_shift_shed",
+    ],
+    "make_scenario": True,
     "run_amiris": True,
     "convert_results": True,
     "process_results": True,
     "use_baseline_prices_for_comparison": True,
-    "write_results": False,
+    "write_results": True,
     "aggregate_results": True,
     "evaluate_cross_scenarios": True,
     "make_plots": True,
@@ -149,7 +155,10 @@ if __name__ == "__main__":
 
         if scenario != baseline_scenario:
             cont.add_load_shifting_config(dr_scen, templates)
-            cont.update_config_for_scenario(dr_scen, templates["load_shedding"])
+            cont.update_config_for_scenario(
+                dr_scen, templates["load_shedding"]
+            )
+            cont.save_scenario_yaml()
 
         else:
             # No need to change config for baseline scenario
