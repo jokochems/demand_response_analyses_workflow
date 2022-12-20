@@ -1,0 +1,10 @@
+Attributes:
+  Loads:
+    - ValueOfLostLoad: 3000.0
+      DemandSeries: "./inputs/data/50/demand_after_flex_ts.csv"
+    - ValueOfLostLoad: "./inputs/data/50/ind_cluster_shed_only_variable_costs_shed.csv"
+      DemandSeries: "./inputs/data/50/availability_shedding_ind_cluster_shed_only.csv"
+    - ValueOfLostLoad: "./inputs/data/50/ind_cluster_shift_shed_variable_costs_shed.csv"
+      DemandSeries: "./inputs/data/50/availability_shedding_ind_cluster_shift_shed.csv"
+    - ValueOfLostLoad: "./inputs/data/50/hoho_cluster_shift_shed_variable_costs_shed.csv"
+      DemandSeries: "./inputs/data/50/availability_shedding_hoho_cluster_shift_shed.csv"
