@@ -32,12 +32,12 @@ def calculate_dynamic_price_time_series(
         power_prices = pd.read_csv(
             cont.config_workflow["output_folder"]
             + cont.trimmed_baseline_scenario
-            + "/EnergyExchange.csv",
+            + "/EnergyExchangeMulti.csv",
             sep=";",
         )
     else:
         power_prices = pd.read_csv(
-            cont.config_convert[Options.OUTPUT] + "/EnergyExchange.csv", sep=";"
+            cont.config_convert[Options.OUTPUT] + "/EnergyExchangeMulti.csv", sep=";"
         )
 
     power_prices = power_prices[["ElectricityPriceInEURperMWH"]]
