@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 import numpy as np
 import pandas as pd
@@ -13,9 +13,21 @@ def add_abs_values(results: pd.DataFrame, columns: List[str]) -> None:
         results["Absolute" + col] = results[col].abs()
 
 
-def add_baseline_load_profile(results: pd.DataFrame, file_name: str) -> None:
+def add_baseline_load_profile(
+    results: pd.DataFrame, cont: Container, key: str
+) -> None:
     """Add baseline load profile to results data"""
-    baseline_load_profile = pd.read_excel(file_name)["absolute"].values
+    baseline_load_profile = pd.read_csv(
+        f"{cont.config_workflow['input_folder']}/data/{key.split('_', 1)[0]}/"
+        f"{cont.config_workflow['baseline_load_file']}_"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}.csv",
+        sep=";",
+        header=None,
+    )[1]
+    baseline_peak_load = cont.load_shifting_data["Attributes"][
+        "LoadShiftingPortfolio"
+    ]["BaselinePeakLoadInMW"]
+    baseline_load_profile *= baseline_peak_load
     results["BaselineLoadProfile"] = baseline_load_profile
 
 
@@ -37,15 +49,18 @@ def calculate_dynamic_price_time_series(
         )
     else:
         power_prices = pd.read_csv(
-            cont.config_convert[Options.OUTPUT] + "/EnergyExchangeMulti.csv", sep=";"
+            cont.config_convert[Options.OUTPUT] + "/EnergyExchangeMulti.csv",
+            sep=";",
         )
 
     power_prices = power_prices[["ElectricityPriceInEURperMWH"]]
     for component in cont.dynamic_components:
         conditions = [
-            power_prices["ElectricityPriceInEURperMWH"].values * component["Multiplier"]
+            power_prices["ElectricityPriceInEURperMWH"].values
+            * component["Multiplier"]
             < component["LowerBound"],
-            power_prices["ElectricityPriceInEURperMWH"].values * component["Multiplier"]
+            power_prices["ElectricityPriceInEURperMWH"].values
+            * component["Multiplier"]
             > component["UpperBound"],
         ]
         choices = [

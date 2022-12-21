@@ -65,7 +65,7 @@ config_workflow = {
         "Analysis_2022-05-12_capacity_charges": "with capacity charge",
     },
     "params_to_evaluate": ["PeakLoadChange", "NetSavings"],
-    "baseline_load_file": "C:/Users/koch_j0/AMIRIS/asgard/result/demand_response_eninnov/00_Evaluation/ind_cluster_shift_only_baseline_load.xlsx",  # noqa: E501
+    "baseline_load_file": "baseline_load_profile",
 }
 
 config_plotting = {
@@ -171,8 +171,8 @@ if __name__ == "__main__":
         if config_workflow["convert_results"]:
             convert_amiris_results(cont)
         if config_workflow["process_results"] and "_wo_dr" not in scenario:
-            calc_basic_load_shifting_results(cont)
             obtain_scenario_and_baseline_prices(cont)
+            calc_basic_load_shifting_results(cont, dr_scen)
             add_power_payments(
                 cont, config_workflow["use_baseline_prices_for_comparison"]
             )

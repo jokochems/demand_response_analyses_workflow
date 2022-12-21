@@ -217,10 +217,10 @@ class Container:
                 "Group": "BusinessModel",
                 "Attribute": "AverageMarketPriceInEURPerMWH",
             },
-            "EEG_SURCHARGE": {
-                "Group": "Policy",
-                "Attribute": "EEGSurchargeInEURPerMWH",
-            },
+            # "EEG_SURCHARGE": {
+            #     "Group": "Policy",
+            #     "Attribute": "EEGSurchargeInEURPerMWH",
+            # },
             "VOLUMETRIC_NETWORK_CHARGE": {
                 "Group": "Policy",
                 "Attribute": "VolumetricNetworkChargeInEURPerMWH",
