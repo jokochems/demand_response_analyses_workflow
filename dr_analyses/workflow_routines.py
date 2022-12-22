@@ -1,6 +1,7 @@
 import os
 from typing import List, Dict
 
+import pandas as pd
 from fameio.scripts.convert_results import run as convert_results
 from fameio.scripts.make_config import run as make_config
 from fameio.source.cli import Options
@@ -34,6 +35,77 @@ def get_all_yaml_files_in_folder_except(
         if file.endswith(".yaml")
         if file not in file_list
     ]
+
+
+def prepare_tariff_configs(config: Dict):
+    """Read, prepare and return load shifting tariff model configs"""
+    tariff_config_template = load_yaml(
+        f"{config['template_folder']}tariff_model_config_template.yaml"
+    )["Configs"]
+
+    parameterization = obtain_parameterization_from_file(config)
+
+    for el in range(len(parameterization)):
+        tariff_config_template.append(tariff_config_template[0].copy())
+    tariff_config_template = tariff_config_template[:-1]
+
+    for number, (name, values) in enumerate(parameterization.iterrows()):
+        tariff_config_template[number]["Name"] = name
+        tariff_config_template[number]["OtherSurchargesInEURPerMWH"] = values[
+            "static_tariff"
+        ]
+        tariff_config_template[number][
+            "CapacityBasedNetworkChargesInEURPerMW"
+        ] = values["capacity_tariff"]
+        # TODO: Add dynamic tariff components; in case nan: use DUMMY
+
+    return tariff_config_template
+
+
+def obtain_parameterization_from_file(config: Dict) -> pd.DataFrame:
+    """Obtain data to derive parameterization from Excel file"""
+    sheet_names = [
+        f"Multiplier_{dynamic_share}_dyn_{capacity_share}_LP"
+        for dynamic_share in [20, 40, 60, 80, 100]
+        for capacity_share in [0, 20, 40, 60, 80]
+    ]
+    parameterization = pd.DataFrame(
+        columns=["multiplier", "static_tariff", "capacity_tariff"]
+    )
+    overview = pd.read_excel(
+        f"{config['input_folder']}{config['tariff_config_file']}",
+        sheet_name="tariff_shares",
+        nrows=36,
+        index_col=[0, 1],
+    )
+    overview = overview[["LP (€/kW*a)", "OTHER_COMPONENTS -> STATIC PARTS"]]
+    overview["new_index"] = (
+        overview.index.get_level_values(0).astype(str)
+        + "_dynamic_"
+        + overview.index.get_level_values(1).astype(str)
+        + "_LP"
+    )
+    overview.set_index("new_index", inplace=True)
+    parameterization["static_tariff"] = overview[
+        "OTHER_COMPONENTS -> STATIC PARTS"
+    ]
+    parameterization["capacity_tariff"] = overview["LP (€/kW*a)"]
+
+    for sheet in sheet_names:
+        multiplier = pd.read_excel(
+            f"{config['input_folder']}{config['tariff_config_file']}",
+            sheet_name=sheet,
+            usecols="H:I",
+            nrows=8,
+            index_col=0,
+            header=None,
+        )
+        index_name = sheet.split("_", 1)[-1].replace("dyn", "dynamic")
+        parameterization.at[index_name, "multiplier"] = multiplier.at[
+            "multiplier with bounds", 8
+        ]
+
+    return parameterization
 
 
 def read_tariff_configs(config: Dict):

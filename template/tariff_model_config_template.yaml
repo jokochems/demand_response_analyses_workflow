@@ -1,0 +1,10 @@
+Configs:
+  - Name: 0_dynamic_0_LP
+    AverageMarketPriceInEURPerMWH: 0
+    OtherSurchargesInEURPerMWH: 0
+    CapacityBasedNetworkChargesInEURPerMW: 0
+    DynamicTariffComponents:
+      - ComponentName: POWER_PRICE
+        Multiplier: 1.0
+        LowerBound: -500.0
+        UpperBound: 3000.0
