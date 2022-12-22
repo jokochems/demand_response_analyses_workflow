@@ -162,13 +162,14 @@ if __name__ == "__main__":
             )
             cont.save_scenario_yaml()
 
-        else:
-            # No need to change config for baseline scenario
-            continue
-
-        # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
-        if dr_scen not in ["5_20_dynamic_0_LP", "5_0_dynamic_0_LP"]:
-            continue
+        # Uncomment the following code for dev purposes; Remove once finalized
+        # else:
+        #     # No need to change config for baseline scenario
+        #     continue
+        #
+        # # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
+        # if dr_scen not in ["5_20_dynamic_0_LP", "5_0_dynamic_0_LP"]:
+        #     continue
 
         if config_workflow["make_scenario"]:
             make_scenario_config(cont)
