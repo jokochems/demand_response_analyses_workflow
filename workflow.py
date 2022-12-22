@@ -207,4 +207,5 @@ if __name__ == "__main__":
 
     if config_workflow["evaluate_cross_runs"]:
         param_results = read_param_results_for_runs(config_workflow)
-        plot_cross_run_comparison(config_workflow, param_results)
+        if len(param_results) > 0:
+            plot_cross_run_comparison(config_workflow, param_results)
