@@ -83,7 +83,7 @@ Agents:
     Id: 6
     Attributes:
       DistributionMethod: SAME_SHARES
-      ForecastPeriodInHours: 24
+      ForecastPeriodInHours: 168
       ForecastRequestOffsetInSeconds: 27
 
   # Include LoadShiftingTrader for cases considering demand response

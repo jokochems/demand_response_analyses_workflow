@@ -11,16 +11,18 @@ from dr_analyses.results_subroutines import (
 )
 
 
-def calc_basic_load_shifting_results(cont: Container) -> None:
+def calc_basic_load_shifting_results(cont: Container, key: str) -> None:
     """Create basic results for scenario and add them to Container object
 
     :param Container cont: container object holding configuration
+    :param str key: Identifier for current scenario
     """
     cont.config_convert[Options.OUTPUT] = (
         cont.config_workflow["output_folder"] + cont.trimmed_scenario
     )
     results = pd.read_csv(
-        f"{cont.config_convert[Options.OUTPUT]}/LoadShiftingTrader.csv", sep=";"
+        f"{cont.config_convert[Options.OUTPUT]}/LoadShiftingTrader.csv",
+        sep=";",
     )
 
     results = (
@@ -29,8 +31,10 @@ def calc_basic_load_shifting_results(cont: Container) -> None:
         .reset_index(drop=True)
     )
     add_abs_values(results, ["NetAwardedPower", "StoredMWh"])
-    results["ShiftCycleEnd"] = np.where(results["CurrentShiftTime"].diff() < 0, 1, 0)
-    add_baseline_load_profile(results, cont.config_workflow["baseline_load_file"])
+    results["ShiftCycleEnd"] = np.where(
+        results["CurrentShiftTime"].diff() < 0, 1, 0
+    )
+    add_baseline_load_profile(results, cont, key)
     results["LoadAfterShifting"] = (
         results["BaselineLoadProfile"] + results["NetAwardedPower"]
     )
@@ -57,6 +61,8 @@ def add_power_payments(
     """Add power payments to results DataFrame
 
     :param Container cont: container object holding configuration and results
+    :param bool use_baseline_prices_for_comparison: indicating
+    whether to use baseline power prices for comparison
     """
     cont.results["BaselineTotalPayments"] = 0
     cont.results["ShiftingTotalPayments"] = 0
@@ -70,12 +76,16 @@ def add_power_payments(
             cont.results["BaselineLoadProfile"] * price
         )
 
-        cont.results["BaselineTotalPayments"] += cont.results[f"Baseline{col}Payment"]
+        cont.results["BaselineTotalPayments"] += cont.results[
+            f"Baseline{col}Payment"
+        ]
         cont.results[f"Shifting{col}Payment"] = (
             cont.results["LoadAfterShifting"] * cont.power_prices[col]
         )
 
-        cont.results["ShiftingTotalPayments"] += cont.results[f"Shifting{col}Payment"]
+        cont.results["ShiftingTotalPayments"] += cont.results[
+            f"Shifting{col}Payment"
+        ]
 
 
 def write_results(cont: Container) -> None:

@@ -36,6 +36,8 @@ config_workflow = {
     "input_folder": "./inputs/",
     "scenario_sub_folder": "scenarios",
     "output_folder": "./results/",
+    "data_output": "data_out/",
+    "plots_output": "plots_out/",
     "demand_response_scenarios": {
         "none": "scenario_wo_dr",
         "5": "scenario_w_dr_5",
@@ -65,7 +67,7 @@ config_workflow = {
         "Analysis_2022-05-12_capacity_charges": "with capacity charge",
     },
     "params_to_evaluate": ["PeakLoadChange", "NetSavings"],
-    "baseline_load_file": "C:/Users/koch_j0/AMIRIS/asgard/result/demand_response_eninnov/00_Evaluation/ind_cluster_shift_only_baseline_load.xlsx",  # noqa: E501
+    "baseline_load_file": "baseline_load_profile",
 }
 
 config_plotting = {
@@ -160,9 +162,14 @@ if __name__ == "__main__":
             )
             cont.save_scenario_yaml()
 
-        else:
-            # No need to change config for baseline scenario
-            continue
+        # Uncomment the following code for dev purposes; Remove once finalized
+        # else:
+        #     # No need to change config for baseline scenario
+        #     continue
+        #
+        # # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
+        # if dr_scen not in ["5_20_dynamic_0_LP", "5_0_dynamic_0_LP"]:
+        #     continue
 
         if config_workflow["make_scenario"]:
             make_scenario_config(cont)
@@ -171,8 +178,8 @@ if __name__ == "__main__":
         if config_workflow["convert_results"]:
             convert_amiris_results(cont)
         if config_workflow["process_results"] and "_wo_dr" not in scenario:
-            calc_basic_load_shifting_results(cont)
             obtain_scenario_and_baseline_prices(cont)
+            calc_basic_load_shifting_results(cont, dr_scen)
             add_power_payments(
                 cont, config_workflow["use_baseline_prices_for_comparison"]
             )
@@ -182,6 +189,7 @@ if __name__ == "__main__":
             calc_summary_parameters(cont)
             scenario_results[cont.trimmed_scenario] = cont.summary_series
 
+    # TODO: Update / fix this part here
     if config_workflow["evaluate_cross_scenarios"]:
         if not scenario_results:
             for scenario in scenario_files:
@@ -200,4 +208,5 @@ if __name__ == "__main__":
 
     if config_workflow["evaluate_cross_runs"]:
         param_results = read_param_results_for_runs(config_workflow)
-        plot_cross_run_comparison(config_workflow, param_results)
+        if len(param_results) > 0:
+            plot_cross_run_comparison(config_workflow, param_results)

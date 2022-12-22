@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
+from dr_analyses.workflow_routines import make_directory_if_missing
+
 
 def configure_plots(config_plotting: Dict) -> None:
     """Update matplotlib plotting paramters"""
@@ -29,6 +31,11 @@ def plot_bar_charts(
             "rename_dict": {"columns": {}, "rows": {}, "parameters": {}},
             "x_label": None,
         }
+
+    plots_output_folder = (
+        f"{config_workflow['output_folder']}{config_workflow['plots_output']}"
+    )
+    make_directory_if_missing(plots_output_folder)
 
     for param, param_results in all_parameter_results.items():
         # Do what control freak demands (renaming etc.)
@@ -64,14 +71,16 @@ def plot_bar_charts(
         #     ncol=1,
         # )
         _ = plt.legend(
-            bbox_to_anchor=(0.01, 0.98), loc="upper left", fancybox=False, shadow=False, ncol=3
+            bbox_to_anchor=(0.01, 0.98),
+            loc="upper left",
+            fancybox=False,
+            shadow=False,
+            ncol=3,
         )
         _ = ax.set_ylabel(param)
         _ = plt.tight_layout()
 
-        _ = fig.savefig(
-            config_workflow["output_folder"] + param + ".png", dpi=300
-        )
+        _ = fig.savefig(f"{plots_output_folder}{param}.png", dpi=300)
         plt.close(fig)
         # plt.show()
 

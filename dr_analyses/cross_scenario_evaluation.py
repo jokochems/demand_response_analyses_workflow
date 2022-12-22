@@ -3,6 +3,7 @@ from typing import Dict
 import pandas as pd
 
 from dr_analyses.container import trim_file_name
+from dr_analyses.workflow_routines import make_directory_if_missing
 
 
 def read_scenario_result(config_workflow: Dict, scenario: str) -> pd.Series:
@@ -23,26 +24,30 @@ def concat_results(scenario_results: Dict) -> pd.DataFrame:
         keys=scenario_results.keys(),
         axis=1,
     )
-    cost_groups = {
-        "low": "low",
-        "medium": "medium",
-        "high": "high",
+    capacity_tariff_share_groups = {
+        "0_LP": "0",
+        "20_LP": "20",
+        "4ß_LP": "40",
+        "60_LP": "60",
+        "80_LP": "80",
+        "100_LP": "100",
     }
-    tariff_groups = {
-        "static_tariff": "static_tariff",
-        "DA_plus_static": "DA",
-        "DA_plus_dynamicEEG": "DA_dyn_EEG",
-        "RTP_w": "RTP_w_Caps",
-        "RTP_no_cap": "RTP_wo_Caps",
+    dynamic_tariff_groups = {
+        "0_dynamic": "0",
+        "20_dynamic": "20",
+        "40_dynamic": "4ß",
+        "60_dynamic": "60",
+        "80_dynamic": "8ß",
+        "100_dynamic": "100",
     }
-    for key, val in cost_groups.items():
+    for key, val in capacity_tariff_share_groups.items():
         overall_results.loc[
-            "cost_group",
+            "capacity_tariff_share",
             [col for col in overall_results.columns if key in col],
         ] = val
-    for key, val in tariff_groups.items():
+    for key, val in dynamic_tariff_groups.items():
         overall_results.loc[
-            "tariff_group",
+            "dynamic_tariff_share",
             [col for col in overall_results.columns if key in col],
         ] = val
 
@@ -55,7 +60,7 @@ def evaluate_all_parameter_results(
     """Evaluate all parameter results and store them in a dict of DataFrames"""
     all_parameter_results = {}
     for param in overall_results.index:
-        if param in ["cost_group", "tariff_group"]:
+        if param in ["capacity_tariff_share", "dynamic_tariff_share"]:
             continue
         else:
             all_parameter_results[param] = evaluate_parameter_results(
@@ -69,18 +74,21 @@ def evaluate_parameter_results(
     config_workflow: Dict, overall_results: pd.DataFrame, param: str
 ) -> pd.DataFrame:
     """Pivot and evaluate parameter results"""
-    param_results = overall_results.loc[[param, "cost_group", "tariff_group"]].T
+    param_results = overall_results.loc[
+        [param, "capacity_tariff_share", "dynamic_tariff_share"]
+    ].T
     param_results = param_results.pivot(
-        index="cost_group", columns="tariff_group", values=param
-    )
-
-    # Define index and columns order
-    param_results = param_results.reindex(
-        index=["high", "medium", "low"],
-        columns=["DA", "DA_dyn_EEG", "RTP_w_Caps", "RTP_wo_Caps"],
+        index="capacity_tariff_share",
+        columns="dynamic_tariff_share",
+        values=param,
     )
 
     if config_workflow["write_results"]:
-        param_results.to_csv(config_workflow["output_folder"] + param + ".csv", sep=";")
+        data_output_folder = (
+            f"{config_workflow['output_folder']}"
+            f"{config_workflow['data_output']}"
+        )
+        make_directory_if_missing(data_output_folder)
+        param_results.to_csv(f"{data_output_folder}{param}.csv", sep=";")
 
     return param_results

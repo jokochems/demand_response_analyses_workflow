@@ -17,10 +17,14 @@ Configs:
     AverageMarketPriceInEURPerMWH: 10
     OtherSurchargesInEURPerMWH: 10
     CapacityBasedNetworkChargesInEURPerMW: 0
-    DynamicTariffComponents: []
+    DynamicTariffComponents:
+      - ComponentName: DUMMY
+        Multiplier: 1.0
 
   - Name: 0_dynamic_20_LP
     AverageMarketPriceInEURPerMWH: 8
     OtherSurchargesInEURPerMWH: 10
     CapacityBasedNetworkChargesInEURPerMW: 1000
-    DynamicTariffComponents: []
+    DynamicTariffComponents:
+      - ComponentName: DUMMY
+        Multiplier: 1.0
