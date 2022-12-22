@@ -55,24 +55,25 @@ def calculate_dynamic_price_time_series(
 
     power_prices = power_prices[["ElectricityPriceInEURperMWH"]]
     for component in cont.dynamic_components:
-        conditions = [
-            power_prices["ElectricityPriceInEURperMWH"].values
-            * component["Multiplier"]
-            < component["LowerBound"],
-            power_prices["ElectricityPriceInEURperMWH"].values
-            * component["Multiplier"]
-            > component["UpperBound"],
-        ]
-        choices = [
-            component["LowerBound"],
-            component["UpperBound"],
-        ]
-        power_prices[component["ComponentName"]] = np.select(
-            conditions,
-            choices,
-            power_prices["ElectricityPriceInEURperMWH"].values
-            * component["Multiplier"],
-        )
+        if component["ComponentName"] != "DUMMY":
+            conditions = [
+                power_prices["ElectricityPriceInEURperMWH"].values
+                * component["Multiplier"]
+                < component["LowerBound"],
+                power_prices["ElectricityPriceInEURperMWH"].values
+                * component["Multiplier"]
+                > component["UpperBound"],
+            ]
+            choices = [
+                component["LowerBound"],
+                component["UpperBound"],
+            ]
+            power_prices[component["ComponentName"]] = np.select(
+                conditions,
+                choices,
+                power_prices["ElectricityPriceInEURperMWH"].values
+                * component["Multiplier"],
+            )
     power_prices.drop(columns="ElectricityPriceInEURperMWH", inplace=True)
 
     if use_baseline_prices:
