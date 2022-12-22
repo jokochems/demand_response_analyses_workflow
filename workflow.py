@@ -36,6 +36,8 @@ config_workflow = {
     "input_folder": "./inputs/",
     "scenario_sub_folder": "scenarios",
     "output_folder": "./results/",
+    "data_output": "data_out/",
+    "plots_output": "plots_out/",
     "demand_response_scenarios": {
         "none": "scenario_wo_dr",
         "5": "scenario_w_dr_5",
@@ -164,6 +166,10 @@ if __name__ == "__main__":
             # No need to change config for baseline scenario
             continue
 
+        # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
+        if dr_scen not in ["5_20_dynamic_0_LP", "5_0_dynamic_0_LP"]:
+            continue
+
         if config_workflow["make_scenario"]:
             make_scenario_config(cont)
         if config_workflow["run_amiris"]:
@@ -182,6 +188,7 @@ if __name__ == "__main__":
             calc_summary_parameters(cont)
             scenario_results[cont.trimmed_scenario] = cont.summary_series
 
+    # TODO: Update / fix this part here
     if config_workflow["evaluate_cross_scenarios"]:
         if not scenario_results:
             for scenario in scenario_files:
