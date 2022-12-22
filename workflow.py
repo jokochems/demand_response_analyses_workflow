@@ -189,7 +189,6 @@ if __name__ == "__main__":
             calc_summary_parameters(cont)
             scenario_results[cont.trimmed_scenario] = cont.summary_series
 
-    # TODO: Update / fix this part here
     if config_workflow["evaluate_cross_scenarios"]:
         if not scenario_results:
             for scenario in scenario_files:
