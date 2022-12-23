@@ -1,7 +1,9 @@
 import os
 from typing import List, Dict
 
+import numpy as np
 import pandas as pd
+import yaml
 from fameio.scripts.convert_results import run as convert_results
 from fameio.scripts.make_config import run as make_config
 from fameio.source.cli import Options
@@ -51,13 +53,34 @@ def prepare_tariff_configs(config: Dict):
 
     for number, (name, values) in enumerate(parameterization.iterrows()):
         tariff_config_template[number]["Name"] = name
-        tariff_config_template[number]["OtherSurchargesInEURPerMWH"] = values[
+        tariff_config_template[number]["OtherSurchargesInEURPerMWH"] = float(values[
             "static_tariff"
-        ]
+        ])
         tariff_config_template[number][
             "CapacityBasedNetworkChargesInEURPerMW"
-        ] = values["capacity_tariff"]
-        # TODO: Add dynamic tariff components; in case nan: use DUMMY
+        ] = float(values["capacity_tariff"])
+
+        if not values["multiplier"] > 0:
+            component_name = "DUMMY"
+        else:
+            component_name = "POWER_PRICE"
+        tariff_config_template[number]["DynamicTariffComponents"] = [
+            {
+                "ComponentName": component_name,
+                "Multiplier": float(values["multiplier"]),
+                "LowerBound": -500,
+                "UpperBound": 3000,
+            }
+        ]
+
+    tariff_model_configs = {"Configs": tariff_config_template}
+
+    with open(f"{config['template_folder']}tariff_model_configs.yaml", "w") as file:
+        yaml.dump(
+            tariff_model_configs,
+            file,
+            sort_keys=False,
+        )
 
     return tariff_config_template
 
@@ -104,6 +127,7 @@ def obtain_parameterization_from_file(config: Dict) -> pd.DataFrame:
         parameterization.at[index_name, "multiplier"] = multiplier.at[
             "multiplier with bounds", 8
         ]
+    parameterization.fillna(0, inplace=True)
 
     return parameterization
 

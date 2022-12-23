@@ -29,6 +29,7 @@ from dr_analyses.workflow_routines import (
     read_load_shifting_template,
     read_load_shedding_template,
     prepare_tariff_configs,
+    read_tariff_configs,
 )
 
 config_workflow = {
@@ -51,7 +52,7 @@ config_workflow = {
         "ind_cluster_shift_shed",
         "hoho_cluster_shift_shed",
     ],
-    "prepare_tariff_config": True,
+    "prepare_tariff_config": False,
     "make_scenario": True,
     "run_amiris": True,
     "convert_results": True,
@@ -168,9 +169,9 @@ if __name__ == "__main__":
             cont.save_scenario_yaml()
 
         # Uncomment the following code for dev purposes; Remove once finalized
-        # else:
-        #     # No need to change config for baseline scenario
-        #     continue
+        else:
+            # No need to change config for baseline scenario
+            continue
         #
         # # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
         # if dr_scen not in ["5_20_dynamic_0_LP", "5_0_dynamic_0_LP"]:
