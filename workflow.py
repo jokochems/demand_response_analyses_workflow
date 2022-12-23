@@ -36,7 +36,7 @@ config_workflow = {
     "template_folder": "./template/",
     "input_folder": "./inputs/",
     "scenario_sub_folder": "scenarios",
-    "tariff_config_file": "tariff_configuration.xlsx",
+    "tariff_config_file": "tariff_configuration",
     "output_folder": "./results/",
     "data_output": "data_out/",
     "plots_output": "plots_out/",
@@ -52,7 +52,7 @@ config_workflow = {
         "ind_cluster_shift_shed",
         "hoho_cluster_shift_shed",
     ],
-    "prepare_tariff_config": False,
+    "prepare_tariff_config": True,
     "make_scenario": True,
     "run_amiris": True,
     "convert_results": True,
@@ -109,11 +109,15 @@ config_convert = {
 if __name__ == "__main__":
     make_directory_if_missing(f"{config_workflow['input_folder']}/scenarios/")
     if config_workflow["prepare_tariff_config"]:
-        prepare_tariff_configs(config_workflow)
+        for dr_scen in config_workflow[
+            "demand_response_scenarios"
+        ]:
+            if dr_scen != "none":
+                prepare_tariff_configs(config_workflow, dr_scen)
 
     # Store templates for reuse
     templates = {
-        "tariffs": read_tariff_configs(config_workflow),
+        "tariffs": {},
         "load_shifting": read_load_shifting_template(config_workflow),
         "load_shedding": read_load_shedding_template(config_workflow),
     }
@@ -124,7 +128,8 @@ if __name__ == "__main__":
         "demand_response_scenarios"
     ].items():
         if dr_scen != "none":
-            for tariff in templates["tariffs"]:
+            templates["tariffs"][dr_scen] = read_tariff_configs(config_workflow, dr_scen)
+            for tariff in templates["tariffs"][dr_scen]:
                 tariff_name = tariff["Name"]
 
                 scenario = (
@@ -169,9 +174,9 @@ if __name__ == "__main__":
             cont.save_scenario_yaml()
 
         # Uncomment the following code for dev purposes; Remove once finalized
-        else:
-            # No need to change config for baseline scenario
-            continue
+        # else:
+        #     # No need to change config for baseline scenario
+        #     continue
         #
         # # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
         # if dr_scen not in ["5_20_dynamic_0_LP", "5_0_dynamic_0_LP"]:

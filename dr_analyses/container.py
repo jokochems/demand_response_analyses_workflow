@@ -286,7 +286,7 @@ class Container:
         """Add a load shifting agent to scenario and adjust configuration"""
         self.add_load_shifting_agent(templates["load_shifting"], key)
         add_load_shifting_tariff(
-            templates["tariffs"], templates["load_shifting"], key
+            templates["tariffs"][key.split("_", 1)[0]], templates["load_shifting"], key
         )
         self.scenario_yaml["Agents"].append(templates["load_shifting"])
 

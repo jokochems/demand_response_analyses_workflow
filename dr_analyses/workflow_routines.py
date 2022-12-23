@@ -39,13 +39,14 @@ def get_all_yaml_files_in_folder_except(
     ]
 
 
-def prepare_tariff_configs(config: Dict):
+def prepare_tariff_configs(config: Dict, dr_scen: str):
     """Read, prepare and return load shifting tariff model configs"""
+    print(f"Preparing tariff configs for scenario {dr_scen}.")
     tariff_config_template = load_yaml(
         f"{config['template_folder']}tariff_model_config_template.yaml"
     )["Configs"]
 
-    parameterization = obtain_parameterization_from_file(config)
+    parameterization = obtain_parameterization_from_file(config, dr_scen)
 
     for el in range(len(parameterization)):
         tariff_config_template.append(tariff_config_template[0].copy())
@@ -53,9 +54,9 @@ def prepare_tariff_configs(config: Dict):
 
     for number, (name, values) in enumerate(parameterization.iterrows()):
         tariff_config_template[number]["Name"] = name
-        tariff_config_template[number]["OtherSurchargesInEURPerMWH"] = float(values[
-            "static_tariff"
-        ])
+        tariff_config_template[number]["OtherSurchargesInEURPerMWH"] = float(
+            values["static_tariff"]
+        )
         tariff_config_template[number][
             "CapacityBasedNetworkChargesInEURPerMW"
         ] = float(values["capacity_tariff"])
@@ -75,17 +76,22 @@ def prepare_tariff_configs(config: Dict):
 
     tariff_model_configs = {"Configs": tariff_config_template}
 
-    with open(f"{config['template_folder']}tariff_model_configs.yaml", "w") as file:
+    with open(
+        f"{config['template_folder']}tariff_model_configs_{dr_scen}.yaml", "w"
+    ) as file:
         yaml.dump(
             tariff_model_configs,
             file,
             sort_keys=False,
         )
 
+    print(f"Tariff configs for scenario {dr_scen} compiled.")
     return tariff_config_template
 
 
-def obtain_parameterization_from_file(config: Dict) -> pd.DataFrame:
+def obtain_parameterization_from_file(
+    config: Dict, dr_scen: str
+) -> pd.DataFrame:
     """Obtain data to derive parameterization from Excel file"""
     sheet_names = [
         f"Multiplier_{dynamic_share}_dyn_{capacity_share}_LP"
@@ -96,7 +102,7 @@ def obtain_parameterization_from_file(config: Dict) -> pd.DataFrame:
         columns=["multiplier", "static_tariff", "capacity_tariff"]
     )
     overview = pd.read_excel(
-        f"{config['input_folder']}{config['tariff_config_file']}",
+        f"{config['input_folder']}{config['tariff_config_file']}_{dr_scen}.xlsx",
         sheet_name="tariff_shares",
         nrows=36,
         index_col=[0, 1],
@@ -116,7 +122,7 @@ def obtain_parameterization_from_file(config: Dict) -> pd.DataFrame:
 
     for sheet in sheet_names:
         multiplier = pd.read_excel(
-            f"{config['input_folder']}{config['tariff_config_file']}",
+            f"{config['input_folder']}{config['tariff_config_file']}_{dr_scen}.xlsx",
             sheet_name=sheet,
             usecols="H:I",
             nrows=8,
@@ -132,11 +138,11 @@ def obtain_parameterization_from_file(config: Dict) -> pd.DataFrame:
     return parameterization
 
 
-def read_tariff_configs(config: Dict):
+def read_tariff_configs(config: Dict, dr_scen: str):
     """Read and return load shifting tariff model configs"""
-    return load_yaml(f"{config['template_folder']}tariff_model_configs.yaml")[
-        "Configs"
-    ]
+    return load_yaml(
+        f"{config['template_folder']}tariff_model_configs_{dr_scen}.yaml"
+    )["Configs"]
 
 
 def read_load_shifting_template(config: Dict):
