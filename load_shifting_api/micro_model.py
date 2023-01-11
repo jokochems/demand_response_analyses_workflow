@@ -74,6 +74,7 @@ def run_model(inputs: Inputs):
         max_capacity_up=inputs.max_capacity_up,
         efficiency=inputs.efficiency,
         activate_annual_limits=inputs.activate_annual_limits,
+        solver=inputs.solver,
     )
     extract_results(lsm, rounding_precision=3)
 
