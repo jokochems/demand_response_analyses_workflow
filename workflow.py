@@ -31,6 +31,7 @@ from dr_analyses.workflow_routines import (
     prepare_tariff_configs,
     read_tariff_configs,
 )
+from load_shifting_api.main import LoadShiftingApiThread
 
 config_workflow = {
     "template_folder": "./template/",
@@ -157,6 +158,9 @@ if __name__ == "__main__":
 
     scenario_results = {}
 
+    load_shifting_api_thread = LoadShiftingApiThread()
+    load_shifting_api_thread.start()
+
     for dr_scen, scenario in scenario_files.items():
         cont = Container(
             scenario,
@@ -174,13 +178,13 @@ if __name__ == "__main__":
             cont.save_scenario_yaml()
 
         # Uncomment the following code for dev purposes; Remove once finalized
-        # else:
-        #     # No need to change config for baseline scenario
-        #     continue
-        #
-        # # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
-        # if dr_scen not in ["5_20_dynamic_0_LP", "5_0_dynamic_0_LP"]:
-        #     continue
+        else:
+            # No need to change config for baseline scenario
+            continue
+
+        # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
+        if dr_scen not in ["5_20_dynamic_0_LP", "5_0_dynamic_0_LP"]:
+            continue
 
         if config_workflow["make_scenario"]:
             make_scenario_config(cont)
