@@ -26,15 +26,17 @@ from dr_analyses.workflow_routines import (
     make_scenario_config,
     run_amiris,
     make_directory_if_missing,
-    read_tariff_configs,
     read_load_shifting_template,
     read_load_shedding_template,
+    prepare_tariff_configs,
+    read_tariff_configs,
 )
 
 config_workflow = {
     "template_folder": "./template/",
     "input_folder": "./inputs/",
     "scenario_sub_folder": "scenarios",
+    "tariff_config_file": "tariff_configuration",
     "output_folder": "./results/",
     "data_output": "data_out/",
     "plots_output": "plots_out/",
@@ -50,6 +52,7 @@ config_workflow = {
         "ind_cluster_shift_shed",
         "hoho_cluster_shift_shed",
     ],
+    "prepare_tariff_config": True,
     "make_scenario": True,
     "run_amiris": True,
     "convert_results": True,
@@ -105,9 +108,16 @@ config_convert = {
 
 if __name__ == "__main__":
     make_directory_if_missing(f"{config_workflow['input_folder']}/scenarios/")
+    if config_workflow["prepare_tariff_config"]:
+        for dr_scen in config_workflow[
+            "demand_response_scenarios"
+        ]:
+            if dr_scen != "none":
+                prepare_tariff_configs(config_workflow, dr_scen)
+
     # Store templates for reuse
     templates = {
-        "tariffs": read_tariff_configs(config_workflow),
+        "tariffs": {},
         "load_shifting": read_load_shifting_template(config_workflow),
         "load_shedding": read_load_shedding_template(config_workflow),
     }
@@ -118,7 +128,8 @@ if __name__ == "__main__":
         "demand_response_scenarios"
     ].items():
         if dr_scen != "none":
-            for tariff in templates["tariffs"]:
+            templates["tariffs"][dr_scen] = read_tariff_configs(config_workflow, dr_scen)
+            for tariff in templates["tariffs"][dr_scen]:
                 tariff_name = tariff["Name"]
 
                 scenario = (
@@ -189,7 +200,6 @@ if __name__ == "__main__":
             calc_summary_parameters(cont)
             scenario_results[cont.trimmed_scenario] = cont.summary_series
 
-    # TODO: Update / fix this part here
     if config_workflow["evaluate_cross_scenarios"]:
         if not scenario_results:
             for scenario in scenario_files:
