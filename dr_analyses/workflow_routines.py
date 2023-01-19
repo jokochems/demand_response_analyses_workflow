@@ -145,18 +145,25 @@ def read_tariff_configs(config: Dict, dr_scen: str):
     )["Configs"]
 
 
-def read_load_shifting_template(config: Dict):
+def read_load_shifting_template(config: Dict) -> Dict:
     """Read and return load shifting tariff model configs"""
     return load_yaml(
         f"{config['template_folder']}" f"load_shifting_config_template.yaml"
     )["Agents"][0]
 
 
-def read_load_shedding_template(config: Dict):
+def read_load_shedding_template(config: Dict) -> Dict:
     """Read and return load shifting tariff model configs"""
     return load_yaml(
         f"{config['template_folder']}" f"load_shedding_config_template.yaml"
     )["Attributes"]
+
+
+def read_investment_expenses(config: Dict, dr_scen: str) -> pd.Series:
+    """Read and return investment expenses"""
+    path = f"{config['input_folder']}/{config['data_sub_folder']}/{dr_scen.split('_', 1)[0]}/"
+    file_name = f"{config['load_shifting_focus_cluster']}_specific_investments.csv"
+    return pd.read_csv(path + file_name, sep=";", index_col=0)
 
 
 def make_scenario_config(cont: Container) -> None:

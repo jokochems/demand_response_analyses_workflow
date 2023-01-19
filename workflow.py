@@ -8,6 +8,7 @@ from dr_analyses.cross_scenario_evaluation import (
     concat_results,
     evaluate_all_parameter_results,
     read_scenario_result,
+    calculate_net_present_values,
 )
 from dr_analyses.plotting import (
     plot_bar_charts,
@@ -30,12 +31,14 @@ from dr_analyses.workflow_routines import (
     read_load_shedding_template,
     prepare_tariff_configs,
     read_tariff_configs,
+    read_investment_expenses,
 )
 from load_shifting_api.main import LoadShiftingApiThread
 
 config_workflow = {
     "template_folder": "./template/",
     "input_folder": "./inputs/",
+    "data_sub_folder": "data",
     "scenario_sub_folder": "scenarios",
     "tariff_config_file": "tariff_configuration",
     "output_folder": "./results/",
@@ -53,14 +56,17 @@ config_workflow = {
         "ind_cluster_shift_shed",
         "hoho_cluster_shift_shed",
     ],
-    "prepare_tariff_config": True,
-    "make_scenario": True,
-    "run_amiris": True,
-    "convert_results": True,
-    "process_results": True,
-    "use_baseline_prices_for_comparison": True,
+    "prepare_tariff_config": False,
+    "amiris_analyses": {
+        "start_web_service": False,
+        "make_scenario": False,
+        "run_amiris": False,
+        "convert_results": False,
+        "process_results": False,
+        "use_baseline_prices_for_comparison": True,
+        "aggregate_results": False,
+    },
     "write_results": True,
-    "aggregate_results": True,
     "evaluate_cross_scenarios": True,
     "make_plots": True,
     "evaluate_cross_runs": True,
@@ -110,9 +116,7 @@ config_convert = {
 if __name__ == "__main__":
     make_directory_if_missing(f"{config_workflow['input_folder']}/scenarios/")
     if config_workflow["prepare_tariff_config"]:
-        for dr_scen in config_workflow[
-            "demand_response_scenarios"
-        ]:
+        for dr_scen in config_workflow["demand_response_scenarios"]:
             if dr_scen != "none":
                 prepare_tariff_configs(config_workflow, dr_scen)
 
@@ -124,12 +128,15 @@ if __name__ == "__main__":
     }
 
     scenario_files = {}
+    investment_expenses = {}
     baseline_scenario = None
     for dr_scen, dr_scen_name in config_workflow[
         "demand_response_scenarios"
     ].items():
         if dr_scen != "none":
-            templates["tariffs"][dr_scen] = read_tariff_configs(config_workflow, dr_scen)
+            templates["tariffs"][dr_scen] = read_tariff_configs(
+                config_workflow, dr_scen
+            )
             for tariff in templates["tariffs"][dr_scen]:
                 tariff_name = tariff["Name"]
 
@@ -143,6 +150,10 @@ if __name__ == "__main__":
                     scenario,
                 )
                 scenario_files[f"{dr_scen}_{tariff_name}"] = scenario
+
+            investment_expenses[dr_scen] = read_investment_expenses(
+                config_workflow, dr_scen,
+            )
 
         else:
             scenario = (
@@ -158,8 +169,9 @@ if __name__ == "__main__":
 
     scenario_results = {}
 
-    load_shifting_api_thread = LoadShiftingApiThread()
-    load_shifting_api_thread.start()
+    if config_workflow["amiris_analyses"]["start_web_service"]:
+        load_shifting_api_thread = LoadShiftingApiThread()
+        load_shifting_api_thread.start()
 
     for dr_scen, scenario in scenario_files.items():
         cont = Container(
@@ -186,31 +198,53 @@ if __name__ == "__main__":
         if dr_scen not in ["5_20_dynamic_0_LP", "5_0_dynamic_0_LP"]:
             continue
 
-        if config_workflow["make_scenario"]:
+        if config_workflow["amiris_analyses"]["make_scenario"]:
             make_scenario_config(cont)
-        if config_workflow["run_amiris"]:
+        if config_workflow["amiris_analyses"]["run_amiris"]:
             run_amiris(run_properties, cont)
-        if config_workflow["convert_results"]:
+        if config_workflow["amiris_analyses"]["convert_results"]:
             convert_amiris_results(cont)
-        if config_workflow["process_results"] and "_wo_dr" not in scenario:
+        if (
+            config_workflow["amiris_analyses"]["process_results"]
+            and "_wo_dr" not in scenario
+        ):
             obtain_scenario_and_baseline_prices(cont)
             calc_basic_load_shifting_results(cont, dr_scen)
             add_power_payments(
-                cont, config_workflow["use_baseline_prices_for_comparison"]
+                cont,
+                config_workflow["amiris_analyses"][
+                    "use_baseline_prices_for_comparison"
+                ],
             )
             if config_workflow["write_results"]:
                 write_results(cont)
-        if config_workflow["aggregate_results"] and "_wo_dr" not in scenario:
+        if (
+            config_workflow["amiris_analyses"]["aggregate_results"]
+            and "_wo_dr" not in scenario
+        ):
             calc_summary_parameters(cont)
             scenario_results[cont.trimmed_scenario] = cont.summary_series
 
     if config_workflow["evaluate_cross_scenarios"]:
         if not scenario_results:
-            for scenario in scenario_files:
-                scenario_results[
-                    trim_file_name(scenario)
-                ] = read_scenario_result(config_workflow, scenario)
+            scenario_files = {
+                k: v
+                for k, v in scenario_files.items()
+                if k
+                in [
+                    "none",
+                    "5_0_dynamic_0_LP",
+                    "5_0_dynamic_20_LP",
+                    "5_20_dynamic_0_LP",
+                ]
+            }
+            for dr_scen, scenario in scenario_files.items():
+                if dr_scen != "none":
+                    scenario_results[dr_scen] = read_scenario_result(
+                        config_workflow, scenario
+                    )
         overall_results = concat_results(scenario_results)
+        calculate_net_present_values(overall_results, investment_expenses[dr_scen.split("_", 1)[0]])
         all_parameter_results = evaluate_all_parameter_results(
             config_workflow, overall_results
         )

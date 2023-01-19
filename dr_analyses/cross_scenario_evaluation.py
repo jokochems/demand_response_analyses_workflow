@@ -27,7 +27,7 @@ def concat_results(scenario_results: Dict) -> pd.DataFrame:
     capacity_tariff_share_groups = {
         "0_LP": "0",
         "20_LP": "20",
-        "4ß_LP": "40",
+        "40_LP": "40",
         "60_LP": "60",
         "80_LP": "80",
         "100_LP": "100",
@@ -35,9 +35,9 @@ def concat_results(scenario_results: Dict) -> pd.DataFrame:
     dynamic_tariff_groups = {
         "0_dynamic": "0",
         "20_dynamic": "20",
-        "40_dynamic": "4ß",
+        "40_dynamic": "40",
         "60_dynamic": "60",
-        "80_dynamic": "8ß",
+        "80_dynamic": "80",
         "100_dynamic": "100",
     }
     for key, val in capacity_tariff_share_groups.items():
@@ -92,3 +92,10 @@ def evaluate_parameter_results(
         param_results.to_csv(f"{data_output_folder}{param}.csv", sep=";")
 
     return param_results
+
+
+def calculate_net_present_values(overall_results: pd.DaraFrame, ):
+    """Calculate and return net present values for demand response investments made
+    :return:
+    """
+    pass
