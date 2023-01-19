@@ -18,7 +18,7 @@ from dr_analyses.plotting import (
 from dr_analyses.results_summary import calc_summary_parameters
 from dr_analyses.results_workflow import (
     add_power_payments,
-    calc_basic_load_shifting_results,
+    calc_load_shifting_results,
     obtain_scenario_and_baseline_prices,
     write_results,
 )
@@ -56,6 +56,7 @@ config_workflow = {
         "ind_cluster_shift_shed",
         "hoho_cluster_shift_shed",
     ],
+    "interest_rate": 0.05,
     "prepare_tariff_config": False,
     "amiris_analyses": {
         "start_web_service": False,
@@ -209,7 +210,7 @@ if __name__ == "__main__":
             and "_wo_dr" not in scenario
         ):
             obtain_scenario_and_baseline_prices(cont)
-            calc_basic_load_shifting_results(cont, dr_scen)
+            calc_load_shifting_results(cont, dr_scen)
             add_power_payments(
                 cont,
                 config_workflow["amiris_analyses"][
@@ -223,6 +224,7 @@ if __name__ == "__main__":
             and "_wo_dr" not in scenario
         ):
             calc_summary_parameters(cont)
+            calculate_net_present_values(cont, dr_scen, investment_expenses)
             scenario_results[cont.trimmed_scenario] = cont.summary_series
 
     if config_workflow["evaluate_cross_scenarios"]:
@@ -244,7 +246,7 @@ if __name__ == "__main__":
                         config_workflow, scenario
                     )
         overall_results = concat_results(scenario_results)
-        calculate_net_present_values(overall_results, investment_expenses[dr_scen.split("_", 1)[0]])
+
         all_parameter_results = evaluate_all_parameter_results(
             config_workflow, overall_results
         )

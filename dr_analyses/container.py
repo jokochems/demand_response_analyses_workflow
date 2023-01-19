@@ -176,6 +176,8 @@ class Container:
     :attr str trimmed_baseline_scenario: baseline scenario (name only)
     :attr pd.DataFrame or NoneType results: load shifting results from the
     simulation
+    :attr pd.Series or NoneType cashflows: annual load shifting cashflows,
+    i.e. (opportunity) revenues - expenses
     :attr pd.DataFrame or NoneType power_prices: end consumer power price
     time series
     :attr pd.DataFrame or NoneType baseline_power_prices: end consumer power price
@@ -202,6 +204,7 @@ class Container:
         self.trimmed_baseline_scenario = trim_file_name(baseline_scenario)
         self.scenario_yaml = load_yaml(self.scenario)
         self.results = None
+        self.cashflows = None
         self.power_prices = None
         self.baseline_power_prices = None
         self.load_shifting_data = None
@@ -427,3 +430,7 @@ class Container:
         """Save 'scenario_yaml' attribute to yaml file"""
         with open(self.scenario, "w") as file:
             yaml.dump(self.scenario_yaml, file, sort_keys=False)
+
+    def set_cashflows(self, cashflows: pd.Series):
+        """Save cashflow results in container object"""
+        self.cashflows = cashflows

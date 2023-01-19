@@ -1,0 +1,16 @@
+name: demandResponseEnv
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8
+  - pip
+  - pip:
+      - fameio>=1.6
+      - ioproc>=2.0.11
+      - matplotlib>=3.5.1
+      - seaborn
+      - fastapi[all]
+      - pyomo
+      - numpy
+      - numpy-financial
+      - pandas

@@ -1,4 +1,7 @@
+from typing import Dict
+
 import numpy as np
+import numpy_financial as npf
 import pandas as pd
 from fameio.source.cli import Options
 
@@ -11,8 +14,8 @@ from dr_analyses.results_subroutines import (
 )
 
 
-def calc_basic_load_shifting_results(cont: Container, key: str) -> None:
-    """Create basic results for scenario and add them to Container object
+def calc_load_shifting_results(cont: Container, key: str) -> None:
+    """Create shifting results for scenario and add them to Container object
 
     :param Container cont: container object holding configuration
     :param str key: Identifier for current scenario
@@ -39,6 +42,27 @@ def calc_basic_load_shifting_results(cont: Container, key: str) -> None:
         results["BaselineLoadProfile"] + results["NetAwardedPower"]
     )
     cont.set_results(results)
+    cont.set_cashflows(extract_load_shifting_cashflows(cont, key))
+
+
+def calculate_net_present_values(
+    cont: Container, dr_scen: str, investment_expenses: Dict
+) -> float:
+    """Calculate and return net present values for demand response investments made
+    :return: DataFrame holding net present values for the respective case
+    """
+    investment_expenses = investment_expenses[dr_scen.split("_", 1)[0]]
+    interest_rate = cont.config_workflow["interest_rate"]
+    cash_flows = [-investment_expenses.iloc[0, 0]]
+    cash_flows.extend(extract_load_shifting_cashflows(cont.cashflows.to_list()))
+    npv = npf.npv(interest_rate, cash_flows)
+    return npv
+
+
+def extract_load_shifting_cashflows(cont, dr_scen) -> pd.Series:
+    """Extract annual cashflows from raw load shifting results"""
+    # TODO: Extract annual cashflows by evaluating (opportunity) revenues - costs
+    pass
 
 
 def obtain_scenario_and_baseline_prices(cont: Container) -> None:

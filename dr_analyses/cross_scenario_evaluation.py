@@ -92,10 +92,3 @@ def evaluate_parameter_results(
         param_results.to_csv(f"{data_output_folder}{param}.csv", sep=";")
 
     return param_results
-
-
-def calculate_net_present_values(overall_results: pd.DaraFrame, ):
-    """Calculate and return net present values for demand response investments made
-    :return:
-    """
-    pass
