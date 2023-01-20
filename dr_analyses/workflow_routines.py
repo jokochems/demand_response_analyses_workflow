@@ -207,6 +207,7 @@ def run_amiris(run_properties: Dict, cont: Container) -> None:
 
 def convert_amiris_results(cont: Container) -> None:
     """Convert AMIRIS results from a previous model run"""
+    print(f"Converting scenario {cont.trimmed_scenario} results")
     cont.config_convert[Options.OUTPUT] = (
         cont.config_workflow["output_folder"] + cont.trimmed_scenario
     )
@@ -214,3 +215,4 @@ def convert_amiris_results(cont: Container) -> None:
         cont.config_workflow["output_folder"] + "amiris-output.pb",
         cont.config_convert,
     )
+    print(f"Scenario {cont.trimmed_scenario} results converted")
