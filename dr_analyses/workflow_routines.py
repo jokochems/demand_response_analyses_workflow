@@ -169,7 +169,7 @@ def read_investment_expenses(config: Dict, dr_scen: str) -> pd.Series:
     """Read and return investment expenses"""
     path = f"{config['input_folder']}/{config['data_sub_folder']}/{dr_scen.split('_', 1)[0]}/"
     file_name = f"{config['load_shifting_focus_cluster']}_specific_investments.csv"
-    return pd.read_csv(path + file_name, sep=";", index_col=0)
+    return pd.read_csv(path + file_name, sep=";", index_col=0, header=None)
 
 
 def make_scenario_config(cont: Container) -> None:
