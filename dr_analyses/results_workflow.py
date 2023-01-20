@@ -121,6 +121,7 @@ def add_discounted_payments_to_results(
             stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR
 
         for col in cols:
+            cont.results[f"Discounted{col}"] = 0
             cont.results[f"Discounted{col}"].loc[
                 i * AMIRIS_TIMESTEPS_PER_YEAR : stop
             ] = cont.results[f"{col}"].loc[
