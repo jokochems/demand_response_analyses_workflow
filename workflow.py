@@ -2,13 +2,12 @@ import shutil
 
 from fameio.source.cli import Options, ResolveOptions
 
-from dr_analyses.container import Container, trim_file_name
+from dr_analyses.container import Container
 from dr_analyses.cross_run_evaluation import read_param_results_for_runs
 from dr_analyses.cross_scenario_evaluation import (
     concat_results,
     evaluate_all_parameter_results,
     read_scenario_result,
-    calculate_net_present_values,
 )
 from dr_analyses.plotting import (
     plot_bar_charts,
@@ -21,6 +20,8 @@ from dr_analyses.results_workflow import (
     calc_load_shifting_results,
     obtain_scenario_and_baseline_prices,
     write_results,
+    extract_load_shifting_cashflows,
+    add_capacity_payments, calculate_net_present_values,
 )
 from dr_analyses.workflow_routines import (
     convert_amiris_results,
@@ -57,15 +58,15 @@ config_workflow = {
         "hoho_cluster_shift_shed",
     ],
     "interest_rate": 0.05,
-    "prepare_tariff_config": False,
+    "prepare_tariff_config": True,
     "amiris_analyses": {
-        "start_web_service": False,
-        "make_scenario": False,
-        "run_amiris": False,
-        "convert_results": False,
-        "process_results": False,
+        "start_web_service": True,
+        "make_scenario": True,
+        "run_amiris": True,
+        "convert_results": True,
+        "process_results": True,
         "use_baseline_prices_for_comparison": True,
-        "aggregate_results": False,
+        "aggregate_results": True,
     },
     "write_results": True,
     "evaluate_cross_scenarios": True,
@@ -153,7 +154,8 @@ if __name__ == "__main__":
                 scenario_files[f"{dr_scen}_{tariff_name}"] = scenario
 
             investment_expenses[dr_scen] = read_investment_expenses(
-                config_workflow, dr_scen,
+                config_workflow,
+                dr_scen,
             )
 
         else:
@@ -189,14 +191,17 @@ if __name__ == "__main__":
                 dr_scen, templates["load_shedding"]
             )
             cont.save_scenario_yaml()
-
-        # Uncomment the following code for dev purposes; Remove once finalized
         else:
             # No need to change config for baseline scenario
             continue
 
+        # Uncomment the following code for dev purposes; Remove once finalized
         # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
-        if dr_scen not in ["5_20_dynamic_0_LP", "5_0_dynamic_0_LP"]:
+        if dr_scen not in [
+            "5_20_dynamic_0_LP",
+            "5_0_dynamic_0_LP",
+            "5_0_dynamic_20_LP",
+        ]:
             continue
 
         if config_workflow["amiris_analyses"]["make_scenario"]:
@@ -217,6 +222,15 @@ if __name__ == "__main__":
                     "use_baseline_prices_for_comparison"
                 ],
             )
+            add_capacity_payments(
+                cont,
+            )
+            cont.add_cashflows(extract_load_shifting_cashflows(cont))
+            cont.add_npv(
+                calculate_net_present_values(
+                    cont, dr_scen, investment_expenses
+                )
+            )
             if config_workflow["write_results"]:
                 write_results(cont)
         if (
@@ -224,7 +238,6 @@ if __name__ == "__main__":
             and "_wo_dr" not in scenario
         ):
             calc_summary_parameters(cont)
-            calculate_net_present_values(cont, dr_scen, investment_expenses)
             scenario_results[cont.trimmed_scenario] = cont.summary_series
 
     if config_workflow["evaluate_cross_scenarios"]:

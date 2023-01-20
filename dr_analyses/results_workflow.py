@@ -1,4 +1,5 @@
-from typing import Dict
+import math
+from typing import Dict, List
 
 import numpy as np
 import numpy_financial as npf
@@ -12,6 +13,8 @@ from dr_analyses.results_subroutines import (
     add_static_prices,
     calculate_dynamic_price_time_series,
 )
+
+AMIRIS_TIMESTEPS_PER_YEAR = 8760
 
 
 def calc_load_shifting_results(cont: Container, key: str) -> None:
@@ -42,7 +45,6 @@ def calc_load_shifting_results(cont: Container, key: str) -> None:
         results["BaselineLoadProfile"] + results["NetAwardedPower"]
     )
     cont.set_results(results)
-    cont.set_cashflows(extract_load_shifting_cashflows(cont, key))
 
 
 def calculate_net_present_values(
@@ -54,22 +56,58 @@ def calculate_net_present_values(
     investment_expenses = investment_expenses[dr_scen.split("_", 1)[0]]
     interest_rate = cont.config_workflow["interest_rate"]
     cash_flows = [-investment_expenses.iloc[0, 0]]
-    cash_flows.extend(extract_load_shifting_cashflows(cont.cashflows.to_list()))
+    cash_flows.extend(extract_load_shifting_cashflows(cont))
     npv = npf.npv(interest_rate, cash_flows)
+
     return npv
 
 
-def extract_load_shifting_cashflows(cont, dr_scen) -> pd.Series:
-    """Extract annual cashflows from raw load shifting results"""
-    # TODO: Extract annual cashflows by evaluating (opportunity) revenues - costs
-    pass
+def extract_load_shifting_cashflows(cont: Container) -> List:
+    """Extract annual cashflows from raw load shifting results
+
+    Opportunity revenues: the reduction in payments compared to the baseline
+    Costs: Variable shifting costs
+    """
+    cashflows = []
+    payment_columns = ["TotalPayments", "CapacityPayment"]
+
+    for i in range(math.ceil(len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR)):
+        if (i + 1) * 8760 > len(cont.results) + 1:
+            stop = len(cont.results) + 1
+        else:
+            stop = (i + 1) * 8760
+
+        baseline_annual_payments = (
+            cont.results[[f"Baseline{col}" for col in payment_columns]]
+            .loc[i * 8760 : stop]
+            .sum(axis=1)
+            .sum()
+        )
+        shifting_annual_payments = (
+            cont.results[[f"Shifting{col}" for col in payment_columns]]
+            .loc[i * 8760 : stop]
+            .sum(axis=1)
+            .sum()
+        )
+
+        # Baseline payments are assumed higher
+        # cost savings are opportunity revenues
+        opportunity_revenues = (
+            baseline_annual_payments - shifting_annual_payments
+        )
+        costs = cont.results["VariableShiftingCosts"].loc[i * 8760 : stop].sum()
+
+        cashflows.append(opportunity_revenues - costs)
+
+    return cashflows
 
 
 def obtain_scenario_and_baseline_prices(cont: Container) -> None:
     """Obtain price time-series based on results of scenario and for baseline
 
-    The baseline prices (baseline = no demand response, i.e. the situation before
-    load shifting) differ in so far, as they do not include any price repercussion.
+    The baseline prices (baseline = no demand response, i.e. the situation
+    before load shifting) differ in so far, as they do not include
+    any price repercussion.
 
     :param Container cont: container object holding configuration
     """
@@ -110,6 +148,32 @@ def add_power_payments(
         cont.results["ShiftingTotalPayments"] += cont.results[
             f"Shifting{col}Payment"
         ]
+
+
+def add_capacity_payments(cont: Container) -> None:
+    """Calculate annual capacity payments and include these
+    as one single payment happening every 8760 hours (= rows)
+
+    :param Container cont: container object holding configuration and results
+    """
+    cont.results["BaselineCapacityPayment"] = 0
+    cont.results["ShiftingCapacityPayment"] = 0
+    capacity_charge = cont.load_shifting_data["Attributes"]["Policy"][
+        "CapacityBasedNetworkChargesInEURPerMW"
+    ]
+    for i in range(math.ceil(len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR)):
+        if (i + 1) * 8760 > len(cont.results) + 1:
+            stop = len(cont.results) + 1
+        else:
+            stop = (i + 1) * 8760
+        cont.results.at[i * 8760, "BaselineCapacityPayment"] = (
+            cont.results["BaselineLoadProfile"].loc[i * 8760 : stop].max()
+            * capacity_charge
+        )
+        cont.results.at[i * 8760, "ShiftingCapacityPayment"] = (
+            cont.results["LoadAfterShifting"].loc[i * 8760 : stop].max()
+            * capacity_charge
+        )
 
 
 def write_results(cont: Container) -> None:

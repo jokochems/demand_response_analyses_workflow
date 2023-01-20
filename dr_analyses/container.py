@@ -137,8 +137,9 @@ def add_load_shifting_tariff(
                 entries={
                     param: tariff[param]
                     for param in [
-                        "DynamicTariffComponents",
+                        "OtherSurchargesInEURPerMWH",
                         "CapacityBasedNetworkChargesInEURPerMW",
+                        "DynamicTariffComponents",
                     ]
                 },
                 group="Policy",
@@ -176,14 +177,15 @@ class Container:
     :attr str trimmed_baseline_scenario: baseline scenario (name only)
     :attr pd.DataFrame or NoneType results: load shifting results from the
     simulation
-    :attr pd.Series or NoneType cashflows: annual load shifting cashflows,
-    i.e. (opportunity) revenues - expenses
     :attr pd.DataFrame or NoneType power_prices: end consumer power price
     time series
     :attr pd.DataFrame or NoneType baseline_power_prices: end consumer power price
     time series for the baseline load case (no price repercussions due to shifting)
     :attr dict or NoneType load_shifting_data: load shifting config from yaml
     :attr list dynamic_components: dynamic tariff components
+    :attr list or NoneType cashflows: annual load shifting cashflows,
+    i.e. (opportunity) revenues - expenses
+    :attr float or NoneType npv: net present value of load shifting investment
     :attr dict or NoneType summary: parameter summary retrieved from results
     :attr dict or pd.Series summary_series: parameter summary as Series
     """
@@ -204,38 +206,14 @@ class Container:
         self.trimmed_baseline_scenario = trim_file_name(baseline_scenario)
         self.scenario_yaml = load_yaml(self.scenario)
         self.results = None
-        self.cashflows = None
         self.power_prices = None
         self.baseline_power_prices = None
         self.load_shifting_data = None
         self.dynamic_components = None
+        self.cashflows = None
+        self.npv = None
         self.summary = None
         self.summary_series = None
-        self._define_components_mapping()
-
-    def _define_components_mapping(self) -> None:
-        """Map dynamic identifier to static component value"""
-        self.price_components = {
-            "POWER_PRICE": {
-                "Group": "BusinessModel",
-                "Attribute": "AverageMarketPriceInEURPerMWH",
-            },
-            # "EEG_SURCHARGE": {
-            #     "Group": "Policy",
-            #     "Attribute": "EEGSurchargeInEURPerMWH",
-            # },
-            "VOLUMETRIC_NETWORK_CHARGE": {
-                "Group": "Policy",
-                "Attribute": "VolumetricNetworkChargeInEURPerMWH",
-            },
-            "OTHER_COMPONENTS": {
-                "Group": "Policy",
-                "Attribute": [
-                    "ElectricityTaxInEURPerMWH",
-                    "OtherSurchargesInEURPerMWH",
-                ],
-            },
-        }
 
     def set_results(self, results: pd.DataFrame) -> None:
         self.results = results
@@ -289,7 +267,9 @@ class Container:
         """Add a load shifting agent to scenario and adjust configuration"""
         self.add_load_shifting_agent(templates["load_shifting"], key)
         add_load_shifting_tariff(
-            templates["tariffs"][key.split("_", 1)[0]], templates["load_shifting"], key
+            templates["tariffs"][key.split("_", 1)[0]],
+            templates["load_shifting"],
+            key,
         )
         self.scenario_yaml["Agents"].append(templates["load_shifting"])
 
@@ -431,6 +411,10 @@ class Container:
         with open(self.scenario, "w") as file:
             yaml.dump(self.scenario_yaml, file, sort_keys=False)
 
-    def set_cashflows(self, cashflows: pd.Series):
+    def add_cashflows(self, cashflows: List):
         """Save cashflow results in container object"""
         self.cashflows = cashflows
+
+    def add_npv(self, npv: float):
+        """Save net present value (NPV) results in container object"""
+        self.npv = npv
