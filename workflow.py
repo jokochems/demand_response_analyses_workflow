@@ -21,7 +21,9 @@ from dr_analyses.results_workflow import (
     obtain_scenario_and_baseline_prices,
     write_results,
     extract_load_shifting_cashflows,
-    add_capacity_payments, calculate_net_present_values,
+    add_capacity_payments,
+    calculate_net_present_values,
+    add_discounted_payments_to_results,
 )
 from dr_analyses.workflow_routines import (
     convert_amiris_results,
@@ -223,6 +225,14 @@ if __name__ == "__main__":
                 ],
             )
             add_capacity_payments(
+                cont,
+            )
+            add_discounted_payments_to_results(
+                [
+                    "BaselineTotalPayments",
+                    "ShiftingTotalPayments",
+                    "VariableShiftingCosts",
+                ],
                 cont,
             )
             cont.add_cashflows(extract_load_shifting_cashflows(cont))

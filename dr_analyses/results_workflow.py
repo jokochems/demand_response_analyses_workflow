@@ -72,20 +72,20 @@ def extract_load_shifting_cashflows(cont: Container) -> List:
     payment_columns = ["TotalPayments", "CapacityPayment"]
 
     for i in range(math.ceil(len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR)):
-        if (i + 1) * 8760 > len(cont.results) + 1:
+        if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR > len(cont.results) + 1:
             stop = len(cont.results) + 1
         else:
-            stop = (i + 1) * 8760
+            stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR
 
         baseline_annual_payments = (
             cont.results[[f"Baseline{col}" for col in payment_columns]]
-            .loc[i * 8760 : stop]
+            .loc[i * AMIRIS_TIMESTEPS_PER_YEAR : stop]
             .sum(axis=1)
             .sum()
         )
         shifting_annual_payments = (
             cont.results[[f"Shifting{col}" for col in payment_columns]]
-            .loc[i * 8760 : stop]
+            .loc[i * AMIRIS_TIMESTEPS_PER_YEAR : stop]
             .sum(axis=1)
             .sum()
         )
@@ -95,11 +95,41 @@ def extract_load_shifting_cashflows(cont: Container) -> List:
         opportunity_revenues = (
             baseline_annual_payments - shifting_annual_payments
         )
-        costs = cont.results["VariableShiftingCosts"].loc[i * 8760 : stop].sum()
+        costs = (
+            cont.results["VariableShiftingCosts"]
+            .loc[i * AMIRIS_TIMESTEPS_PER_YEAR : stop]
+            .sum()
+        )
 
         cashflows.append(opportunity_revenues - costs)
 
     return cashflows
+
+
+def add_discounted_payments_to_results(
+    cols: List[str], cont: Container
+) -> None:
+    """Add discounted energy payment columns to results
+
+    :param list(str) cols: Columns for which discounted values shall be added
+    :param Container cont: object holding results
+    """
+    for i in range(math.ceil(len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR)):
+        if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR > len(cont.results) + 1:
+            stop = len(cont.results) + 1
+        else:
+            stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR
+
+        for col in cols:
+            cont.results[f"Discounted{col}"].loc[
+                i * AMIRIS_TIMESTEPS_PER_YEAR : stop
+            ] = cont.results[f"{col}"].loc[
+                i * AMIRIS_TIMESTEPS_PER_YEAR : stop
+            ] * (
+                1 + cont.config_workflow["interest_rate"]
+            ) ** (
+                -i
+            )
 
 
 def obtain_scenario_and_baseline_prices(cont: Container) -> None:
