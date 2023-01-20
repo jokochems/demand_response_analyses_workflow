@@ -1,7 +1,6 @@
 import os
 from typing import List, Dict
 
-import numpy as np
 import pandas as pd
 import yaml
 from fameio.scripts.convert_results import run as convert_results
@@ -48,12 +47,14 @@ def prepare_tariff_configs(config: Dict, dr_scen: str):
 
     parameterization = obtain_parameterization_from_file(config, dr_scen)
 
-    for el in range(len(parameterization)):
+    for el in range(len(parameterization) - 1):
         tariff_config_template.append(tariff_config_template[0].copy())
-    tariff_config_template = tariff_config_template[:-1]
 
     for number, (name, values) in enumerate(parameterization.iterrows()):
         tariff_config_template[number]["Name"] = name
+        tariff_config_template[number][
+            "AverageMarketPriceInEURPerMWH"
+        ] = float(values["weighted_average"])
         tariff_config_template[number]["OtherSurchargesInEURPerMWH"] = float(
             values["static_tariff"]
         )
@@ -99,7 +100,7 @@ def obtain_parameterization_from_file(
         for capacity_share in [0, 20, 40, 60, 80]
     ]
     parameterization = pd.DataFrame(
-        columns=["multiplier", "static_tariff", "capacity_tariff"]
+        columns=["multiplier", "static_tariff", "capacity_tariff", "weighted_average"]
     )
     overview = pd.read_excel(
         f"{config['input_folder']}{config['tariff_config_file']}_{dr_scen}.xlsx",
@@ -125,7 +126,7 @@ def obtain_parameterization_from_file(
             f"{config['input_folder']}{config['tariff_config_file']}_{dr_scen}.xlsx",
             sheet_name=sheet,
             usecols="H:I",
-            nrows=8,
+            nrows=13,
             index_col=0,
             header=None,
         )
@@ -133,6 +134,11 @@ def obtain_parameterization_from_file(
         parameterization.at[index_name, "multiplier"] = multiplier.at[
             "multiplier with bounds", 8
         ]
+        parameterization.at[index_name, "weighted_average"] = multiplier.at[
+            "Weigthed average for consumer", 8
+        ]
+        parameterization["weighted_average"].fillna(method="bfill", inplace=True)
+        parameterization["weighted_average"].fillna(method="ffill", inplace=True)
     parameterization.fillna(0, inplace=True)
 
     return parameterization

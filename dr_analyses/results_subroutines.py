@@ -48,6 +48,11 @@ def calculate_dynamic_price_time_series(
             sep=";",
         )
     else:
+        if not cont.config_convert[Options.OUTPUT]:
+            raise ValueError(
+                "Processing results without aggregating them first "
+                "is not implemented."
+            )
         power_prices = pd.read_csv(
             cont.config_convert[Options.OUTPUT] + "/EnergyExchangeMulti.csv",
             sep=";",
