@@ -54,8 +54,9 @@ def calculate_net_present_values(
     :return: DataFrame holding net present values for the respective case
     """
     investment_expenses = investment_expenses[dr_scen.split("_", 1)[0]]
+    cont.set_investment_expenses(investment_expenses.iloc[0, 0])
     interest_rate = cont.config_workflow["interest_rate"]
-    cash_flows = [-investment_expenses.iloc[0, 0]]
+    cash_flows = [-cont.investment_expenses]
     cash_flows.extend(extract_load_shifting_cashflows(cont))
     npv = npf.npv(interest_rate, cash_flows)
 

@@ -24,6 +24,7 @@ def calc_summary_parameters(cont: Container) -> None:
     add_capacity_charges_summary(cont)
     add_energy_payments_summary(cont)
     add_total_costs_and_savings_summary(cont)
+    add_investments_and_npv_summary(cont)
     cont.set_summary_series()
     cont.write_summary()
 
@@ -149,3 +150,9 @@ def add_total_costs_and_savings_summary(cont: Container) -> None:
         -cont.summary["TotalPaymentChange"]
         - cont.summary["TotalShiftingCosts"]
     )
+
+
+def add_investments_and_npv_summary(cont: Container) -> None:
+    """Add summary for net present values and investment expenditures"""
+    cont.summary["InvestmentExpenses"] = cont.investment_expenses
+    cont.summary["NetPresentValue"] = cont.npv
