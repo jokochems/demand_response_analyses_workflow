@@ -12,7 +12,7 @@ from dr_analyses.cross_scenario_evaluation import (
 from dr_analyses.plotting import (
     plot_bar_charts,
     plot_cross_run_comparison,
-    configure_plots,
+    configure_plots, plot_heat_maps,
 )
 from dr_analyses.results_summary import calc_summary_parameters
 from dr_analyses.results_workflow import (
@@ -92,6 +92,8 @@ config_plotting = {
     "drop_list": [],
     "rename_dict": {"columns": {}, "rows": {}, "parameters": {}},
     "x_label": None,
+    "save_plot": True,
+    "show_plot": False,
 }
 
 config_make = {
@@ -276,6 +278,9 @@ if __name__ == "__main__":
         if config_workflow["make_plots"]:
             configure_plots(config_plotting)
             plot_bar_charts(
+                config_workflow, all_parameter_results, config_plotting
+            )
+            plot_heat_maps(
                 config_workflow, all_parameter_results, config_plotting
             )
 
