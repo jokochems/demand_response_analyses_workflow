@@ -1,5 +1,0 @@
-fastapi[all]
-pyomo
-numpy
-pandas
-matplotlib

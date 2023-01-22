@@ -48,6 +48,11 @@ def calculate_dynamic_price_time_series(
             sep=";",
         )
     else:
+        if not cont.config_convert[Options.OUTPUT]:
+            raise ValueError(
+                "Processing results without aggregating them first "
+                "is not implemented."
+            )
         power_prices = pd.read_csv(
             cont.config_convert[Options.OUTPUT] + "/EnergyExchangeMulti.csv",
             sep=";",
@@ -68,12 +73,14 @@ def calculate_dynamic_price_time_series(
                 component["LowerBound"],
                 component["UpperBound"],
             ]
-            power_prices[component["ComponentName"]] = np.select(
+            power_prices[f"DYNAMIC_{component['ComponentName']}"] = np.select(
                 conditions,
                 choices,
                 power_prices["ElectricityPriceInEURperMWH"].values
                 * component["Multiplier"],
             )
+        else:
+            power_prices["DYNAMIC_POWER_PRICE"] = 0
     power_prices.drop(columns="ElectricityPriceInEURperMWH", inplace=True)
 
     if use_baseline_prices:
@@ -85,28 +92,13 @@ def calculate_dynamic_price_time_series(
 def add_static_prices(cont: Container) -> None:
     """Obtain static prices and add them to power prices time series
 
-    :param Container cont: container object with configuration and results info
-    """
-    dynamic_components_list = [
-        col
-        for col in cont.power_prices.columns
-        if "ElectricityPriceInEURperMWH" not in col
-    ]
-    static_components_list = list(
-        set(cont.price_components.keys()) - set(dynamic_components_list)
-    )
-    for component in static_components_list:
-        price_component = 0
-        component_data = cont.load_shifting_data["Attributes"][
-            cont.price_components[component]["Group"]
-        ]
-        if isinstance(cont.price_components[component]["Attribute"], list):
-            for attribute in cont.price_components[component]["Attribute"]:
-                price_component += component_data[attribute]
-        else:
-            price_component = component_data[
-                cont.price_components[component]["Attribute"]
-            ]
+    OtherSurchargesInEURPerMWH is the only price component to include
+    all static price shares
 
-        cont.power_prices[component] = price_component
-        cont.baseline_power_prices[component] = price_component
+    :param Container cont: container object with configuration and results
+    info
+    """
+    price_component = cont.load_shifting_data["Attributes"]["Policy"]["OtherSurchargesInEURPerMWH"]
+
+    cont.power_prices["STATIC_POWER_PRICE"] = price_component
+    cont.baseline_power_prices["STATIC_POWER_PRICE"] = price_component

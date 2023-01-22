@@ -1,8 +1,14 @@
+import math
+
 from dr_analyses.container import Container
+from dr_analyses.results_workflow import AMIRIS_TIMESTEPS_PER_YEAR
 
 
 def calc_summary_parameters(cont: Container) -> None:
-    """Calculate summary parameters from results time series"""
+    """Calculate summary parameters from results time series
+
+    Hereby, payments are overall payments with annual discounting.
+    """
 
     if cont.results is None:
         msg = (
@@ -18,6 +24,7 @@ def calc_summary_parameters(cont: Container) -> None:
     add_capacity_charges_summary(cont)
     add_energy_payments_summary(cont)
     add_total_costs_and_savings_summary(cont)
+    add_investments_and_npv_summary(cont)
     cont.set_summary_series()
     cont.write_summary()
 
@@ -25,7 +32,9 @@ def calc_summary_parameters(cont: Container) -> None:
 def add_full_shift_cycles(cont: Container) -> None:
     """Determine and add the number of full shift cycles to summary"""
     full_shift_cycle_energy = (
-        cont.load_shifting_data["Attributes"]["LoadShiftingPortfolio"]["PowerInMW"]
+        cont.load_shifting_data["Attributes"]["LoadShiftingPortfolio"][
+            "PowerInMW"
+        ]
         * cont.load_shifting_data["Attributes"]["LoadShiftingPortfolio"][
             "MaximumShiftTimeInHours"
         ]
@@ -37,38 +46,82 @@ def add_full_shift_cycles(cont: Container) -> None:
 
 
 def add_peak_load_summary(cont: Container) -> None:
-    """Add peak load information to summary"""
-    cont.summary["PeakLoadBeforeShifting"] = cont.results["BaselineLoadProfile"].max()
-    cont.summary["PeakLoadAfterShifting"] = cont.results["LoadAfterShifting"].max()
+    """Add overall peak load information to summary"""
+    cont.summary["PeakLoadBeforeShifting"] = cont.results[
+        "BaselineLoadProfile"
+    ].max()
+    cont.summary["PeakLoadAfterShifting"] = cont.results[
+        "LoadAfterShifting"
+    ].max()
     cont.summary["PeakLoadChange"] = (
-        cont.summary["PeakLoadAfterShifting"] - cont.summary["PeakLoadBeforeShifting"]
+        cont.summary["PeakLoadAfterShifting"]
+        - cont.summary["PeakLoadBeforeShifting"]
     )
 
 
 def add_capacity_charges_summary(cont: Container) -> None:
     """Add capacity charges information to summary"""
-    capacity_charge = cont.load_shifting_data["Attributes"]["Policy"][
-        "CapacityBasedNetworkChargesInEURPerMW"
-    ]
-    cont.summary["CapacityPaymentBeforeShifting"] = (
-        capacity_charge * cont.summary["PeakLoadBeforeShifting"]
-    )
-    cont.summary["CapacityPaymentAfterShifting"] = (
-        capacity_charge * cont.summary["PeakLoadAfterShifting"]
-    )
+    (
+        total_discounted_payments_before,
+        total_discounted_payments_after,
+    ) = calculate_discounted_capacity_payments(cont)
+
+    cont.summary[
+        "CapacityPaymentBeforeShifting"
+    ] = total_discounted_payments_before
+    cont.summary[
+        "CapacityPaymentAfterShifting"
+    ] = total_discounted_payments_after
     cont.summary["CapacityPaymentChange"] = (
         cont.summary["CapacityPaymentAfterShifting"]
         - cont.summary["CapacityPaymentBeforeShifting"]
     )
 
 
+def calculate_discounted_capacity_payments(cont: Container) -> (float, float):
+    """Calculate and return discounted capacity payments"""
+    nominal_annual_payments_before = list(
+        cont.results["BaselineCapacityPayment"]
+        .loc[cont.results["BaselineCapacityPayment"] != 0]
+        .values
+    )
+    nominal_annual_payments_after = list(
+        cont.results["ShiftingCapacityPayment"]
+        .loc[cont.results["ShiftingCapacityPayment"] != 0]
+        .values
+    )
+    # Fill list of annual values with zeros if there is no capacity payment
+    if not nominal_annual_payments_before:
+        nominal_annual_payments_before = [0] * math.ceil(
+            len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR
+        )
+        nominal_annual_payments_after = [0] * math.ceil(
+            len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR
+        )
+
+    total_discounted_payments_before = sum(
+        [
+            payment * (1 + cont.config_workflow["interest_rate"]) ** (-year)
+            for year, payment in enumerate(nominal_annual_payments_before)
+        ]
+    )
+    total_discounted_payments_after = sum(
+        [
+            payment * (1 + cont.config_workflow["interest_rate"]) ** (-year)
+            for year, payment in enumerate(nominal_annual_payments_after)
+        ]
+    )
+
+    return total_discounted_payments_before, total_discounted_payments_after
+
+
 def add_energy_payments_summary(cont: Container) -> None:
     """Add energy-related payments information to summary"""
     cont.summary["EnergyPaymentBeforeShifting"] = cont.results[
-        "BaselineTotalPayments"
+        "DiscountedBaselineTotalPayments"
     ].sum()
     cont.summary["EnergyPaymentAfterShifting"] = cont.results[
-        "ShiftingTotalPayments"
+        "DiscountedShiftingTotalPayments"
     ].sum()
     cont.summary["EnergyPaymentChange"] = (
         cont.summary["EnergyPaymentAfterShifting"]
@@ -90,7 +143,16 @@ def add_total_costs_and_savings_summary(cont: Container) -> None:
         cont.summary["TotalPaymentAfterShifting"]
         - cont.summary["TotalPaymentBeforeShifting"]
     )
-    cont.summary["TotalShiftingCosts"] = cont.results["VariableShiftingCosts"].sum()
+    cont.summary["TotalShiftingCosts"] = cont.results[
+        "DiscountedVariableShiftingCosts"
+    ].sum()
     cont.summary["NetSavings"] = (
-        -cont.summary["TotalPaymentChange"] - cont.summary["TotalShiftingCosts"]
+        -cont.summary["TotalPaymentChange"]
+        - cont.summary["TotalShiftingCosts"]
     )
+
+
+def add_investments_and_npv_summary(cont: Container) -> None:
+    """Add summary for net present values and investment expenditures"""
+    cont.summary["InvestmentExpenses"] = cont.investment_expenses
+    cont.summary["NetPresentValue"] = cont.npv
