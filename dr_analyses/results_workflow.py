@@ -54,7 +54,12 @@ def calculate_net_present_values(
     :return: DataFrame holding net present values for the respective case
     """
     investment_expenses = investment_expenses[dr_scen.split("_", 1)[0]]
-    cont.set_investment_expenses(investment_expenses.iloc[0, 0])
+    installed_power = cont.load_shifting_data["Attributes"][
+        "LoadShiftingPortfolio"
+    ]["PowerInMW"]
+    cont.set_investment_expenses(
+        investment_expenses.iloc[0, 0] * installed_power
+    )
     interest_rate = cont.config_workflow["interest_rate"]
     cash_flows = [-cont.investment_expenses]
     cash_flows.extend(extract_load_shifting_cashflows(cont))
