@@ -201,8 +201,8 @@ def plot_heat_maps(
         fig, ax = plt.subplots(figsize=config_plotting["figsize"])
 
         data = param_results.astype(float).values
-        row_labels = param_results.columns.values
-        col_labels = param_results.index.values
+        row_labels = param_results.index.values
+        col_labels = param_results.columns.values
 
         cbar_bounds = np.nanmax([np.nanmin(data), np.nanmax(data)]) * 1.05
         im, cbar = heatmap(data, row_labels, col_labels, ax=ax, vmin=-cbar_bounds, vmax=cbar_bounds,
