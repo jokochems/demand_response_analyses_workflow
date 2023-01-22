@@ -61,7 +61,7 @@ def plot_bar_charts(
         _ = plt.tight_layout()
 
         if config_plotting["save_plot"]:
-            _ = fig.savefig(f"{plots_output_folder}{param}.png", dpi=300)
+            _ = fig.savefig(f"{plots_output_folder}{param}_bar.png", dpi=300)
         plt.close(fig)
         if config_plotting["show_plot"]:
             plt.show()
@@ -201,18 +201,18 @@ def plot_heat_maps(
         fig, ax = plt.subplots(figsize=config_plotting["figsize"])
 
         data = param_results.astype(float).values
-        row_labels = param_results.index.values
-        col_labels = param_results.columns.values
+        row_labels = param_results.columns.values
+        col_labels = param_results.index.values
 
         cbar_bounds = np.nanmax([np.nanmin(data), np.nanmax(data)]) * 1.05
         im, cbar = heatmap(data, row_labels, col_labels, ax=ax, vmin=-cbar_bounds, vmax=cbar_bounds,
                            cbar_kw={"shrink": 1.0}, cmap="coolwarm", cbarlabel=param)
-        texts = annotate_heatmap(im, valfmt="{x:.1f} €")
+        texts = annotate_heatmap(im, valfmt="{x:,.0f}")
 
         _ = fig.tight_layout()
 
         if config_plotting["save_plot"]:
-            _ = fig.savefig(f"{plots_output_folder}{param}.png", dpi=300)
+            _ = fig.savefig(f"{plots_output_folder}{param}_heatmap.png", dpi=300)
         plt.close(fig)
         if config_plotting["show_plot"]:
             plt.show()
@@ -340,6 +340,6 @@ def annotate_heatmap(
                 text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
                 texts.append(text)
             except Exception:
-                print("Ran into an Exception.")
+                print("Failed to annotate heat map.")
 
     return texts

@@ -73,14 +73,6 @@ config_workflow = {
     "write_results": True,
     "evaluate_cross_scenarios": True,
     "make_plots": True,
-    "evaluate_cross_runs": True,
-    "runs_to_evaluate": {
-        "Analysis_2022-05-05_price_no_repercussions": (
-            "without capacity charge"
-        ),
-        "Analysis_2022-05-12_capacity_charges": "with capacity charge",
-    },
-    "params_to_evaluate": ["PeakLoadChange", "NetSavings"],
     "baseline_load_file": "baseline_load_profile",
 }
 
@@ -283,8 +275,3 @@ if __name__ == "__main__":
             plot_heat_maps(
                 config_workflow, all_parameter_results, config_plotting
             )
-
-    if config_workflow["evaluate_cross_runs"]:
-        param_results = read_param_results_for_runs(config_workflow)
-        if len(param_results) > 0:
-            plot_cross_run_comparison(config_workflow, param_results)
