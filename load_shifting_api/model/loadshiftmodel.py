@@ -460,10 +460,16 @@ class LoadShiftOptimizationModel:
             overall_peak_load_costs += model.peak_load * self.peak_load_price
 
             overall_variable_costs += sum(
-                sum(model.dsm_do_shift[h, t] for h in self.shifting_times)
-                + sum(model.balance_dsm_do[h, t] for h in self.shifting_times)
-                + sum(model.dsm_up[h, t] for h in self.shifting_times)
-                + sum(model.balance_dsm_up[h, t] for h in self.shifting_times)
+                (
+                    sum(model.dsm_do_shift[h, t] for h in self.shifting_times)
+                    + sum(model.balance_dsm_up[h, t] for h in self.shifting_times)
+                )
+                * self.variable_costs_down
+                + (
+                    sum(model.dsm_up[h, t] for h in self.shifting_times)
+                    + sum(model.balance_dsm_do[h, t] for h in self.shifting_times)
+                )
+                * self.variable_costs_up
                 for t in model.T
             )
 
