@@ -100,7 +100,12 @@ def obtain_parameterization_from_file(
         for capacity_share in [0, 20, 40, 60, 80]
     ]
     parameterization = pd.DataFrame(
-        columns=["multiplier", "static_tariff", "capacity_tariff", "weighted_average"]
+        columns=[
+            "multiplier",
+            "static_tariff",
+            "capacity_tariff",
+            "weighted_average",
+        ]
     )
     overview = pd.read_excel(
         f"{config['input_folder']}{config['tariff_config_file']}_{dr_scen}.xlsx",
@@ -109,6 +114,7 @@ def obtain_parameterization_from_file(
         index_col=[0, 1],
     )
     overview = overview[["LP (€/kW*a)", "OTHER_COMPONENTS -> STATIC PARTS"]]
+    overview = drop_duplicate_scenarios(overview)
     overview["new_index"] = (
         overview.index.get_level_values(0).astype(str)
         + "_dynamic_"
@@ -137,11 +143,32 @@ def obtain_parameterization_from_file(
         parameterization.at[index_name, "weighted_average"] = multiplier.at[
             "Weigthed average for consumer", 8
         ]
-        parameterization["weighted_average"].fillna(method="bfill", inplace=True)
-        parameterization["weighted_average"].fillna(method="ffill", inplace=True)
+        parameterization["weighted_average"].fillna(
+            method="bfill", inplace=True
+        )
+        parameterization["weighted_average"].fillna(
+            method="ffill", inplace=True
+        )
     parameterization.fillna(0, inplace=True)
 
     return parameterization
+
+
+def drop_duplicate_scenarios(overview: pd.DataFrame) -> pd.DataFrame:
+    """Remove duplicate tariff scenarios
+
+    Scenarios with 100% capacity payment are duplicates;
+    keep only the first one, i.e. the one with no dynamic payments
+    """
+    overview.drop(
+        index=overview.loc[
+            (overview.index.get_level_values(1) == 100)
+            & (overview.index.get_level_values(0) != 0)
+        ].index,
+        inplace=True
+    )
+
+    return overview
 
 
 def read_tariff_configs(config: Dict, dr_scen: str):
@@ -168,7 +195,9 @@ def read_load_shedding_template(config: Dict) -> Dict:
 def read_investment_expenses(config: Dict, dr_scen: str) -> pd.Series:
     """Read and return investment expenses"""
     path = f"{config['input_folder']}/{config['data_sub_folder']}/{dr_scen.split('_', 1)[0]}/"
-    file_name = f"{config['load_shifting_focus_cluster']}_specific_investments.csv"
+    file_name = (
+        f"{config['load_shifting_focus_cluster']}_specific_investments.csv"
+    )
     return pd.read_csv(path + file_name, sep=";", index_col=0, header=None)
 
 
