@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 
 import matplotlib
 import numpy as np
@@ -205,14 +205,25 @@ def plot_heat_maps(
         col_labels = param_results.columns.values
 
         cbar_bounds = np.nanmax([np.nanmin(data), np.nanmax(data)]) * 1.05
-        im, cbar = heatmap(data, row_labels, col_labels, ax=ax, vmin=-cbar_bounds, vmax=cbar_bounds,
-                           cbar_kw={"shrink": 1.0}, cmap="coolwarm", cbarlabel=param)
+        im, cbar = heatmap(
+            data,
+            row_labels,
+            col_labels,
+            ax=ax,
+            vmin=-cbar_bounds,
+            vmax=cbar_bounds,
+            cbar_kw={"shrink": 1.0},
+            cmap="coolwarm",
+            cbarlabel=param,
+        )
         texts = annotate_heatmap(im, valfmt="{x:,.0f}")
 
         _ = fig.tight_layout()
 
         if config_plotting["save_plot"]:
-            _ = fig.savefig(f"{plots_output_folder}{param}_heatmap.png", dpi=300)
+            _ = fig.savefig(
+                f"{plots_output_folder}{param}_heatmap.png", dpi=300
+            )
         plt.close(fig)
         if config_plotting["show_plot"]:
             plt.show()
@@ -279,9 +290,10 @@ def heatmap(
 def annotate_heatmap(
     im,
     data=None,
-    valfmt="{x:.2f}",
+    valfmt="{x:,.0f}",
     textcolors=("black", "white"),
     threshold=2,
+    use_abbreviation=True,
     **textkw,
 ):
     """A function to annotate a heatmap.
@@ -307,6 +319,8 @@ def annotate_heatmap(
         Value in data units according to which the colors from textcolors are
         applied.  If None (the default) uses the middle of the colormap as
         separation.  Optional.
+    use_abbreviation: bool
+        If True, use abbreviations for numbers instead of string formatter.
     **kwargs
         All other arguments are forwarded to each call to `text` used to create
         the text labels.
@@ -327,6 +341,8 @@ def annotate_heatmap(
     kw.update(textkw)
 
     # Get the formatter in case a string is supplied
+    # if use_abbreviation:
+    #     valfmt = "{x:}"
     if isinstance(valfmt, str):
         valfmt = matplotlib.ticker.StrMethodFormatter(valfmt)
 
@@ -343,3 +359,23 @@ def annotate_heatmap(
                 print("Failed to annotate heat map.")
 
     return texts
+
+
+def abbreviate(x: float or None) -> str:
+    """use scientific notation for abbreviating numbers
+
+    Solution is taken from this stackoverflow issue:
+    https://stackoverflow.com/questions/3158132/verbally-format-a-number-in-python
+    """  # noqa: E501
+    if x is np.nan:
+        return "--"
+    abbreviations = ["", "* 10^3", "* 10^6", "* 10^9", "* 10^12"]
+    thing = "1"
+    a = 0
+    while len(thing) < len(str(x)) - 3:
+        thing += "000"
+        a += 1
+    b = int(thing)
+    thing = round(x / b, 2)
+
+    return str(thing) + " " + abbreviations[a]

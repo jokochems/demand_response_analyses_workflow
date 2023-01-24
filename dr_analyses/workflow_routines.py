@@ -113,7 +113,7 @@ def obtain_parameterization_from_file(
         nrows=36,
         index_col=[0, 1],
     )
-    overview = overview[["LP (€/kW*a)", "OTHER_COMPONENTS -> STATIC PARTS"]]
+    overview = overview[["LP (€/MW*a)", "OTHER_COMPONENTS -> STATIC PARTS"]]
     overview = drop_duplicate_scenarios(overview)
     overview["new_index"] = (
         overview.index.get_level_values(0).astype(str)
@@ -125,7 +125,7 @@ def obtain_parameterization_from_file(
     parameterization["static_tariff"] = overview[
         "OTHER_COMPONENTS -> STATIC PARTS"
     ]
-    parameterization["capacity_tariff"] = overview["LP (€/kW*a)"]
+    parameterization["capacity_tariff"] = overview["LP (€/MW*a)"]
 
     for sheet in sheet_names:
         multiplier = pd.read_excel(
