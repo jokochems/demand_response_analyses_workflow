@@ -82,6 +82,7 @@ def evaluate_parameter_results(
         columns="dynamic_tariff_share",
         values=param,
     )
+    param_results = sort_data_ascending(param_results)
 
     if config_workflow["write_results"]:
         data_output_folder = (
@@ -90,5 +91,15 @@ def evaluate_parameter_results(
         )
         make_directory_if_missing(data_output_folder)
         param_results.to_csv(f"{data_output_folder}{param}.csv", sep=";")
+
+    return param_results
+
+
+def sort_data_ascending(param_results: pd.DataFrame) -> pd.DataFrame:
+    """Sort given DataFrame's index and columns in ascending order"""
+    # Ensure correct data type
+    param_results.index = param_results.index.astype(int)
+    param_results.columns = param_results.columns.astype(int)
+    param_results = param_results.sort_index().sort_index(axis=1)
 
     return param_results
