@@ -184,6 +184,7 @@ def plot_heat_maps(
     config_workflow: Dict,
     all_parameter_results: Dict[str, pd.DataFrame],
     config_plotting: Dict = None,
+    annotate: bool = False,
 ) -> None:
     """Plot and save an annotated heat map for given parameters"""
     if not config_plotting:
@@ -216,13 +217,17 @@ def plot_heat_maps(
             cmap="coolwarm",
             cbarlabel=param,
         )
-        texts = annotate_heatmap(im, valfmt="{x:,.0f}")
+        if annotate:
+            texts = annotate_heatmap(im, valfmt="{x:,.0f}")
 
         _ = fig.tight_layout()
 
         if config_plotting["save_plot"]:
+            file_name = f"{plots_output_folder}{param}_heatmap"
+            if not annotate:
+                file_name += "_no_annotations"
             _ = fig.savefig(
-                f"{plots_output_folder}{param}_heatmap.png", dpi=300
+                f"{file_name}.png", dpi=300
             )
         plt.close(fig)
         if config_plotting["show_plot"]:
