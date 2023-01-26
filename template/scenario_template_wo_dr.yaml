@@ -7,7 +7,7 @@ GeneralProperties:
   RunId: 1
   Simulation:
     StartTime: 2019-12-31_23:58:00
-    StopTime: 2020-12-30_23:58:00
+    StopTime: 2035-12-31_23:58:00
     RandomSeed: 1
   Output:
     Interval: 100
@@ -83,7 +83,7 @@ Agents:
     Id: 6
     Attributes:
       DistributionMethod: SAME_SHARES
-      ForecastPeriodInHours: 168
+      ForecastPeriodInHours: 8760
       ForecastRequestOffsetInSeconds: 27
 
   # Include LoadShiftingTrader for cases considering demand response
