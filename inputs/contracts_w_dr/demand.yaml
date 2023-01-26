@@ -13,13 +13,13 @@ Contracts:
     ReceiverId: *demandTrader
     ProductName: ForecastRequest
     FirstDeliveryTime: -26
-    DeliveryIntervalInSteps: *hourly
+    DeliveryIntervalInSteps: *yearly
 
   - SenderId: *demandTrader
     ReceiverId: *forecaster
     ProductName: BidsForecast
     FirstDeliveryTime: -21
-    DeliveryIntervalInSteps: *hourly
+    DeliveryIntervalInSteps: *yearly
 
   - SenderId: *exchange
     ReceiverId: *demandTrader
