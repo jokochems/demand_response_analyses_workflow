@@ -3,7 +3,6 @@ import shutil
 from fameio.source.cli import Options, ResolveOptions
 
 from dr_analyses.container import Container
-from dr_analyses.cross_run_evaluation import read_param_results_for_runs
 from dr_analyses.cross_scenario_evaluation import (
     concat_results,
     evaluate_all_parameter_results,
@@ -11,7 +10,6 @@ from dr_analyses.cross_scenario_evaluation import (
 )
 from dr_analyses.plotting import (
     plot_bar_charts,
-    plot_cross_run_comparison,
     configure_plots, plot_heat_maps,
 )
 from dr_analyses.results_summary import calc_summary_parameters
@@ -50,8 +48,8 @@ config_workflow = {
     "demand_response_scenarios": {
         "none": "scenario_wo_dr",
         "5": "scenario_w_dr_5",
-        # "50": "scenario_w_dr_50",
-        # "95": "scenario_w_dr_95",
+        "50": "scenario_w_dr_50",
+        "95": "scenario_w_dr_95",
     },
     "load_shifting_focus_cluster": "ind_cluster_shift_only",
     "load_shedding_clusters": [
