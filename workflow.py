@@ -50,8 +50,8 @@ config_workflow = {
     "demand_response_scenarios": {
         "none": "scenario_wo_dr",
         "5": "scenario_w_dr_5",
-        "50": "scenario_w_dr_50",
-        "95": "scenario_w_dr_95",
+        # "50": "scenario_w_dr_50",
+        # "95": "scenario_w_dr_95",
     },
     "load_shifting_focus_cluster": "ind_cluster_shift_only",
     "load_shedding_clusters": [
@@ -190,13 +190,13 @@ if __name__ == "__main__":
 
         # Uncomment the following code for dev purposes; Remove once finalized
         # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
-        if dr_scen not in [
-            "none",
-            "5_20_dynamic_0_LP",
-            "5_0_dynamic_0_LP",
-            "5_0_dynamic_20_LP",
-        ]:
-            continue
+        # if dr_scen not in [
+        #     "none",
+        #     "5_20_dynamic_0_LP",
+        #     "5_0_dynamic_0_LP",
+        #     "5_0_dynamic_20_LP",
+        # ]:
+        #     continue
 
         if config_workflow["amiris_analyses"]["make_scenario"]:
             make_scenario_config(cont)
