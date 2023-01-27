@@ -3,7 +3,6 @@ import shutil
 from fameio.source.cli import Options, ResolveOptions
 
 from dr_analyses.container import Container
-from dr_analyses.cross_run_evaluation import read_param_results_for_runs
 from dr_analyses.cross_scenario_evaluation import (
     concat_results,
     evaluate_all_parameter_results,
