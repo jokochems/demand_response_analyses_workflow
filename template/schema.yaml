@@ -165,7 +165,7 @@ AgentTypes:
             Mandatory: true
             List: false
           ValueOfLostLoad:
-            AttributeType: double
+            AttributeType: time_series
             Mandatory: true
             List: false
     Products: [ 'Bids', 'Payout', 'DispatchAssignment', 'BidsForecast', 'MeritOrderForecastRequest', 'PriceForecastRequest', 'GateClosureForward', 'ForecastRequestForward' ]
