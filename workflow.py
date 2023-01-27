@@ -3,7 +3,6 @@ import shutil
 from fameio.source.cli import Options, ResolveOptions
 
 from dr_analyses.container import Container
-from dr_analyses.cross_run_evaluation import read_param_results_for_runs
 from dr_analyses.cross_scenario_evaluation import (
     concat_results,
     evaluate_all_parameter_results,
@@ -11,8 +10,8 @@ from dr_analyses.cross_scenario_evaluation import (
 )
 from dr_analyses.plotting import (
     plot_bar_charts,
-    plot_cross_run_comparison,
-    configure_plots, plot_heat_maps,
+    configure_plots,
+    plot_heat_maps,
 )
 from dr_analyses.results_summary import calc_summary_parameters
 from dr_analyses.results_workflow import (
@@ -34,7 +33,8 @@ from dr_analyses.workflow_routines import (
     read_load_shedding_template,
     prepare_tariff_configs,
     read_tariff_configs,
-    read_investment_expenses, initialize_scenario_results_dict,
+    read_investment_expenses,
+    initialize_scenario_results_dict,
 )
 from load_shifting_api.main import LoadShiftingApiThread
 
@@ -187,9 +187,6 @@ if __name__ == "__main__":
                 dr_scen, templates["load_shedding"]
             )
             cont.save_scenario_yaml()
-        else:
-            # No need to change config for baseline scenario
-            continue
 
         # Uncomment the following code for dev purposes; Remove once finalized
         # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
@@ -243,7 +240,9 @@ if __name__ == "__main__":
             and "_wo_dr" not in scenario
         ):
             calc_summary_parameters(cont)
-            scenario_results[dr_scen][cont.trimmed_scenario] = cont.summary_series
+            scenario_results[dr_scen.split("_")[0]][
+                cont.trimmed_scenario
+            ] = cont.summary_series
 
     if config_workflow["evaluate_cross_scenarios"]:
         if not scenario_results:
@@ -260,11 +259,14 @@ if __name__ == "__main__":
             # }
             for dr_scen, scenario in scenario_files.items():
                 if dr_scen != "none":
-                    scenario_results[dr_scen.split("_")[0]][dr_scen] = read_scenario_result(
-                        config_workflow, scenario
-                    )
+                    scenario_results[dr_scen.split("_")[0]][
+                        dr_scen
+                    ] = read_scenario_result(config_workflow, scenario)
 
         for dr_scen, dr_scen_results in scenario_results.items():
+            if dr_scen == "none":
+                continue
+
             overall_results = concat_results(dr_scen_results)
 
             all_parameter_results = evaluate_all_parameter_results(
@@ -273,8 +275,14 @@ if __name__ == "__main__":
             if config_workflow["make_plots"]:
                 configure_plots(config_plotting)
                 plot_bar_charts(
-                    config_workflow, all_parameter_results, config_plotting, dr_scen
+                    config_workflow,
+                    all_parameter_results,
+                    config_plotting,
+                    dr_scen,
                 )
                 plot_heat_maps(
-                    config_workflow, all_parameter_results, config_plotting, dr_scen
+                    config_workflow,
+                    all_parameter_results,
+                    config_plotting,
+                    dr_scen,
                 )
