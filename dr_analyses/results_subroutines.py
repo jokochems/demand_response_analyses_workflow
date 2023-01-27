@@ -43,6 +43,7 @@ def calculate_dynamic_price_time_series(
     if use_baseline_prices:
         power_prices = pd.read_csv(
             cont.config_workflow["output_folder"]
+            + "/none/"
             + cont.trimmed_baseline_scenario
             + "/EnergyExchangeMulti.csv",
             sep=";",

@@ -3,7 +3,6 @@ import shutil
 from fameio.source.cli import Options, ResolveOptions
 
 from dr_analyses.container import Container
-from dr_analyses.cross_run_evaluation import read_param_results_for_runs
 from dr_analyses.cross_scenario_evaluation import (
     concat_results,
     evaluate_all_parameter_results,
@@ -11,8 +10,8 @@ from dr_analyses.cross_scenario_evaluation import (
 )
 from dr_analyses.plotting import (
     plot_bar_charts,
-    plot_cross_run_comparison,
-    configure_plots, plot_heat_maps,
+    configure_plots,
+    plot_heat_maps,
 )
 from dr_analyses.results_summary import calc_summary_parameters
 from dr_analyses.results_workflow import (
@@ -35,6 +34,7 @@ from dr_analyses.workflow_routines import (
     prepare_tariff_configs,
     read_tariff_configs,
     read_investment_expenses,
+    initialize_scenario_results_dict,
 )
 from load_shifting_api.main import LoadShiftingApiThread
 
@@ -166,7 +166,7 @@ if __name__ == "__main__":
             scenario_files[dr_scen] = scenario
             baseline_scenario = scenario
 
-    scenario_results = {}
+    scenario_results = initialize_scenario_results_dict(config_workflow)
 
     if config_workflow["amiris_analyses"]["start_web_service"]:
         load_shifting_api_thread = LoadShiftingApiThread()
@@ -187,18 +187,16 @@ if __name__ == "__main__":
                 dr_scen, templates["load_shedding"]
             )
             cont.save_scenario_yaml()
-        else:
-            # No need to change config for baseline scenario
-            continue
 
         # Uncomment the following code for dev purposes; Remove once finalized
         # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
-        # if dr_scen not in [
-        #     "5_20_dynamic_0_LP",
-        #     "5_0_dynamic_0_LP",
-        #     "5_0_dynamic_20_LP",
-        # ]:
-        #     continue
+        if dr_scen not in [
+            "none",
+            "5_20_dynamic_0_LP",
+            "5_0_dynamic_0_LP",
+            "5_0_dynamic_20_LP",
+        ]:
+            continue
 
         if config_workflow["amiris_analyses"]["make_scenario"]:
             make_scenario_config(cont)
@@ -242,7 +240,9 @@ if __name__ == "__main__":
             and "_wo_dr" not in scenario
         ):
             calc_summary_parameters(cont)
-            scenario_results[cont.trimmed_scenario] = cont.summary_series
+            scenario_results[dr_scen.split("_")[0]][
+                cont.trimmed_scenario
+            ] = cont.summary_series
 
     if config_workflow["evaluate_cross_scenarios"]:
         if not scenario_results:
@@ -259,19 +259,30 @@ if __name__ == "__main__":
             # }
             for dr_scen, scenario in scenario_files.items():
                 if dr_scen != "none":
-                    scenario_results[dr_scen] = read_scenario_result(
-                        config_workflow, scenario
-                    )
-        overall_results = concat_results(scenario_results)
+                    scenario_results[dr_scen.split("_")[0]][
+                        dr_scen
+                    ] = read_scenario_result(config_workflow, scenario)
 
-        all_parameter_results = evaluate_all_parameter_results(
-            config_workflow, overall_results
-        )
-        if config_workflow["make_plots"]:
-            configure_plots(config_plotting)
-            plot_bar_charts(
-                config_workflow, all_parameter_results, config_plotting
+        for dr_scen, dr_scen_results in scenario_results.items():
+            if dr_scen == "none":
+                continue
+
+            overall_results = concat_results(dr_scen_results)
+
+            all_parameter_results = evaluate_all_parameter_results(
+                config_workflow, overall_results, dr_scen
             )
-            plot_heat_maps(
-                config_workflow, all_parameter_results, config_plotting
-            )
+            if config_workflow["make_plots"]:
+                configure_plots(config_plotting)
+                plot_bar_charts(
+                    config_workflow,
+                    all_parameter_results,
+                    config_plotting,
+                    dr_scen,
+                )
+                plot_heat_maps(
+                    config_workflow,
+                    all_parameter_results,
+                    config_plotting,
+                    dr_scen,
+                )

@@ -10,6 +10,7 @@ def read_scenario_result(config_workflow: Dict, scenario: str) -> pd.Series:
     """Read the scenario result and return it"""
     return pd.read_csv(
         config_workflow["output_folder"]
+        + f"{trim_file_name(scenario).split('_')[3]}/"
         + trim_file_name(scenario)
         + "/parameter_summary.csv",
         sep=";",
@@ -55,7 +56,7 @@ def concat_results(scenario_results: Dict) -> pd.DataFrame:
 
 
 def evaluate_all_parameter_results(
-    config_workflow: Dict, overall_results: pd.DataFrame
+    config_workflow: Dict, overall_results: pd.DataFrame, dr_scen: str
 ) -> Dict[str, pd.DataFrame]:
     """Evaluate all parameter results and store them in a dict of DataFrames"""
     all_parameter_results = {}
@@ -64,14 +65,14 @@ def evaluate_all_parameter_results(
             continue
         else:
             all_parameter_results[param] = evaluate_parameter_results(
-                config_workflow, overall_results, param
+                config_workflow, overall_results, param, dr_scen
             )
 
     return all_parameter_results
 
 
 def evaluate_parameter_results(
-    config_workflow: Dict, overall_results: pd.DataFrame, param: str
+    config_workflow: Dict, overall_results: pd.DataFrame, param: str, dr_scen: str
 ) -> pd.DataFrame:
     """Pivot and evaluate parameter results"""
     param_results = overall_results.loc[
@@ -88,6 +89,7 @@ def evaluate_parameter_results(
         data_output_folder = (
             f"{config_workflow['output_folder']}"
             f"{config_workflow['data_output']}"
+            f"{dr_scen}/"
         )
         make_directory_if_missing(data_output_folder)
         param_results.to_csv(f"{data_output_folder}{param}.csv", sep=";")

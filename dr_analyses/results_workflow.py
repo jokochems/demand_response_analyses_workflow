@@ -23,9 +23,6 @@ def calc_load_shifting_results(cont: Container, key: str) -> None:
     :param Container cont: container object holding configuration
     :param str key: Identifier for current scenario
     """
-    cont.config_convert[Options.OUTPUT] = (
-        cont.config_workflow["output_folder"] + cont.trimmed_scenario
-    )
     results = pd.read_csv(
         f"{cont.config_convert[Options.OUTPUT]}/LoadShiftingTrader.csv",
         sep=";",

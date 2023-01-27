@@ -165,7 +165,7 @@ def drop_duplicate_scenarios(overview: pd.DataFrame) -> pd.DataFrame:
             (overview.index.get_level_values(1) == 100)
             & (overview.index.get_level_values(0) != 0)
         ].index,
-        inplace=True
+        inplace=True,
     )
 
     return overview
@@ -199,6 +199,15 @@ def read_investment_expenses(config: Dict, dr_scen: str) -> pd.Series:
         f"{config['load_shifting_focus_cluster']}_specific_investments.csv"
     )
     return pd.read_csv(path + file_name, sep=";", index_col=0, header=None)
+
+
+def initialize_scenario_results_dict(config: Dict) -> Dict:
+    """Initialize and return scenario results dict"""
+    scenario_results = {}
+    for dr_scen in config["demand_response_scenarios"]:
+        scenario_results[dr_scen] = {}
+
+    return scenario_results
 
 
 def make_scenario_config(cont: Container) -> None:
@@ -237,8 +246,17 @@ def run_amiris(run_properties: Dict, cont: Container) -> None:
 def convert_amiris_results(cont: Container) -> None:
     """Convert AMIRIS results from a previous model run"""
     print(f"Converting scenario {cont.trimmed_scenario} results")
+    try:
+        sub_folder_name = cont.trimmed_scenario.split("_")[3]
+    except IndexError:
+        sub_folder_name = "none"
     cont.config_convert[Options.OUTPUT] = (
-        cont.config_workflow["output_folder"] + cont.trimmed_scenario
+        f"{cont.config_workflow['output_folder']}/"
+        f"{sub_folder_name}/"
+        f"{cont.trimmed_scenario}"
+    )
+    make_directory_if_missing(
+        f"{cont.config_workflow['output_folder']}/{sub_folder_name}/"
     )
     convert_results(
         cont.config_workflow["output_folder"] + "amiris-output.pb",

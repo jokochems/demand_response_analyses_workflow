@@ -23,13 +23,14 @@ def plot_bar_charts(
     config_workflow: Dict,
     all_parameter_results: Dict[str, pd.DataFrame],
     config_plotting: Dict = None,
+        dr_scen: str = "",
 ) -> None:
     """Plot and save bar charts for the different parameters"""
     if not config_plotting:
         config_plotting = initialize_empty_plot_config()
 
     plots_output_folder = (
-        f"{config_workflow['output_folder']}{config_workflow['plots_output']}"
+        f"{config_workflow['output_folder']}{config_workflow['plots_output']}{dr_scen}/"
     )
     make_directory_if_missing(plots_output_folder)
 
@@ -184,6 +185,7 @@ def plot_heat_maps(
     config_workflow: Dict,
     all_parameter_results: Dict[str, pd.DataFrame],
     config_plotting: Dict = None,
+    dr_scen: str = "",
     annotate: bool = False,
 ) -> None:
     """Plot and save an annotated heat map for given parameters"""
@@ -191,7 +193,7 @@ def plot_heat_maps(
         config_plotting = initialize_empty_plot_config()
 
     plots_output_folder = (
-        f"{config_workflow['output_folder']}{config_workflow['plots_output']}"
+        f"{config_workflow['output_folder']}{config_workflow['plots_output']}{dr_scen}/"
     )
     make_directory_if_missing(plots_output_folder)
 
