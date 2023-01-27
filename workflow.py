@@ -106,7 +106,7 @@ config_convert = {
     Options.OUTPUT: None,  # set in workflow
     Options.SINGLE_AGENT_EXPORT: False,
     Options.MEMORY_SAVING: False,
-    Options.RESOLVE_COMPLEX_FIELD: ResolveOptions.SPLIT,
+    Options.RESOLVE_COMPLEX_FIELD: ResolveOptions.IGNORE,
 }
 
 if __name__ == "__main__":
