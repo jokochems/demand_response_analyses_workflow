@@ -108,7 +108,7 @@ config_convert = {
     Options.OUTPUT: None,  # set in workflow
     Options.SINGLE_AGENT_EXPORT: False,
     Options.MEMORY_SAVING: False,
-    Options.RESOLVE_COMPLEX_FIELD: ResolveOptions.SPLIT,
+    Options.RESOLVE_COMPLEX_FIELD: ResolveOptions.IGNORE,
 }
 
 if __name__ == "__main__":
@@ -190,13 +190,13 @@ if __name__ == "__main__":
 
         # Uncomment the following code for dev purposes; Remove once finalized
         # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
-        if dr_scen not in [
-            "none",
-            "5_20_dynamic_0_LP",
-            "5_0_dynamic_0_LP",
-            "5_0_dynamic_20_LP",
-        ]:
-            continue
+        # if dr_scen not in [
+        #     "none",
+        #     "5_20_dynamic_0_LP",
+        #     "5_0_dynamic_0_LP",
+        #     "5_0_dynamic_20_LP",
+        # ]:
+        #     continue
 
         if config_workflow["amiris_analyses"]["make_scenario"]:
             make_scenario_config(cont)

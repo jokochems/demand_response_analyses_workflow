@@ -47,7 +47,7 @@ Contracts:
     ReceiverId: *carbonMarket
     ProductName: Co2PriceForecastRequest
     FirstDeliveryTime: -24
-    DeliveryIntervalInSteps: *hourly    
+    DeliveryIntervalInSteps: *hourly
 
   - SenderId: *fuelsMarket
     ReceiverId: *operators
