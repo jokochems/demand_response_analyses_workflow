@@ -26,25 +26,25 @@ Contracts:
     ReceiverId: *marketer
     ProductName: ForecastRequest
     FirstDeliveryTime: -26
-    DeliveryIntervalInSteps: *yearly
+    DeliveryIntervalInSteps: *hourly
 
   - SenderId: *marketer
     ReceiverId: *renewables
     ProductName: ForecastRequestForward
     FirstDeliveryTime: -25
-    DeliveryIntervalInSteps: *yearly
+    DeliveryIntervalInSteps: *hourly
 
   - SenderId: *renewables
     ReceiverId: *marketer
     ProductName: MarginalCostForecast
     FirstDeliveryTime: -22
-    DeliveryIntervalInSteps: *yearly
+    DeliveryIntervalInSteps: *hourly
 
   - SenderId: *marketer
     ReceiverId: *forecaster
     ProductName: BidsForecast
     FirstDeliveryTime: -21
-    DeliveryIntervalInSteps: *yearly
+    DeliveryIntervalInSteps: *hourly
 
 #################################
 # -- Bidding --                 #
