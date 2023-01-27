@@ -29,49 +29,49 @@ Contracts:
     ReceiverId: *traders
     ProductName: ForecastRequest
     FirstDeliveryTime: -26
-    DeliveryIntervalInSteps: *yearly
+    DeliveryIntervalInSteps: *hourly
 
   - SenderId: *traders
     ReceiverId: *operators
     ProductName: ForecastRequestForward
     FirstDeliveryTime: -25
-    DeliveryIntervalInSteps: *yearly
+    DeliveryIntervalInSteps: *hourly
 
   - SenderId: *operators
     ReceiverId: *fuelsMarket
     ProductName: FuelPriceForecastRequest
     FirstDeliveryTime: -24
-    DeliveryIntervalInSteps: *yearly
+    DeliveryIntervalInSteps: *hourly
 
   - SenderId: *operators
     ReceiverId: *carbonMarket
     ProductName: Co2PriceForecastRequest
     FirstDeliveryTime: -24
-    DeliveryIntervalInSteps: *yearly
+    DeliveryIntervalInSteps: *hourly
 
   - SenderId: *fuelsMarket
     ReceiverId: *operators
     ProductName: FuelPriceForecast
     FirstDeliveryTime: -23
-    DeliveryIntervalInSteps: *yearly
+    DeliveryIntervalInSteps: *hourly
 
   - SenderId: *carbonMarket
     ReceiverId: *operators
     ProductName: Co2PriceForecast
     FirstDeliveryTime: -23
-    DeliveryIntervalInSteps: *yearly
+    DeliveryIntervalInSteps: *hourly
 
   - SenderId: *operators
     ReceiverId: *traders
     ProductName: MarginalCostForecast
     FirstDeliveryTime: -22
-    DeliveryIntervalInSteps: *yearly
+    DeliveryIntervalInSteps: *hourly
 
   - SenderId: *traders
     ReceiverId: *forecaster
     ProductName: BidsForecast
     FirstDeliveryTime: -21
-    DeliveryIntervalInSteps: *yearly
+    DeliveryIntervalInSteps: *hourly
 
 #################
 # -- Bidding -- #
