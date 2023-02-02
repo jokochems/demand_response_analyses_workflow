@@ -125,8 +125,13 @@ def calculate_load_shifting_annuity(cont: Container) -> float:
     mode = cont.config_workflow["annuity_mode"]
     if mode == "multiple_years":
         n_years = derive_lifetime_from_simulation_horizon(cont)
-    elif mode == "singe_year":
+    elif mode == "single_year":
         n_years = cont.config_workflow["lifetime"]
+    else:
+        raise ValueError(
+            f"`annuity_mode` must be one of ['multiple_years', 'single_year']"
+            f"You passed an invalid value: {mode}."
+        )
     annuity_factor = calculate_annuity_factor(
         n_years, cont.config_workflow["interest_rate"]
     )
@@ -135,9 +140,10 @@ def calculate_load_shifting_annuity(cont: Container) -> float:
     elif mode == "single_year":
         invest_annuity = -cont.investment_expenses * annuity_factor
         simulated_year = get_number_of_simulated_year(cont)
-        simulation_year_discounted_cashflow = cont.cashflows[0] * (
-            1 + cont.config_workflow["interest_rate"]
-        ) ** -simulated_year
+        simulation_year_discounted_cashflow = (
+            cont.cashflows[0]
+            * (1 + cont.config_workflow["interest_rate"]) ** -simulated_year
+        )
         annuity = invest_annuity + simulation_year_discounted_cashflow
 
     return annuity
@@ -163,7 +169,8 @@ def get_number_of_simulated_year(cont: Container) -> int:
                 :4
             ]
         )
-        - 2019 + 1
+        - 2019
+        + 1
     )
 
 
