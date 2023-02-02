@@ -21,14 +21,15 @@ Agents:
       Strategy:
         # SINGLE_AGENT_MAX_PROFIT, SINGLE_AGENT_MIN_SYSTEM_COST, MULTI_AGENT_SIMPLE, DISPATCH_FILE, SINGLE_AGENT_MAX_PROFIT_TARIFFS, SINGLE_AGENT_MAX_PROFIT_EXTERNAL
         StrategistType: SINGLE_AGENT_MAX_PROFIT_EXTERNAL
-        ForecastPeriodInHours: 168
-        ScheduleDurationInHours: 24
+        ForecastPeriodInHours: 8760
+        ScheduleDurationInHours: 8760
         SingleAgent:
           PurchaseLeviesAndTaxesInEURperMWH: 0.0
         Api:
           ServiceUrl: http://127.0.0.1:8000/load_shift/
           UseAnnualLimit: 0
           Solver: cplex
+          BidMargin: 1000.0
       Policy:
         EEGSurchargeInEURPerMWH: 0.0
         VolumetricNetworkChargeInEURPerMWH: 0.0

@@ -1,13 +1,13 @@
 # AMIRIS simulation using inputs from pommesinvest for parameterization
-# Simulating a 20 year horizon
+# Simulating a one year horizon
 
 Schema: !include "../../template/schema.yaml"
 
 GeneralProperties:
   RunId: 1
   Simulation:
-    StartTime: 2019-12-31_23:58:00
-    StopTime: 2035-12-31_23:58:00
+    StartTime: 2026-12-31_23:58:00
+    StopTime: 2027-12-31_23:58:00
     RandomSeed: 1
   Output:
     Interval: 100

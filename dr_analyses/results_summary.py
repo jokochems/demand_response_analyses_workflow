@@ -156,3 +156,4 @@ def add_investments_and_npv_summary(cont: Container) -> None:
     """Add summary for net present values and investment expenditures"""
     cont.summary["InvestmentExpenses"] = cont.investment_expenses
     cont.summary["NetPresentValue"] = cont.npv
+    cont.summary["Annuity"] = cont.annuity

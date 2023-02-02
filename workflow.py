@@ -22,7 +22,7 @@ from dr_analyses.results_workflow import (
     extract_load_shifting_cashflows,
     add_capacity_payments,
     calculate_net_present_values,
-    add_discounted_payments_to_results,
+    add_discounted_payments_to_results, calculate_load_shifting_annuity,
 )
 from dr_analyses.workflow_routines import (
     convert_amiris_results,
@@ -70,6 +70,8 @@ config_workflow = {
         "use_baseline_prices_for_comparison": True,
         "aggregate_results": True,
     },
+    "annuity_mode": "single_year",  # "single_year", "multiple_years"
+    "lifetime": 15,  # only for annuity_mode "single_year"
     "write_results": True,
     "evaluate_cross_scenarios": True,
     "make_plots": True,
@@ -190,13 +192,13 @@ if __name__ == "__main__":
 
         # Uncomment the following code for dev purposes; Remove once finalized
         # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
-        # if dr_scen not in [
-        #     "none",
-        #     "5_20_dynamic_0_LP",
-        #     "5_0_dynamic_0_LP",
-        #     "5_0_dynamic_20_LP",
-        # ]:
-        #     continue
+        if dr_scen not in [
+            # "none",
+            "5_20_dynamic_0_LP",
+            # "5_0_dynamic_0_LP",
+            # "5_0_dynamic_20_LP",
+        ]:
+            continue
 
         if config_workflow["amiris_analyses"]["make_scenario"]:
             make_scenario_config(cont)
@@ -232,6 +234,9 @@ if __name__ == "__main__":
                 calculate_net_present_values(
                     cont, dr_scen, investment_expenses
                 )
+            )
+            cont.add_annuity(
+                calculate_load_shifting_annuity(cont)
             )
             if config_workflow["write_results"]:
                 write_results(cont)
