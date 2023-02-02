@@ -16,25 +16,25 @@ Contracts:
     ReceiverId: *forecaster
     ProductName: PriceForecastRequest
     FirstDeliveryTime: -21
-    DeliveryIntervalInSteps: *hourly
+    DeliveryIntervalInSteps: *yearly
 
   - SenderId: *forecaster
     ReceiverId: *loadshift
     ProductName: PriceForecast
     FirstDeliveryTime: -19
-    DeliveryIntervalInSteps: *hourly
+    DeliveryIntervalInSteps: *yearly
 
 #  - SenderId: *loadshift
 #    ReceiverId: *forecaster
 #    ProductName: MeritOrderForecastRequest
 #    FirstDeliveryTime: -21
-#    DeliveryIntervalInSteps: *hourly
+#    DeliveryIntervalInSteps: *yearly
 #
 #  - SenderId: *forecaster
 #    ReceiverId: *loadshift
 #    ProductName: MeritOrderForecast
 #    FirstDeliveryTime: -19
-#    DeliveryIntervalInSteps: *hourly
+#    DeliveryIntervalInSteps: *yearly
 
 ###############################
 # -- Bidding --               #
