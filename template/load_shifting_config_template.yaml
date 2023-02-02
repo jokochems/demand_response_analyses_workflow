@@ -21,8 +21,8 @@ Agents:
       Strategy:
         # SINGLE_AGENT_MAX_PROFIT, SINGLE_AGENT_MIN_SYSTEM_COST, MULTI_AGENT_SIMPLE, DISPATCH_FILE, SINGLE_AGENT_MAX_PROFIT_TARIFFS, SINGLE_AGENT_MAX_PROFIT_EXTERNAL
         StrategistType: SINGLE_AGENT_MAX_PROFIT_EXTERNAL
-        ForecastPeriodInHours: 168
-        ScheduleDurationInHours: 24
+        ForecastPeriodInHours: 8760
+        ScheduleDurationInHours: 8760
         SingleAgent:
           PurchaseLeviesAndTaxesInEURperMWH: 0.0
         Api:
