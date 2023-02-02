@@ -75,8 +75,8 @@ def extract_load_shifting_cashflows(cont: Container) -> List:
     payment_columns = ["TotalPayments", "CapacityPayment"]
 
     for i in range(get_simulation_horizon_in_years(cont)):
-        if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR > len(cont.results) + 1:
-            stop = len(cont.results) + 1
+        if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
+            stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
         else:
             stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR
 
@@ -156,8 +156,12 @@ def get_number_of_simulated_year(cont: Container) -> int:
     """Return the number of the simulated year
 
     0 = start year, where investment occur"""
-    return int(
-        cont.scenario_yaml["GeneralProperties"]["Simulation"]["StartTime"][:4]
+    return (
+        int(
+            cont.scenario_yaml["GeneralProperties"]["Simulation"]["StartTime"][
+                :4
+            ]
+        )
         - 2019
     )
 
@@ -171,8 +175,8 @@ def add_discounted_payments_to_results(
     :param Container cont: object holding results
     """
     for i in range(get_simulation_horizon_in_years(cont)):
-        if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR > len(cont.results) + 1:
-            stop = len(cont.results) + 1
+        if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
+            stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
         else:
             stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR
 
@@ -249,16 +253,24 @@ def add_capacity_payments(cont: Container) -> None:
         "CapacityBasedNetworkChargesInEURPerMW"
     ]
     for i in range(get_simulation_horizon_in_years(cont)):
-        if (i + 1) * 8760 > len(cont.results) + 1:
-            stop = len(cont.results) + 1
+        if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
+            stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
         else:
-            stop = (i + 1) * 8760
-        cont.results.at[i * 8760, "BaselineCapacityPayment"] = (
-            cont.results["BaselineLoadProfile"].loc[i * 8760 : stop].max()
+            stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR
+        cont.results.at[
+            i * AMIRIS_TIMESTEPS_PER_YEAR, "BaselineCapacityPayment"
+        ] = (
+            cont.results["BaselineLoadProfile"]
+            .loc[i * AMIRIS_TIMESTEPS_PER_YEAR : stop]
+            .max()
             * capacity_charge
         )
-        cont.results.at[i * 8760, "ShiftingCapacityPayment"] = (
-            cont.results["LoadAfterShifting"].loc[i * 8760 : stop].max()
+        cont.results.at[
+            i * AMIRIS_TIMESTEPS_PER_YEAR, "ShiftingCapacityPayment"
+        ] = (
+            cont.results["LoadAfterShifting"]
+            .loc[i * AMIRIS_TIMESTEPS_PER_YEAR : stop]
+            .max()
             * capacity_charge
         )
 
