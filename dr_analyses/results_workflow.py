@@ -74,7 +74,7 @@ def extract_load_shifting_cashflows(cont: Container) -> List:
     cashflows = []
     payment_columns = ["TotalPayments", "CapacityPayment"]
 
-    for i in range(get_simulation_horizon_in_years(cont)):
+    for i in range(derive_lifetime_from_simulation_horizon(cont)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
             stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
         else:
@@ -123,7 +123,10 @@ def calculate_load_shifting_annuity(cont: Container) -> float:
     :return float: annuity for the respective case
     """
     mode = cont.config_workflow["annuity_mode"]
-    n_years = get_simulation_horizon_in_years(cont)
+    if mode == "multiple_years":
+        n_years = derive_lifetime_from_simulation_horizon(cont)
+    elif mode == "singe_year":
+        n_years = cont.config_workflow["lifetime"]
     annuity_factor = calculate_annuity_factor(
         n_years, cont.config_workflow["interest_rate"]
     )
@@ -132,17 +135,15 @@ def calculate_load_shifting_annuity(cont: Container) -> float:
     elif mode == "single_year":
         invest_annuity = -cont.investment_expenses * annuity_factor
         simulated_year = get_number_of_simulated_year(cont)
-        simulation_year_discounted_cashflow = cont.cashflows[
-            simulated_year
-        ] * (1 + cont.config_workflow["interest_rate"]) ** -(
-            simulated_year + 1
-        )
+        simulation_year_discounted_cashflow = cont.cashflows[0] * (
+            1 + cont.config_workflow["interest_rate"]
+        ) ** -simulated_year
         annuity = invest_annuity + simulation_year_discounted_cashflow
 
     return annuity
 
 
-def get_simulation_horizon_in_years(cont: Container) -> int:
+def derive_lifetime_from_simulation_horizon(cont: Container) -> int:
     """Return the simulation horizon in years"""
     return math.ceil(len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR)
 
@@ -155,14 +156,14 @@ def calculate_annuity_factor(n, interest) -> float:
 def get_number_of_simulated_year(cont: Container) -> int:
     """Return the number of the simulated year
 
-    0 = start year, where investment occur"""
+    0 = start year, where investment occur; 1 = first year"""
     return (
         int(
             cont.scenario_yaml["GeneralProperties"]["Simulation"]["StartTime"][
                 :4
             ]
         )
-        - 2019
+        - 2019 + 1
     )
 
 
@@ -174,7 +175,7 @@ def add_discounted_payments_to_results(
     :param list(str) cols: Columns for which discounted values shall be added
     :param Container cont: object holding results
     """
-    for i in range(get_simulation_horizon_in_years(cont)):
+    for i in range(derive_lifetime_from_simulation_horizon(cont)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
             stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
         else:
@@ -252,7 +253,7 @@ def add_capacity_payments(cont: Container) -> None:
     capacity_charge = cont.load_shifting_data["Attributes"]["Policy"][
         "CapacityBasedNetworkChargesInEURPerMW"
     ]
-    for i in range(get_simulation_horizon_in_years(cont)):
+    for i in range(derive_lifetime_from_simulation_horizon(cont)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
             stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
         else:

@@ -71,6 +71,7 @@ config_workflow = {
         "aggregate_results": True,
     },
     "annuity_mode": "single_year",  # "single_year", "multiple_years"
+    "lifetime": 15,  # only for annuity_mode "single_year"
     "write_results": True,
     "evaluate_cross_scenarios": True,
     "make_plots": True,
@@ -191,13 +192,13 @@ if __name__ == "__main__":
 
         # Uncomment the following code for dev purposes; Remove once finalized
         # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
-        # if dr_scen not in [
-        #     "none",
-        #     "5_20_dynamic_0_LP",
-        #     "5_0_dynamic_0_LP",
-        #     "5_0_dynamic_20_LP",
-        # ]:
-        #     continue
+        if dr_scen not in [
+            # "none",
+            "5_20_dynamic_0_LP",
+            # "5_0_dynamic_0_LP",
+            # "5_0_dynamic_20_LP",
+        ]:
+            continue
 
         if config_workflow["amiris_analyses"]["make_scenario"]:
             make_scenario_config(cont)
