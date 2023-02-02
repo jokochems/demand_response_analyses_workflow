@@ -48,7 +48,7 @@ def calculate_net_present_values(
     cont: Container, dr_scen: str, investment_expenses: Dict
 ) -> float:
     """Calculate and return net present values for demand response investments made
-    :return: DataFrame holding net present values for the respective case
+    :return float: net present value for the respective case
     """
     investment_expenses = investment_expenses[dr_scen.split("_", 1)[0]]
     installed_power = cont.load_shifting_data["Attributes"][
@@ -74,7 +74,7 @@ def extract_load_shifting_cashflows(cont: Container) -> List:
     cashflows = []
     payment_columns = ["TotalPayments", "CapacityPayment"]
 
-    for i in range(math.ceil(len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR)):
+    for i in range(get_simulation_horizon_in_years(cont)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR > len(cont.results) + 1:
             stop = len(cont.results) + 1
         else:
@@ -109,6 +109,59 @@ def extract_load_shifting_cashflows(cont: Container) -> List:
     return cashflows
 
 
+def calculate_load_shifting_annuity(cont: Container) -> float:
+    """Calculate load shifting annuity
+
+    There are two modes:
+    - "single_year": Use for single year simulation
+    and calculate load shifting annuities based on situation
+    in that one particular year
+    - "multiple_years": Use for multiple years (lifetime) simulation
+    and calculate load shifting annuities based on situation
+    over the demand response investments lifetime
+
+    :return float: annuity for the respective case
+    """
+    mode = cont.config_workflow["annuity_mode"]
+    n_years = get_simulation_horizon_in_years(cont)
+    annuity_factor = calculate_annuity_factor(
+        n_years, cont.config_workflow["interest_rate"]
+    )
+    if mode == "multiple_years":
+        annuity = cont.npv * annuity_factor
+    elif mode == "single_year":
+        invest_annuity = -cont.investment_expenses * annuity_factor
+        simulated_year = get_number_of_simulated_year(cont)
+        simulation_year_discounted_cashflow = cont.cashflows[
+            simulated_year
+        ] * (1 + cont.config_workflow["interest_rate"]) ** -(
+            simulated_year + 1
+        )
+        annuity = invest_annuity + simulation_year_discounted_cashflow
+
+    return annuity
+
+
+def get_simulation_horizon_in_years(cont: Container) -> int:
+    """Return the simulation horizon in years"""
+    return math.ceil(len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR)
+
+
+def calculate_annuity_factor(n, interest) -> float:
+    """Return annuity factor for given number of years and interest rate"""
+    return ((1 + interest) ** n * interest) / ((1 + interest) ** n - 1)
+
+
+def get_number_of_simulated_year(cont: Container) -> int:
+    """Return the number of the simulated year
+
+    0 = start year, where investment occur"""
+    return int(
+        cont.scenario_yaml["GeneralProperties"]["Simulation"]["StartTime"][:4]
+        - 2019
+    )
+
+
 def add_discounted_payments_to_results(
     cols: List[str], cont: Container
 ) -> None:
@@ -117,7 +170,7 @@ def add_discounted_payments_to_results(
     :param list(str) cols: Columns for which discounted values shall be added
     :param Container cont: object holding results
     """
-    for i in range(math.ceil(len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR)):
+    for i in range(get_simulation_horizon_in_years(cont)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR > len(cont.results) + 1:
             stop = len(cont.results) + 1
         else:
@@ -195,7 +248,7 @@ def add_capacity_payments(cont: Container) -> None:
     capacity_charge = cont.load_shifting_data["Attributes"]["Policy"][
         "CapacityBasedNetworkChargesInEURPerMW"
     ]
-    for i in range(math.ceil(len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR)):
+    for i in range(get_simulation_horizon_in_years(cont)):
         if (i + 1) * 8760 > len(cont.results) + 1:
             stop = len(cont.results) + 1
         else:

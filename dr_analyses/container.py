@@ -187,6 +187,7 @@ class Container:
     i.e. (opportunity) revenues - expenses
     :attr float or NoneType investment_expenses: load shifting investment
     :attr float or NoneType npv: net present value of load shifting investment
+    :attr float or NoneType annuity: annuity of load shifting investment
     :attr dict or NoneType summary: parameter summary retrieved from results
     :attr dict or pd.Series summary_series: parameter summary as Series
     """
@@ -214,6 +215,7 @@ class Container:
         self.cashflows = None
         self.investment_expenses = None
         self.npv = None
+        self.annuity = None
         self.summary = None
         self.summary_series = None
 
@@ -420,6 +422,10 @@ class Container:
     def add_npv(self, npv: float):
         """Save net present value (NPV) results in container object"""
         self.npv = npv
+
+    def add_annuity(self, annuity: float):
+        """Save annuity results in container object"""
+        self.annuity = annuity
 
     def set_investment_expenses(self, investment_expenses: float):
         """Set investment expenses for load shifting focus cluster"""
