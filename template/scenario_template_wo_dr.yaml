@@ -535,6 +535,33 @@ Agents:
       minMarkup: 0
       maxMarkup: 0
 
+  # ARTIFICAL UNITS TO PREVENT SHORTAGE!
+  - Type: ConventionalPlantOperator
+    Id: 517
+
+  - Type: PredefinedPlantBuilder
+    Id: 2017
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: OTHER  # otherfossil gas turbine
+        SpecificCo2EmissionsInTperMWH: 0.2452248
+        PlannedAvailability: 1.0
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_GT_otherfossil.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/GT_otherfossil_efficiency_max.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_otherfossil_efficiency_max.csv"
+      BlockSizeInMW: 10000.0
+      InstalledPowerInMW: 10000.0
+
+  - Type: ConventionalTrader
+    Id: 1017
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
+
   - Type: VariableRenewableOperator
     Id: 10
     Attributes:
