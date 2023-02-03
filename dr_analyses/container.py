@@ -272,7 +272,7 @@ class Container:
         shortage_agent = [
             agent
             for agent in self.scenario_yaml["Agents"]
-            if agent["Id"] == "2017"
+            if agent["Id"] == 2017
         ][0]
         shortage_agent["Attributes"]["InstalledPowerInMW"] = shortage_capacity
 
