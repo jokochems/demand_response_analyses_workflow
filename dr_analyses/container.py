@@ -267,6 +267,15 @@ class Container:
             sep=";",
         )
 
+    def adapt_shortage_capacity(self, shortage_capacity: float) -> None:
+        """Adapt the capacity of artificial shortage units to given value"""
+        shortage_agent = [
+            agent
+            for agent in self.scenario_yaml["Agents"]
+            if agent["Id"] == "2017"
+        ][0]
+        shortage_agent["Attributes"]["InstalledPowerInMW"] = shortage_capacity
+
     def add_load_shifting_config(self, key: str, templates: Dict) -> None:
         """Add a load shifting agent to scenario and adjust configuration"""
         self.add_load_shifting_agent(templates["load_shifting"], key)
