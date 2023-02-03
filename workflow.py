@@ -22,7 +22,8 @@ from dr_analyses.results_workflow import (
     extract_load_shifting_cashflows,
     add_capacity_payments,
     calculate_net_present_values,
-    add_discounted_payments_to_results, calculate_load_shifting_annuity,
+    add_discounted_payments_to_results,
+    calculate_load_shifting_annuity,
 )
 from dr_analyses.workflow_routines import (
     convert_amiris_results,
@@ -61,6 +62,7 @@ config_workflow = {
     ],
     "interest_rate": 0.05,
     "prepare_tariff_config": True,
+    "artificial_shortage_capacity_in_MW": 10000,
     "amiris_analyses": {
         "start_web_service": True,
         "make_scenario": True,
@@ -183,6 +185,10 @@ if __name__ == "__main__":
             baseline_scenario,
         )
 
+        cont.adapt_shortage_capacity(
+            config_workflow["artificial_shortage_capacity_in_MW"]
+        )
+
         if scenario != baseline_scenario:
             cont.add_load_shifting_config(dr_scen, templates)
             cont.update_config_for_scenario(
@@ -235,9 +241,7 @@ if __name__ == "__main__":
                     cont, dr_scen, investment_expenses
                 )
             )
-            cont.add_annuity(
-                calculate_load_shifting_annuity(cont)
-            )
+            cont.add_annuity(calculate_load_shifting_annuity(cont))
             if config_workflow["write_results"]:
                 write_results(cont)
         if (
