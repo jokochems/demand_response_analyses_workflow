@@ -62,7 +62,7 @@ config_workflow = {
     ],
     "interest_rate": 0.05,
     "prepare_tariff_config": True,
-    "artificial_shortage_capacity_in_MW": 10000,
+    "artificial_shortage_capacity_in_MW": 100000,
     "amiris_analyses": {
         "start_web_service": True,
         "make_scenario": True,
