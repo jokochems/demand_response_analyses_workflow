@@ -1,4 +1,5 @@
 import shutil
+from json import load
 
 from fameio.source.cli import Options, ResolveOptions
 
@@ -175,6 +176,9 @@ if __name__ == "__main__":
     if config_workflow["amiris_analyses"]["start_web_service"]:
         load_shifting_api_thread = LoadShiftingApiThread()
         load_shifting_api_thread.start()
+
+        service_url = load_shifting_api_thread.get_url()
+        templates["load_shifting"]["Attributes"]["Strategy"]["Api"]["ServiceUrl"] = service_url
 
     for dr_scen, scenario in scenario_files.items():
         cont = Container(
