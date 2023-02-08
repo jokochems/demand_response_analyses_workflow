@@ -198,7 +198,7 @@ if __name__ == "__main__":
             cont.update_config_for_scenario(
                 dr_scen, templates["load_shedding"]
             )
-            cont.save_scenario_yaml()
+        cont.save_scenario_yaml()
 
         # Uncomment the following code for dev purposes; Remove once finalized
         # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
