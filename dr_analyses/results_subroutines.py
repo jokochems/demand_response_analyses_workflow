@@ -42,10 +42,10 @@ def calculate_dynamic_price_time_series(
     """
     if use_baseline_prices:
         power_prices = pd.read_csv(
-            cont.config_workflow["output_folder"]
-            + cont.trimmed_scenario.split("_")[3]
-            + cont.trimmed_baseline_scenario
-            + "/EnergyExchangeMulti.csv",
+            f"{cont.config_workflow['output_folder']}"
+            f"{cont.trimmed_scenario.split('_')[3]}/"
+            f"{cont.trimmed_baseline_scenario}"
+            f"/EnergyExchangeMulti.csv",
             sep=";",
         )
     else:
