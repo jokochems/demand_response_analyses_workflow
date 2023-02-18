@@ -1,0 +1,73 @@
+import shutil
+
+import yaml
+from fameio.source.cli import Options, ResolveOptions
+import argparse
+from typing import Dict
+
+from fameio.source.loader import load_yaml
+
+
+def add_args():
+    """Add command line argument for config file"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-f",
+        "--file",
+        required=False,
+        default="./config.yml",
+        help="Specify input config file",
+    )
+    return parser.parse_args()
+
+
+def extract_simple_config(config: Dict, key):
+    """Extract config part to control the workflow"""
+    return config[key]
+
+
+def extract_config_plotting(config: Dict):
+    """Extract config part to control the plotting"""
+    config_plotting = config["config_plotting"]
+    if config_plotting["x_label"] == "None":
+        config_plotting["x_label"] = None
+    config_plotting["figsize"] = (
+        config_plotting.pop("width"),
+        config_plotting.pop("height"),
+    )
+
+    return config_plotting
+
+
+def extract_fame_config(config: Dict, key: str):
+    """Extract config part to control fameio"""
+    fame_config_str_keys = config[key]
+    fame_config = {}
+    for config_option, config_value in fame_config_str_keys.items():
+        for option in Options:
+            if config_option.split(".")[1] == option.name:
+                if config_value == "None":
+                    config_value = None
+                fame_config[option] = config_value
+
+    return fame_config
+
+
+def update_run_properties(default_run_properties: Dict, dr_scen: str):
+    """Create a duplicate of fameSetup.yaml and adjust output file"""
+    new_setup_file = f"{default_run_properties['setup'].split('.')[0]}_{dr_scen}.yaml"
+    shutil.copyfile(
+        f"{default_run_properties['setup']}",
+        new_setup_file,
+    )
+    fame_setup = load_yaml(new_setup_file)
+    fame_setup[
+        "outputFilePrefix"
+    ] = f"{fame_setup['outputFilePrefix']}_{dr_scen}"
+    with open(new_setup_file, "w") as file:
+        yaml.dump(fame_setup, file, sort_keys=False)
+
+    run_properties = default_run_properties.copy()
+    run_properties["setup"] = new_setup_file
+
+    return run_properties
