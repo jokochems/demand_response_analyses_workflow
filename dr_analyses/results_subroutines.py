@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -43,7 +43,7 @@ def calculate_dynamic_price_time_series(
     if use_baseline_prices:
         power_prices = pd.read_csv(
             cont.config_workflow["output_folder"]
-            + "/none/"
+            + cont.trimmed_scenario.split("_")[3]
             + cont.trimmed_baseline_scenario
             + "/EnergyExchangeMulti.csv",
             sep=";",
@@ -99,7 +99,9 @@ def add_static_prices(cont: Container) -> None:
     :param Container cont: container object with configuration and results
     info
     """
-    price_component = cont.load_shifting_data["Attributes"]["Policy"]["OtherSurchargesInEURPerMWH"]
+    price_component = cont.load_shifting_data["Attributes"]["Policy"][
+        "OtherSurchargesInEURPerMWH"
+    ]
 
     cont.power_prices["STATIC_POWER_PRICE"] = price_component
     cont.baseline_power_prices["STATIC_POWER_PRICE"] = price_component

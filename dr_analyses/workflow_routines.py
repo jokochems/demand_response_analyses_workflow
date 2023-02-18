@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import List, Dict
 
 import pandas as pd
@@ -192,6 +193,56 @@ def read_load_shedding_template(config: Dict) -> Dict:
     )["Attributes"]
 
 
+def prepare_scenario_dicts(
+    templates: Dict, config: Dict
+) -> (Dict, Dict, Dict):
+    """Prepare dictionaries and return them
+
+    Prepares the following dicts:
+    - scenario_files: mapping string name to respective scenario.yaml file
+    - investment_expenses: investment expenses per demand response scenario
+    - baseline_scenarios: baseline scenario per demand response scenario
+    """
+    scenario_files = {}
+    investment_expenses = {}
+    baseline_scenarios = {}
+
+    for dr_scen, dr_scen_name in config["demand_response_scenarios"].items():
+        templates["tariffs"][dr_scen] = read_tariff_configs(config, dr_scen)
+        scenario = (
+            f"{config['input_folder']}/"
+            f"{config['scenario_sub_folder']}/"
+            f"scenario_wo_dr_{dr_scen}.yaml"
+        )
+        shutil.copyfile(
+            f"{config['template_folder']}/scenario_template_wo_dr.yaml",
+            scenario,
+        )
+        scenario_files[f"{dr_scen}_wo_dr"] = scenario
+        baseline_scenarios[dr_scen] = scenario
+
+        for tariff in templates["tariffs"][dr_scen]:
+            tariff_name = tariff["Name"]
+
+            scenario = (
+                f"{config['input_folder']}/"
+                f"{config['scenario_sub_folder']}/"
+                f"{dr_scen_name}_{tariff_name}.yaml"
+            )
+            shutil.copyfile(
+                f"{config['template_folder']}/scenario_template_wo_dr.yaml",
+                scenario,
+            )
+            scenario_files[f"{dr_scen}_{tariff_name}"] = scenario
+
+        investment_expenses[dr_scen] = read_investment_expenses(
+            config,
+            dr_scen,
+        )
+
+    return scenario_files, investment_expenses, baseline_scenarios
+
+
 def read_investment_expenses(config: Dict, dr_scen: str) -> pd.Series:
     """Read and return investment expenses"""
     path = f"{config['input_folder']}/{config['data_sub_folder']}/{dr_scen.split('_', 1)[0]}/"
@@ -246,10 +297,7 @@ def run_amiris(run_properties: Dict, cont: Container) -> None:
 def convert_amiris_results(cont: Container) -> None:
     """Convert AMIRIS results from a previous model run"""
     print(f"Converting scenario {cont.trimmed_scenario} results")
-    try:
-        sub_folder_name = cont.trimmed_scenario.split("_")[3]
-    except IndexError:
-        sub_folder_name = "none"
+    sub_folder_name = cont.trimmed_scenario.split("_")[3]
     cont.config_convert[Options.OUTPUT] = (
         f"{cont.config_workflow['output_folder']}/"
         f"{sub_folder_name}/"
