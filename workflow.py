@@ -1,6 +1,3 @@
-import shutil
-from json import load
-
 from fameio.source.cli import Options, ResolveOptions
 
 from dr_analyses.container import Container
@@ -34,9 +31,8 @@ from dr_analyses.workflow_routines import (
     read_load_shifting_template,
     read_load_shedding_template,
     prepare_tariff_configs,
-    read_tariff_configs,
-    read_investment_expenses,
     initialize_scenario_results_dict,
+    prepare_scenario_dicts,
 )
 from load_shifting_api.main import LoadShiftingApiThread
 
@@ -50,7 +46,6 @@ config_workflow = {
     "data_output": "data_out/",
     "plots_output": "plots_out/",
     "demand_response_scenarios": {
-        "none": "scenario_wo_dr",
         "5": "scenario_w_dr_5",
         "50": "scenario_w_dr_50",
         "95": "scenario_w_dr_95",
@@ -120,56 +115,19 @@ if __name__ == "__main__":
     make_directory_if_missing(f"{config_workflow['input_folder']}/scenarios/")
     if config_workflow["prepare_tariff_config"]:
         for dr_scen in config_workflow["demand_response_scenarios"]:
-            if dr_scen != "none":
-                prepare_tariff_configs(config_workflow, dr_scen)
+            prepare_tariff_configs(config_workflow, dr_scen)
 
-    # Store templates for reuse
     templates = {
         "tariffs": {},
         "load_shifting": read_load_shifting_template(config_workflow),
         "load_shedding": read_load_shedding_template(config_workflow),
     }
 
-    scenario_files = {}
-    investment_expenses = {}
-    baseline_scenario = None
-    for dr_scen, dr_scen_name in config_workflow[
-        "demand_response_scenarios"
-    ].items():
-        if dr_scen != "none":
-            templates["tariffs"][dr_scen] = read_tariff_configs(
-                config_workflow, dr_scen
-            )
-            for tariff in templates["tariffs"][dr_scen]:
-                tariff_name = tariff["Name"]
-
-                scenario = (
-                    f"{config_workflow['input_folder']}/"
-                    f"{config_workflow['scenario_sub_folder']}/"
-                    f"{dr_scen_name}_{tariff_name}.yaml"
-                )
-                shutil.copyfile(
-                    f"{config_workflow['template_folder']}/scenario_template_wo_dr.yaml",
-                    scenario,
-                )
-                scenario_files[f"{dr_scen}_{tariff_name}"] = scenario
-
-            investment_expenses[dr_scen] = read_investment_expenses(
-                config_workflow,
-                dr_scen,
-            )
-
-        else:
-            scenario = (
-                f"{config_workflow['input_folder']}/"
-                f"{config_workflow['scenario_sub_folder']}/{dr_scen_name}.yaml"
-            )
-            shutil.copyfile(
-                f"{config_workflow['template_folder']}/scenario_template_wo_dr.yaml",
-                scenario,
-            )
-            scenario_files[dr_scen] = scenario
-            baseline_scenario = scenario
+    (
+        scenario_files,
+        investment_expenses,
+        baseline_scenarios,
+    ) = prepare_scenario_dicts(templates, config_workflow)
 
     scenario_results = initialize_scenario_results_dict(config_workflow)
 
@@ -178,22 +136,25 @@ if __name__ == "__main__":
         load_shifting_api_thread.start()
 
         service_url = load_shifting_api_thread.get_url()
-        templates["load_shifting"]["Attributes"]["Strategy"]["Api"]["ServiceUrl"] = service_url
+        templates["load_shifting"]["Attributes"]["Strategy"]["Api"][
+            "ServiceUrl"
+        ] = service_url
 
     for dr_scen, scenario in scenario_files.items():
+        dr_scen_short = dr_scen.split("_", 1)[0]
         cont = Container(
             scenario,
             config_workflow,
             config_convert,
             config_make,
-            baseline_scenario,
+            baseline_scenarios[dr_scen_short],
         )
 
         cont.adapt_shortage_capacity(
             config_workflow["artificial_shortage_capacity_in_MW"]
         )
 
-        if scenario != baseline_scenario:
+        if scenario != baseline_scenarios[dr_scen_short]:
             cont.add_load_shifting_config(dr_scen, templates)
             cont.update_config_for_scenario(
                 dr_scen, templates["load_shedding"]
@@ -255,26 +216,15 @@ if __name__ == "__main__":
             and "_wo_dr" not in scenario
         ):
             calc_summary_parameters(cont)
-            scenario_results[dr_scen.split("_")[0]][
+            scenario_results[dr_scen_short][
                 cont.trimmed_scenario
             ] = cont.summary_series
 
     if config_workflow["evaluate_cross_scenarios"]:
         if not scenario_results:
-            # scenario_files = {
-            #     k: v
-            #     for k, v in scenario_files.items()
-            #     if k
-            #     in [
-            #         "none",
-            #         "5_0_dynamic_0_LP",
-            #         "5_0_dynamic_20_LP",
-            #         "5_20_dynamic_0_LP",
-            #     ]
-            # }
             for dr_scen, scenario in scenario_files.items():
                 if dr_scen != "none":
-                    scenario_results[dr_scen.split("_")[0]][
+                    scenario_results[dr_scen_short][
                         dr_scen
                     ] = read_scenario_result(config_workflow, scenario)
 
