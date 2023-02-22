@@ -122,7 +122,7 @@ if __name__ == "__main__":
         if config_workflow["amiris_analyses"]["run_amiris"]:
             if not load_shifting_api_thread.is_alive():
                 raise Exception("LoadShiftingAPI is not available.")
-            run_amiris(default_run_properties, cont)
+            run_amiris(run_properties[dr_scen_short], cont)
         if config_workflow["amiris_analyses"]["convert_results"]:
             convert_amiris_results(cont)
         if (

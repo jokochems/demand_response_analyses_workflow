@@ -13,7 +13,7 @@ config_workflow:
     "50": "scenario_w_dr_50"
     "95": "scenario_w_dr_95"
   load_shifting_focus_cluster: "ind_cluster_shift_only"
-  load_shedding_clusters": [
+  load_shedding_clusters: [
     "ind_cluster_shed_only",
     "ind_cluster_shift_shed",
     "hoho_cluster_shift_shed",
