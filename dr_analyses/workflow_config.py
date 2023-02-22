@@ -48,6 +48,14 @@ def extract_fame_config(config: Dict, key: str):
             if config_option.split(".")[1] == option.name:
                 if config_value == "None":
                     config_value = None
+                elif isinstance(config_value, str) and "." in config_value:
+                    if config_value.split(".")[0] == "ResolveOptions":
+                        config_value = [
+                            resolve_option
+                            for resolve_option in ResolveOptions
+                            if resolve_option.name
+                            == config_value.split(".")[1]
+                        ][0]
                 fame_config[option] = config_value
 
     return fame_config
@@ -55,7 +63,9 @@ def extract_fame_config(config: Dict, key: str):
 
 def update_run_properties(default_run_properties: Dict, dr_scen: str):
     """Create a duplicate of fameSetup.yaml and adjust output file"""
-    new_setup_file = f"{default_run_properties['setup'].split('.')[0]}_{dr_scen}.yaml"
+    new_setup_file = (
+        f"{default_run_properties['setup'].split('.')[0]}_{dr_scen}.yaml"
+    )
     shutil.copyfile(
         f"{default_run_properties['setup']}",
         new_setup_file,
