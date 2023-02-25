@@ -1,0 +1,29 @@
+Variables:
+  - &portfolioBuildingOffset 60
+
+Agents:
+  - Type: ConventionalPlantOperator
+    Id: 518
+
+  - Type: PredefinedPlantBuilder
+    Id: 2018
+    Attributes:
+      PortfolioBuildingOffsetInSeconds: *portfolioBuildingOffset
+      Prototype:
+        FuelType: BIOMASS  # newly installed biomass
+        SpecificCo2EmissionsInTperMWH: 0
+        PlannedAvailability: 1.0
+        UnplannedAvailabilityFactor: 1.0
+        OpexVarInEURperMWH: "./inputs/data/none/opex_ST_biomass.csv"
+        CyclingCostInEURperMW: 0.0
+      Efficiency:
+        Minimal: "./inputs/data/all_scenarios/GT_otherfossil_efficiency_max.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_otherfossil_efficiency_max.csv"
+      BlockSizeInMW: 10000.0
+      InstalledPowerInMW: 10000.0
+
+  - Type: ConventionalTrader
+    Id: 1017
+    Attributes:
+      minMarkup: 0
+      maxMarkup: 0
