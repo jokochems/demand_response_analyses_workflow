@@ -274,9 +274,10 @@ def set_config_make_output(cont: Container) -> None:
     make_directory_if_missing(
         f"{cont.config_workflow['input_folder']}/configs/"
     )
-    cont.config_make[
-        Options.OUTPUT
-    ] = f'{cont.config_workflow["input_folder"]}/configs/{cont.trimmed_scenario}.pb'
+    cont.config_make[Options.OUTPUT] = (
+        f"{cont.config_workflow['input_folder']}/configs/"
+        f"{cont.trimmed_scenario}.pb"
+    )
 
 
 def run_amiris(run_properties: Dict, cont: Container) -> None:
@@ -307,7 +308,8 @@ def convert_amiris_results(cont: Container) -> None:
         f"{cont.config_workflow['output_folder']}/{sub_folder_name}/"
     )
     convert_results(
-        cont.config_workflow["output_folder"] + "amiris-output.pb",
+        f"{cont.config_workflow['output_folder']}/"
+        f"amiris-output_{sub_folder_name}.pb",
         cont.config_convert,
     )
     print(f"Scenario {cont.trimmed_scenario} results converted")

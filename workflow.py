@@ -1,4 +1,4 @@
-from fameio.source.cli import Options, ResolveOptions
+from fameio.source.loader import load_yaml
 
 from dr_analyses.container import Container
 from dr_analyses.cross_scenario_evaluation import (
@@ -23,6 +23,13 @@ from dr_analyses.results_workflow import (
     add_discounted_payments_to_results,
     calculate_load_shifting_annuity,
 )
+from dr_analyses.workflow_config import (
+    add_args,
+    extract_simple_config,
+    extract_config_plotting,
+    extract_fame_config,
+    update_run_properties,
+)
 from dr_analyses.workflow_routines import (
     convert_amiris_results,
     make_scenario_config,
@@ -36,82 +43,21 @@ from dr_analyses.workflow_routines import (
 )
 from load_shifting_api.main import LoadShiftingApiThread
 
-config_workflow = {
-    "template_folder": "./template/",
-    "input_folder": "./inputs/",
-    "data_sub_folder": "data",
-    "scenario_sub_folder": "scenarios",
-    "tariff_config_file": "tariff_configuration",
-    "output_folder": "./results/",
-    "data_output": "data_out/",
-    "plots_output": "plots_out/",
-    "demand_response_scenarios": {
-        "5": "scenario_w_dr_5",
-        "50": "scenario_w_dr_50",
-        "95": "scenario_w_dr_95",
-    },
-    "load_shifting_focus_cluster": "ind_cluster_shift_only",
-    "load_shedding_clusters": [
-        "ind_cluster_shed_only",
-        "ind_cluster_shift_shed",
-        "hoho_cluster_shift_shed",
-    ],
-    "interest_rate": 0.05,
-    "prepare_tariff_config": True,
-    "artificial_shortage_capacity_in_MW": 100000,
-    "amiris_analyses": {
-        "start_web_service": True,
-        "make_scenario": True,
-        "run_amiris": True,
-        "convert_results": True,
-        "process_results": True,
-        "use_baseline_prices_for_comparison": True,
-        "aggregate_results": True,
-    },
-    "annuity_mode": "single_year",  # "single_year", "multiple_years"
-    "lifetime": 15,  # only for annuity_mode "single_year"
-    "write_results": True,
-    "evaluate_cross_scenarios": True,
-    "make_plots": True,
-    "baseline_load_file": "baseline_load_profile",
-}
-
-config_plotting = {
-    "small_size": 12,
-    "medium_size": 14,
-    "bigger_size": 15,
-    "figsize": (10, 7),
-    "drop_list": [],
-    "rename_dict": {"columns": {}, "rows": {}, "parameters": {}},
-    "x_label": None,
-    "save_plot": True,
-    "show_plot": False,
-}
-
-config_make = {
-    Options.LOG_LEVEL: "error",
-    Options.LOG_FILE: None,
-    # Config.NUM_PROCESSES: 1,
-}
-
-run_properties = {
-    "exe": "amiris/amiris-core_1.2.7-jar-with-dependencies.jar -Xmx16000M",
-    "logging": "-Dlog4j.configuration=file:amiris/log4j.properties",
-    "main": "de.dlr.gitlab.fame.setup.FameRunner",
-    "setup": "amiris/fameSetup.yaml",
-}
-
-config_convert = {
-    Options.LOG_LEVEL: "warn",
-    Options.LOG_FILE: None,
-    Options.AGENT_LIST: None,
-    Options.OUTPUT: None,  # set in workflow
-    Options.SINGLE_AGENT_EXPORT: False,
-    Options.MEMORY_SAVING: False,
-    Options.RESOLVE_COMPLEX_FIELD: ResolveOptions.IGNORE,
-}
-
 if __name__ == "__main__":
+    args = add_args()
+    config_file = load_yaml(args.file)
+    config_workflow = extract_simple_config(config_file, "config_workflow")
+    config_plotting = extract_config_plotting(config_file)
+    config_make = extract_fame_config(config_file, "config_make")
+    default_run_properties = extract_simple_config(
+        config_file, "run_properties"
+    )
+    config_convert = extract_fame_config(config_file, "config_convert")
+
+    run_properties = {}
+    for dr_scen in config_workflow["demand_response_scenarios"]:
+        run_properties[dr_scen] = update_run_properties(default_run_properties, dr_scen)
+
     make_directory_if_missing(f"{config_workflow['input_folder']}/scenarios/")
     if config_workflow["prepare_tariff_config"]:
         for dr_scen in config_workflow["demand_response_scenarios"]:
@@ -176,7 +122,7 @@ if __name__ == "__main__":
         if config_workflow["amiris_analyses"]["run_amiris"]:
             if not load_shifting_api_thread.is_alive():
                 raise Exception("LoadShiftingAPI is not available.")
-            run_amiris(run_properties, cont)
+            run_amiris(run_properties[dr_scen_short], cont)
         if config_workflow["amiris_analyses"]["convert_results"]:
             convert_amiris_results(cont)
         if (
