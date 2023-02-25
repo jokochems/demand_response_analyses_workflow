@@ -351,17 +351,17 @@ class Container:
             index_col=0,
         ).to_dict()["2020"]
 
-    def update_config_for_scenario(
-        self, key: str, load_shedding_template: Dict
-    ) -> None:
+    def update_time_series_for_scenario(self, key: str) -> None:
         """Update time series values for a given scenario"""
-        demand_trader = self.get_agents_by_type("DemandTrader")[0]  # only one
         predefined_builders = self.get_agents_by_type("PredefinedPlantBuilder")
-        self.update_demand_trader(demand_trader, key, load_shedding_template)
         update_plant_builders(predefined_builders, key)
-        self.change_contract_location(
-            f"{self.config_workflow['input_folder']}/contracts_w_dr"
-        )
+
+    def update_load_shedding_config(
+        self, key: str, load_shedding_template: Dict
+    ):
+        """Update load shedding config for a given scenario"""
+        demand_trader = self.get_agents_by_type("DemandTrader")[0]
+        self.update_demand_trader(demand_trader, key, load_shedding_template)
 
     def get_agents_by_type(self, agent_type: str) -> List[Dict]:
         """Returns list of agents of given type"""

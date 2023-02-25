@@ -182,7 +182,7 @@ def read_tariff_configs(config: Dict, dr_scen: str):
 def read_load_shifting_template(config: Dict) -> Dict:
     """Read and return load shifting tariff model configs"""
     return load_yaml(
-        f"{config['template_folder']}" f"load_shifting_config_template.yaml"
+        f"{config['template_folder']}load_shifting_config_template.yaml"
     )["Agents"][0]
 
 
@@ -245,7 +245,7 @@ def prepare_scenario_dicts(
 
 def read_investment_expenses(config: Dict, dr_scen: str) -> pd.Series:
     """Read and return investment expenses"""
-    path = f"{config['input_folder']}/{config['data_sub_folder']}/{dr_scen.split('_', 1)[0]}/"
+    path = f"{config['input_folder']}/{config['data_sub_folder']}/{dr_scen}/"
     file_name = (
         f"{config['load_shifting_focus_cluster']}_specific_investments.csv"
     )
