@@ -176,6 +176,40 @@ def create_time_index(start_time: str, end_time: str):
     return pd.date_range(start=start_time, end=end_time, freq="H")[:-1]
 
 
+def is_leap_year(year: int) -> bool:
+    """Check whether given year is a leap year or not"""
+    leap_year = False
+
+    if year % 4 == 0:
+        leap_year = True
+    if year % 100 == 0:
+        leap_year = False
+    if year % 400 == 0:
+        leap_year = True
+
+    return leap_year
+
+
+def cut_leap_days(time_series: pd.DataFrame) -> pd.DataFrame:
+    """Take a time series index with real dates and cut the leap days out"""
+    years = sorted(list(set(getattr(time_series.index, "year"))))
+    for year in years:
+        if is_leap_year(year):
+            try:
+                time_series.drop(
+                    time_series.loc[
+                        (time_series.index.year == year)
+                        & (time_series.index.month == 12)
+                        & (time_series.index.day == 31)
+                    ].index,
+                    inplace=True,
+                )
+            except KeyError:
+                continue
+
+    return time_series
+
+
 def save_to_fame_time_series(ts: pd.DataFrame, config: Dict, key: str):
     """Save given time series to FAME format for given scenario (key)"""
     ts.index = ts.index.astype(str).str.replace(" ", "_")
@@ -438,7 +472,9 @@ class Container:
         dummy_forecast = pd.DataFrame(
             index=time_index, columns=["forecast"], data=0
         )
-        save_to_fame_time_series(dummy_forecast, self.config_workflow, key)
+        save_to_fame_time_series(
+            cut_leap_days(dummy_forecast), self.config_workflow, key
+        )
 
     def update_price_forecast(self, key: str):
         """Update price forecast in scenario.yaml file"""
