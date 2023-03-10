@@ -5,7 +5,6 @@ AgentGroups:
   - &exchange 1
   - &carbonMarket 3
   - &fuelsMarket 4
-  - &forecaster 6
 
 Times:
   - &hourly 3600
@@ -20,57 +19,6 @@ Contracts:
     ReceiverId: *operators
     ProductName: PowerPlantPortfolio
     FirstDeliveryTime: -60
-    DeliveryIntervalInSteps: *yearly
-
-##############################
-# -- Forecast Preparation -- #
-##############################
-  - SenderId: *forecaster
-    ReceiverId: *traders
-    ProductName: ForecastRequest
-    FirstDeliveryTime: -26
-    DeliveryIntervalInSteps: *yearly
-
-  - SenderId: *traders
-    ReceiverId: *operators
-    ProductName: ForecastRequestForward
-    FirstDeliveryTime: -25
-    DeliveryIntervalInSteps: *yearly
-
-  - SenderId: *operators
-    ReceiverId: *fuelsMarket
-    ProductName: FuelPriceForecastRequest
-    FirstDeliveryTime: -24
-    DeliveryIntervalInSteps: *yearly
-
-  - SenderId: *operators
-    ReceiverId: *carbonMarket
-    ProductName: Co2PriceForecastRequest
-    FirstDeliveryTime: -24
-    DeliveryIntervalInSteps: *yearly
-
-  - SenderId: *fuelsMarket
-    ReceiverId: *operators
-    ProductName: FuelPriceForecast
-    FirstDeliveryTime: -23
-    DeliveryIntervalInSteps: *yearly
-
-  - SenderId: *carbonMarket
-    ReceiverId: *operators
-    ProductName: Co2PriceForecast
-    FirstDeliveryTime: -23
-    DeliveryIntervalInSteps: *yearly
-
-  - SenderId: *operators
-    ReceiverId: *traders
-    ProductName: MarginalCostForecast
-    FirstDeliveryTime: -22
-    DeliveryIntervalInSteps: *yearly
-
-  - SenderId: *traders
-    ReceiverId: *forecaster
-    ProductName: BidsForecast
-    FirstDeliveryTime: -21
     DeliveryIntervalInSteps: *yearly
 
 #################
