@@ -29,7 +29,6 @@ Agents:
           ServiceUrl: http://127.0.0.1:8000/load_shift/
           UseAnnualLimit: 0
           Solver: cplex
-          BidMargin: 1000.0
       Policy:
         EEGSurchargeInEURPerMWH: 0.0
         VolumetricNetworkChargeInEURPerMWH: 0.0

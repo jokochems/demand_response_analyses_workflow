@@ -410,10 +410,6 @@ AgentTypes:
                 Mandatory: false
                 List: false
                 Values: [ 'gurobi', 'cplex', 'cbc' ]
-              BidMargin:
-                AttributeType: double
-                Mandatory: false
-                List: false
       Policy:
         AttributeType: block
         Mandatory: false
