@@ -261,12 +261,6 @@ def initialize_scenario_results_dict(config: Dict) -> Dict:
     return scenario_results
 
 
-def create_dummy_forecast_file(config: Dict) -> None:
-    """Create a dummy price forecast file with all 0 values and save it"""
-
-    dummy_forecast = pd.DataFrame()
-
-
 def make_scenario_config(cont: Container) -> None:
     """Make a config for a given scenario with absolute path"""
     print(f"Compiling scenario {cont.trimmed_scenario}")
