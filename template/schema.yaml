@@ -791,6 +791,14 @@ AgentTypes:
         List: false
     Products: [ 'ForecastRequest', 'PriceForecast' ]
 
+  PriceForecasterFile:
+    Attributes:
+      PriceForecastInEURperMWH:
+        AttributeType: time_series
+        Mandatory: true
+        List: false
+    Products: [ 'PriceForecast' ]
+
   ConventionalPlantOperator:
     Attributes:
       Refinancing:
