@@ -261,6 +261,12 @@ def initialize_scenario_results_dict(config: Dict) -> Dict:
     return scenario_results
 
 
+def create_dummy_forecast_file(config: Dict) -> None:
+    """Create a dummy price forecast file with all 0 values and save it"""
+
+    dummy_forecast = pd.DataFrame()
+
+
 def make_scenario_config(cont: Container) -> None:
     """Make a config for a given scenario with absolute path"""
     print(f"Compiling scenario {cont.trimmed_scenario}")
@@ -313,3 +319,30 @@ def convert_amiris_results(cont: Container) -> None:
         cont.config_convert,
     )
     print(f"Scenario {cont.trimmed_scenario} results converted")
+
+
+def store_price_forecast_from_baseline(cont: Container) -> None:
+    """Store price forecast obtained from scenario without demand response"""
+    baseline_power_price = pd.read_csv(
+        f"{cont.config_workflow['output_folder']}"
+        f"{cont.trimmed_scenario.split('_')[3]}/"
+        f"{cont.trimmed_baseline_scenario}"
+        f"/EnergyExchangeMulti.csv",
+        sep=";",
+    )["ElectricityPriceInEURperMWH"]
+    price_forecast = pd.read_csv(
+        f"{cont.config_workflow['input_folder']}"
+        f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
+        sep=";",
+        header=None,
+        index_col=0,
+    )
+    price_forecast[1] = baseline_power_price.values
+    price_forecast.to_csv(
+        f"{cont.config_workflow['input_folder']}"
+        f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
+        sep=";",
+        header=False,
+    )
