@@ -79,12 +79,10 @@ Agents:
       # ForecastRequestOffsetInSeconds: 27
   
   # Use price forecaster, i.e. not consider price repercussion
-  - Type: PriceForecaster
+  - Type: PriceForecasterFile
     Id: 6
     Attributes:
-      DistributionMethod: SAME_SHARES
-      ForecastPeriodInHours: 8760
-      ForecastRequestOffsetInSeconds: 27
+      PriceForecastInEURperMWH: "./inputs/data/none/price_forecast.csv"
 
   # Include LoadShiftingTrader for cases considering demand response
 

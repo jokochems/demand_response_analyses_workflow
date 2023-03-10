@@ -40,6 +40,7 @@ from dr_analyses.workflow_routines import (
     prepare_tariff_configs,
     initialize_scenario_results_dict,
     prepare_scenario_dicts,
+    store_price_forecast_from_baseline,
 )
 from load_shifting_api.main import LoadShiftingApiThread
 
@@ -56,7 +57,9 @@ if __name__ == "__main__":
 
     run_properties = {}
     for dr_scen in config_workflow["demand_response_scenarios"]:
-        run_properties[dr_scen] = update_run_properties(default_run_properties, dr_scen)
+        run_properties[dr_scen] = update_run_properties(
+            default_run_properties, dr_scen
+        )
 
     make_directory_if_missing(f"{config_workflow['input_folder']}/scenarios/")
     if config_workflow["prepare_tariff_config"]:
@@ -102,9 +105,18 @@ if __name__ == "__main__":
 
         if scenario != baseline_scenarios[dr_scen_short]:
             cont.add_load_shifting_config(dr_scen, templates)
-            cont.update_config_for_scenario(
+            cont.update_load_shedding_config(
                 dr_scen, templates["load_shedding"]
             )
+            cont.update_price_forecast(dr_scen)
+            cont.change_contract_location(
+                f"{cont.config_workflow['input_folder']}/contracts_w_dr"
+            )
+        else:
+            cont.create_dummy_price_forecast(dr_scen)
+            cont.update_price_forecast(dr_scen)
+
+        cont.update_time_series_for_scenario(dr_scen)
         cont.save_scenario_yaml()
 
         # Uncomment the following code for dev purposes; Remove once finalized
@@ -125,6 +137,8 @@ if __name__ == "__main__":
             run_amiris(run_properties[dr_scen_short], cont)
         if config_workflow["amiris_analyses"]["convert_results"]:
             convert_amiris_results(cont)
+            if scenario == baseline_scenarios[dr_scen_short]:
+                store_price_forecast_from_baseline(cont)
         if (
             config_workflow["amiris_analyses"]["process_results"]
             and "_wo_dr" not in scenario

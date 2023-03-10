@@ -1,6 +1,5 @@
 AgentGroups:
   - &exchange 1
-  - &forecaster 6
   - &marketer 12
   - &renewables [10, 20, 30, 40, 50, 60, 70, 80, 90]
 
@@ -17,33 +16,6 @@ Contracts:
     ReceiverId: *marketer
     ProductName: SetRegistration
     FirstDeliveryTime: -37
-    DeliveryIntervalInSteps: *yearly
-
-#################################
-# -- Forecasting --             #
-#################################
-  - SenderId: *forecaster
-    ReceiverId: *marketer
-    ProductName: ForecastRequest
-    FirstDeliveryTime: -26
-    DeliveryIntervalInSteps: *yearly
-
-  - SenderId: *marketer
-    ReceiverId: *renewables
-    ProductName: ForecastRequestForward
-    FirstDeliveryTime: -25
-    DeliveryIntervalInSteps: *yearly
-
-  - SenderId: *renewables
-    ReceiverId: *marketer
-    ProductName: MarginalCostForecast
-    FirstDeliveryTime: -22
-    DeliveryIntervalInSteps: *yearly
-
-  - SenderId: *marketer
-    ReceiverId: *forecaster
-    ProductName: BidsForecast
-    FirstDeliveryTime: -21
     DeliveryIntervalInSteps: *yearly
 
 #################################

@@ -1,6 +1,5 @@
 AgentGroups:
   - &exchange 1
-  - &forecaster 6
   - &demandTrader 100
 
 Times:
@@ -9,18 +8,6 @@ Times:
   - &yearly 31536000
 
 Contracts:
-  - SenderId: *forecaster
-    ReceiverId: *demandTrader
-    ProductName: ForecastRequest
-    FirstDeliveryTime: -26
-    DeliveryIntervalInSteps: *yearly
-
-  - SenderId: *demandTrader
-    ReceiverId: *forecaster
-    ProductName: BidsForecast
-    FirstDeliveryTime: -21
-    DeliveryIntervalInSteps: *yearly
-
   - SenderId: *exchange
     ReceiverId: *demandTrader
     ProductName: GateClosureInfo

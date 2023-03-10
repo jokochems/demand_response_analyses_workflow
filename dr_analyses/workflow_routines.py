@@ -182,7 +182,7 @@ def read_tariff_configs(config: Dict, dr_scen: str):
 def read_load_shifting_template(config: Dict) -> Dict:
     """Read and return load shifting tariff model configs"""
     return load_yaml(
-        f"{config['template_folder']}" f"load_shifting_config_template.yaml"
+        f"{config['template_folder']}load_shifting_config_template.yaml"
     )["Agents"][0]
 
 
@@ -245,7 +245,7 @@ def prepare_scenario_dicts(
 
 def read_investment_expenses(config: Dict, dr_scen: str) -> pd.Series:
     """Read and return investment expenses"""
-    path = f"{config['input_folder']}/{config['data_sub_folder']}/{dr_scen.split('_', 1)[0]}/"
+    path = f"{config['input_folder']}/{config['data_sub_folder']}/{dr_scen}/"
     file_name = (
         f"{config['load_shifting_focus_cluster']}_specific_investments.csv"
     )
@@ -313,3 +313,30 @@ def convert_amiris_results(cont: Container) -> None:
         cont.config_convert,
     )
     print(f"Scenario {cont.trimmed_scenario} results converted")
+
+
+def store_price_forecast_from_baseline(cont: Container) -> None:
+    """Store price forecast obtained from scenario without demand response"""
+    baseline_power_price = pd.read_csv(
+        f"{cont.config_workflow['output_folder']}"
+        f"{cont.trimmed_scenario.split('_')[3]}/"
+        f"{cont.trimmed_baseline_scenario}"
+        f"/EnergyExchangeMulti.csv",
+        sep=";",
+    )["ElectricityPriceInEURperMWH"]
+    price_forecast = pd.read_csv(
+        f"{cont.config_workflow['input_folder']}"
+        f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
+        sep=";",
+        header=None,
+        index_col=0,
+    )
+    price_forecast[1] = baseline_power_price.values
+    price_forecast.to_csv(
+        f"{cont.config_workflow['input_folder']}"
+        f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
+        sep=";",
+        header=False,
+    )

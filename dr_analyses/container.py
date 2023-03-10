@@ -167,6 +167,25 @@ def update_plant_builders(builders: List[Dict], key: str) -> None:
         )
 
 
+def create_time_index(start_time: str, end_time: str):
+    """Create and return pd.date_range from FAME timestamps"""
+    start_time = pd.to_datetime(start_time.replace("_", " ")) + pd.Timedelta(
+        "2m"
+    )
+    end_time = pd.to_datetime(end_time.replace("_", " ")) + pd.Timedelta("2m")
+    return pd.date_range(start=start_time, end=end_time, freq="H")[:-1]
+
+
+def save_to_fame_time_series(ts: pd.DataFrame, config: Dict, key: str):
+    """Save given time series to FAME format for given scenario (key)"""
+    ts.index = ts.index.astype(str).str.replace(" ", "_")
+    ts.to_csv(
+        f"{config['input_folder']}{config['data_sub_folder']}/{key.split('_')[0]}/price_forecast.csv",
+        header=False,
+        sep=";",
+    )
+
+
 class Container:
     """Class holding Container objects with config and results information
 
@@ -351,17 +370,17 @@ class Container:
             index_col=0,
         ).to_dict()["2020"]
 
-    def update_config_for_scenario(
-        self, key: str, load_shedding_template: Dict
-    ) -> None:
+    def update_time_series_for_scenario(self, key: str) -> None:
         """Update time series values for a given scenario"""
-        demand_trader = self.get_agents_by_type("DemandTrader")[0]  # only one
         predefined_builders = self.get_agents_by_type("PredefinedPlantBuilder")
-        self.update_demand_trader(demand_trader, key, load_shedding_template)
         update_plant_builders(predefined_builders, key)
-        self.change_contract_location(
-            f"{self.config_workflow['input_folder']}/contracts_w_dr"
-        )
+
+    def update_load_shedding_config(
+        self, key: str, load_shedding_template: Dict
+    ):
+        """Update load shedding config for a given scenario"""
+        demand_trader = self.get_agents_by_type("DemandTrader")[0]
+        self.update_demand_trader(demand_trader, key, load_shedding_template)
 
     def get_agents_by_type(self, agent_type: str) -> List[Dict]:
         """Returns list of agents of given type"""
@@ -405,6 +424,29 @@ class Container:
             key,
             entries=parameters,
             group="Loads",
+        )
+
+    def create_dummy_price_forecast(self, key: str):
+        """Create a dummy price forecast file containing only 0 entries"""
+        start_time = self.scenario_yaml["GeneralProperties"]["Simulation"][
+            "StartTime"
+        ]
+        end_time = self.scenario_yaml["GeneralProperties"]["Simulation"][
+            "StopTime"
+        ]
+        time_index = create_time_index(start_time, end_time)
+        dummy_forecast = pd.DataFrame(
+            index=time_index, columns=["forecast"], data=0
+        )
+        save_to_fame_time_series(dummy_forecast, self.config_workflow, key)
+
+    def update_price_forecast(self, key: str):
+        """Update price forecast in scenario.yaml file"""
+        price_forecaster = self.get_agents_by_type("PriceForecasterFile")[0]
+        replace_yaml_entries(
+            agent=price_forecaster,
+            key=key,
+            entries=["PriceForecastInEURperMWH"],
         )
 
     def change_contract_location(self, path_to_new_contracts: str) -> None:
