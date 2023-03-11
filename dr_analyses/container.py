@@ -369,20 +369,24 @@ class Container:
                 f"_variable_costs_2020.csv"
             ),
         )
-        parameters = {
-            "PowerInMW": max(
-                float(potential_parameters["potential_neg_overall"]),
-                float(potential_parameters["potential_pos_overall"]),
-            ),
-            "MaximumShiftTimeInHours": math.ceil(
-                float(potential_parameters["shifting_duration"])
-            ),
-            "InterferenceTimeInHours": math.ceil(
+        interference_duration = math.ceil(
                 min(
                     float(potential_parameters["interference_duration_neg"]),
                     float(potential_parameters["interference_duration_pos"]),
                 )
+            )
+        power = max(
+                float(potential_parameters["potential_neg_overall"]),
+                float(potential_parameters["potential_pos_overall"]),
+            )
+        parameters = {
+            "PowerInMW": power,
+            "MaximumShiftTimeInHours": math.ceil(
+                float(potential_parameters["shifting_duration"])
             ),
+            "InterferenceTimeInHours": interference_duration,
+            "EnergyLimitUpInMWH": interference_duration * power,
+            "EnergyLimitDownInMWH": interference_duration * power,
             "BaselinePeakLoadInMW": float(potential_parameters["max_cap"]),
             "VariableShiftCostsInEURPerMWH": float(
                 costs_parameters["variable_costs"]

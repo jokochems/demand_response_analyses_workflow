@@ -10,8 +10,8 @@ Agents:
         PowerUpAvailability: "./inputs/data/50/availability_shifting_neg_ind_cluster_shift_only.csv" # normalized to PowerInMW; TODO: check!
         PowerDownAvailability: "./inputs/data/50/availability_shifting_pos_ind_cluster_shift_only.csv" # normalized to PowerInMW; TODO: check!
         EnergyResolutionInMWH: 1000.0  # Not used
-        EnergyLimitUpInMWH: 1000.0  # Not used
-        EnergyLimitDownInMWH: 1000.0  # Not used
+        EnergyLimitUpInMWH: 1000.0  # Dummy value to be replaced
+        EnergyLimitDownInMWH: 1000.0  # Dummy value to be replaced
         MaximumShiftTimeInHours: 0  # shifting_duration
         VariableShiftCostsInEURPerMWH: 0
         BaselineLoadTimeSeries: "./inputs/data/50/baseline_load_profile_ind_cluster_shift_only.csv" # normalized to PeakLoadInMW
