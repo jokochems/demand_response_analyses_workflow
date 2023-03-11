@@ -91,6 +91,7 @@ Agents:
     Attributes:
       ShareOfRevenues: 0.0
 
+  # All capacities existing or model-endogenous for pommesinvest
   - Type: ConventionalPlantOperator
     Id: 500
 
