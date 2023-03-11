@@ -109,7 +109,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/ST_uranium_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/ST_uranium_efficiency_max.csv"
       BlockSizeInMW: 900.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_uranium_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_uranium_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1000
@@ -135,7 +135,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/ST_lignite_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/ST_lignite_efficiency_max.csv"
       BlockSizeInMW: 500.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_lignite_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_lignite_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1001
@@ -161,7 +161,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/ST_hardcoal_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/ST_hardcoal_efficiency_max.csv"
       BlockSizeInMW: 300.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_hardcoal_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_hardcoal_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1002
@@ -187,7 +187,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/CC_natgas_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/CC_natgas_efficiency_max.csv"
       BlockSizeInMW: 200.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/CC_natgas_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/CC_natgas_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1003
@@ -213,7 +213,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/GT_natgas_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/GT_natgas_efficiency_max.csv"
       BlockSizeInMW: 100.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_natgas_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_natgas_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1004
@@ -239,7 +239,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/M_natgas_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/M_natgas_efficiency_max.csv"
       BlockSizeInMW: 30.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/M_natgas_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/M_natgas_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1005
@@ -265,7 +265,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/ST_natgas_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/ST_natgas_efficiency_max.csv"
       BlockSizeInMW: 100.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_natgas_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_natgas_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1006
@@ -291,7 +291,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/CC_oil_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/CC_oil_efficiency_max.csv"
       BlockSizeInMW: 100.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/CC_oil_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/CC_oil_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1007
@@ -317,7 +317,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/GT_oil_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/GT_oil_efficiency_max.csv"
       BlockSizeInMW: 100.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_oil_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_oil_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1008
@@ -343,7 +343,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/ST_oil_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/ST_oil_efficiency_max.csv"
       BlockSizeInMW: 100.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_oil_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_oil_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1009
@@ -369,7 +369,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/GT_biomass_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/GT_biomass_efficiency_max.csv"
       BlockSizeInMW: 100.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_biomass_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_biomass_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1010
@@ -395,7 +395,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/ST_biomass_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/ST_biomass_efficiency_max.csv"
       BlockSizeInMW: 100.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_biomass_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_biomass_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1011
@@ -421,7 +421,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/GT_hydrogen_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/GT_hydrogen_efficiency_max.csv"
       BlockSizeInMW: 100.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_hydrogen_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_hydrogen_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1012
@@ -447,7 +447,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/ST_waste_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/ST_waste_efficiency_max.csv"
       BlockSizeInMW: 100.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_waste_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_waste_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1013
@@ -473,7 +473,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/ST_otherfossil_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/ST_otherfossil_efficiency_max.csv"
       BlockSizeInMW: 100.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_otherfossil_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_otherfossil_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1014
@@ -499,7 +499,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/GT_otherfossil_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/GT_otherfossil_efficiency_max.csv"
       BlockSizeInMW: 100.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_otherfossil_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/GT_otherfossil_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1015
@@ -525,7 +525,7 @@ Agents:
         Minimal: "./inputs/data/all_scenarios/ST_mixedfuels_efficiency_min.csv"
         Maximal: "./inputs/data/all_scenarios/ST_mixedfuels_efficiency_max.csv"
       BlockSizeInMW: 100.0
-      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_mixedfuels_installed_cap.csv"
+      InstalledPowerInMW: "./inputs/data/all_scenarios/ST_mixedfuels_exogenous_installed_cap.csv"
 
   - Type: ConventionalTrader
     Id: 1016
