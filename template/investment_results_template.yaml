@@ -102,7 +102,7 @@ Agents:
       InstalledPowerInMW: "./inputs/data/none/installed_capacity_ts_hydrogen_GT.csv"
 
   - Type: ConventionalTrader
-    Id: 1003
+    Id: 1103
     Attributes:
       minMarkup: 0
       maxMarkup: 0

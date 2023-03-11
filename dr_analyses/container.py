@@ -156,17 +156,6 @@ def add_load_shifting_tariff(
             )
 
 
-def update_plant_builders(builders: List[Dict], key: str) -> None:
-    """Update PredefinedPlantBuilders with information of resp. scenario"""
-    for builder in builders:
-        replace_yaml_entries(
-            builder,
-            key,
-            entries=["OpexVarInEURperMWH"],
-            group="Prototype",
-        )
-
-
 def create_time_index(start_time: str, end_time: str):
     """Create and return pd.date_range from FAME timestamps"""
     start_time = pd.to_datetime(start_time.replace("_", " ")) + pd.Timedelta(
@@ -370,15 +359,15 @@ class Container:
             ),
         )
         interference_duration = math.ceil(
-                min(
-                    float(potential_parameters["interference_duration_neg"]),
-                    float(potential_parameters["interference_duration_pos"]),
-                )
+            min(
+                float(potential_parameters["interference_duration_neg"]),
+                float(potential_parameters["interference_duration_pos"]),
             )
+        )
         power = max(
-                float(potential_parameters["potential_neg_overall"]),
-                float(potential_parameters["potential_pos_overall"]),
-            )
+            float(potential_parameters["potential_neg_overall"]),
+            float(potential_parameters["potential_pos_overall"]),
+        )
         parameters = {
             "PowerInMW": power,
             "MaximumShiftTimeInHours": math.ceil(
@@ -408,10 +397,16 @@ class Container:
             index_col=0,
         ).to_dict()["2020"]
 
-    def update_time_series_for_scenario(self, key: str) -> None:
-        """Update time series values for a given scenario"""
+    def update_opex_for_scenario(self, key: str) -> None:
+        """Update OPEX time series values for a given scenario"""
         predefined_builders = self.get_agents_by_type("PredefinedPlantBuilder")
-        update_plant_builders(predefined_builders, key)
+        for builder in predefined_builders:
+            replace_yaml_entries(
+                builder,
+                key,
+                entries=["OpexVarInEURperMWH"],
+                group="Prototype",
+            )
 
     def update_load_shedding_config(
         self, key: str, load_shedding_template: Dict
@@ -463,6 +458,23 @@ class Container:
             entries=parameters,
             group="Loads",
         )
+
+    def add_investment_capacities_for_scenario(
+        self, key: str, investment_results: Dict
+    ):
+        """Append investments for dedicated scenario to scenario.yaml"""
+        predefined_invest_builders = [
+            agent
+            for agent in investment_results
+            if agent["Type"] == "PredefinedPlantBuilder"
+        ]
+        for builder in predefined_invest_builders:
+            replace_yaml_entries(
+                builder,
+                key,
+                entries=["InstalledPowerInMW"],
+            )
+        self.scenario_yaml["Agents"].extend(investment_results)
 
     def create_dummy_price_forecast(self, key: str):
         """Create a dummy price forecast file containing only 0 entries"""

@@ -41,6 +41,7 @@ from dr_analyses.workflow_routines import (
     initialize_scenario_results_dict,
     prepare_scenario_dicts,
     store_price_forecast_from_baseline,
+    read_investment_results_template,
 )
 from load_shifting_api.main import LoadShiftingApiThread
 
@@ -70,6 +71,9 @@ if __name__ == "__main__":
         "tariffs": {},
         "load_shifting": read_load_shifting_template(config_workflow),
         "load_shedding": read_load_shedding_template(config_workflow),
+        "investment_results": read_investment_results_template(
+            config_workflow
+        ),
     }
 
     (
@@ -116,7 +120,10 @@ if __name__ == "__main__":
             cont.create_dummy_price_forecast(dr_scen)
             cont.update_price_forecast(dr_scen)
 
-        cont.update_time_series_for_scenario(dr_scen)
+        cont.add_investment_capacities_for_scenario(
+            dr_scen, templates["investment_results"]
+        )
+        cont.update_opex_for_scenario(dr_scen)
         cont.save_scenario_yaml()
 
         # Uncomment the following code for dev purposes; Remove once finalized
