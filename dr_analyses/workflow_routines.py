@@ -189,8 +189,15 @@ def read_load_shifting_template(config: Dict) -> Dict:
 def read_load_shedding_template(config: Dict) -> Dict:
     """Read and return load shifting tariff model configs"""
     return load_yaml(
-        f"{config['template_folder']}" f"load_shedding_config_template.yaml"
+        f"{config['template_folder']}load_shedding_config_template.yaml"
     )["Attributes"]
+
+
+def read_investment_results_template(config: Dict) -> Dict:
+    """Read and return pommesinvest investment results used as input"""
+    return load_yaml(
+        f"{config['template_folder']}investment_results_template.yaml"
+    )["Agents"]
 
 
 def prepare_scenario_dicts(
