@@ -320,7 +320,7 @@ class Container:
 
     def add_load_shifting_config(self, key: str, templates: Dict) -> None:
         """Add a load shifting agent to scenario and adjust configuration"""
-        self.add_load_shifting_agent(templates["load_shifting"], key)
+        # self.add_load_shifting_agent(templates["load_shifting"], key)
         add_load_shifting_tariff(
             templates["tariffs"][key.split("_", 1)[0]],
             templates["load_shifting"],

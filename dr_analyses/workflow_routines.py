@@ -39,13 +39,34 @@ def get_all_yaml_files_in_folder_except(
     ]
 
 
-def prepare_tariff_configs(config: Dict, dr_scen: str):
+def prepare_tariff_configs(config: Dict, dr_scen: str) -> None:
     """Read, prepare and return load shifting tariff model configs"""
     print(f"Preparing tariff configs for scenario {dr_scen}.")
     tariff_config_template = load_yaml(
         f"{config['template_folder']}tariff_model_config_template.yaml"
     )["Configs"]
 
+    if config["tariff_config"]["mode"] == "from_file":
+        prepare_tariffs_from_file(config, dr_scen, tariff_config_template)
+    elif config["tariff_config"]["mode"] == "from_workflow":
+        print("Skipping tariff config preparation for now.")
+        return
+        # prepare_tariffs_from_workflow(config, dr_scen, tariff_config_template)
+
+    else:
+        raise NotImplementedError(
+            f"tariff_config mode {config['tariff_config']['mode']} "
+            f"not implemented."
+        )
+
+    print(f"Tariff configs for scenario {dr_scen} compiled.")
+
+
+def prepare_tariffs_from_file(
+    config: Dict, dr_scen: str, tariff_config_template: Dict
+):
+    """Prepare tariffs using excel file with tariff models
+    and multipliers precalculated"""
     parameterization = obtain_parameterization_from_file(config, dr_scen)
 
     for el in range(len(parameterization) - 1):
@@ -79,7 +100,8 @@ def prepare_tariff_configs(config: Dict, dr_scen: str):
     tariff_model_configs = {"Configs": tariff_config_template}
 
     with open(
-        f"{config['template_folder']}tariff_model_configs_{dr_scen}.yaml", "w"
+        f"{config['template_folder']}tariff_model_configs_{dr_scen}.yaml",
+        "w",
     ) as file:
         yaml.dump(
             tariff_model_configs,
@@ -87,8 +109,33 @@ def prepare_tariff_configs(config: Dict, dr_scen: str):
             sort_keys=False,
         )
 
-    print(f"Tariff configs for scenario {dr_scen} compiled.")
-    return tariff_config_template
+
+def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
+    """Prepare tariffs while calculating multipliers
+    and payments for each year"""
+    power_prices = pd.read_csv(
+        f"{cont.config_workflow['input_folder']}"
+        f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
+        sep=";",
+        header=None,
+        index_col=0,
+    )
+    years = list(
+        power_prices.index.str.slice(start=0, stop=4).astype(int).unique()
+    )
+    baseline_load_profile = pd.read_csv(
+        f"{cont.config_workflow['input_folder']}"
+        f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.trimmed_scenario.split('_')[3]}/"
+        f"baseline_load_profile_"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}.csv",
+        sep=";",
+        header=None,
+        index_col=0,
+    )
+    templates["load_shifting"]["Attributes"]["LoadShiftingPortfolio"]["BaselinePeakLoadInMW"]
+    pass
 
 
 def obtain_parameterization_from_file(
@@ -109,7 +156,7 @@ def obtain_parameterization_from_file(
         ]
     )
     overview = pd.read_excel(
-        f"{config['input_folder']}{config['tariff_config_file']}_{dr_scen}.xlsx",
+        f"{config['input_folder']}{config['tariff_config']['config_file']}_{dr_scen}.xlsx",
         sheet_name="tariff_shares",
         nrows=36,
         index_col=[0, 1],
@@ -130,7 +177,7 @@ def obtain_parameterization_from_file(
 
     for sheet in sheet_names:
         multiplier = pd.read_excel(
-            f"{config['input_folder']}{config['tariff_config_file']}_{dr_scen}.xlsx",
+            f"{config['input_folder']}{config['tariff_config']['config_file']}_{dr_scen}.xlsx",
             sheet_name=sheet,
             usecols="H:I",
             nrows=13,

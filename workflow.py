@@ -42,6 +42,7 @@ from dr_analyses.workflow_routines import (
     prepare_scenario_dicts,
     store_price_forecast_from_baseline,
     read_investment_results_template,
+    prepare_tariffs_from_workflow,
 )
 from load_shifting_api.main import LoadShiftingApiThread
 
@@ -108,6 +109,15 @@ if __name__ == "__main__":
         )
 
         if scenario != baseline_scenarios[dr_scen_short]:
+            if (
+                cont.config_workflow["tariff_config"]["mode"]
+                == "from_workflow"
+            ):
+                # TODO: Properly extract information and calculate multipliers
+                cont.add_load_shifting_agent(
+                    templates["load_shifting"], dr_scen
+                )
+                prepare_tariffs_from_workflow(cont, templates)
             cont.add_load_shifting_config(dr_scen, templates)
             cont.update_load_shedding_config(
                 dr_scen, templates["load_shedding"]
