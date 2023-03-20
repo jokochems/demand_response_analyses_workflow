@@ -118,6 +118,15 @@ if __name__ == "__main__":
                     templates["load_shifting"], dr_scen
                 )
                 prepare_tariffs_from_workflow(cont, templates)
+            elif (
+                cont.config_workflow["tariff_config"]["mode"]
+                == "from_file"
+            ):
+                cont.add_load_shifting_agent(
+                    templates["load_shifting"], dr_scen
+                )
+            else:
+                raise ValueError("Invalid tariff config mode!")
             cont.add_load_shifting_config(dr_scen, templates)
             cont.update_load_shedding_config(
                 dr_scen, templates["load_shedding"]
