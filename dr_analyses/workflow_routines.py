@@ -217,6 +217,23 @@ def prepare_tariffs_skeleton_from_workflow(
         )
 
 
+def drop_duplicate_scenarios(overview: pd.DataFrame) -> pd.DataFrame:
+    """Remove duplicate tariff scenarios
+
+    Scenarios with 100% capacity payment are duplicates;
+    keep only the first one, i.e. the one with no dynamic payments
+    """
+    overview.drop(
+        index=overview.loc[
+            (overview.index.get_level_values(1) == 100)
+            & (overview.index.get_level_values(0) != 0)
+        ].index,
+        inplace=True,
+    )
+
+    return overview
+
+
 def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
     """Prepare actual tariffs while calculating multipliers
     and payments for each year"""
@@ -253,24 +270,51 @@ def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
         header=0,
         sep=";",
     )
-    pass
-
-
-def drop_duplicate_scenarios(overview: pd.DataFrame) -> pd.DataFrame:
-    """Remove duplicate tariff scenarios
-
-    Scenarios with 100% capacity payment are duplicates;
-    keep only the first one, i.e. the one with no dynamic payments
-    """
-    overview.drop(
-        index=overview.loc[
-            (overview.index.get_level_values(1) == 100)
-            & (overview.index.get_level_values(0) != 0)
-        ].index,
-        inplace=True,
+    calculate_tariffs_for_dr_scen(
+        cont, tariff_info, templates, baseline_load_profile, baseline_power_prices
     )
 
-    return overview
+
+def calculate_tariffs_for_dr_scen(
+    cont: Container,
+    tariff_info: pd.DataFrame,
+    templates: Dict,
+    baseline_load_profile: pd.DataFrame,
+    baseline_power_prices: pd.DataFrame,
+):
+    """Calculate and return different tariff components resp. multipliers"""
+    overall_tariff = tariff_info.loc[
+        tariff_info["dr_scen"] == int(cont.trimmed_scenario.split("_")[3]),
+        "value",
+    ].values[0]
+    tariff_configs = templates["tariffs"][cont.trimmed_scenario.split("_")[3]]
+    for no in range(len(tariff_configs)):
+        capacity_tariff = (
+            overall_tariff
+            * int(tariff_configs[no]["Name"].split("_")[2])
+            / 100
+        )
+        overall_energy_tariff = overall_tariff - capacity_tariff
+        dynamic_energy_tariff = (
+            overall_energy_tariff
+            * int(tariff_configs[no]["Name"].split("_")[0])
+            / 100
+        )
+        multiplier = calculate_multiplier(dynamic_energy_tariff, baseline_load_profile, baseline_power_prices)
+        static_energy_tariff = overall_energy_tariff - dynamic_energy_tariff
+
+
+def calculate_multiplier(
+    dynamic_energy_tariff: float,
+    baseline_load_profile: pd.DataFrame,
+    baseline_power_prices: pd.DataFrame,
+) -> float:
+    """Calculate and return multiplier for given dynamic tariff"""
+    combined_data_set = pd.DataFrame(index=baseline_load_profile.index)
+    combined_data_set["load"] = baseline_load_profile
+    combined_data_set["price"] = baseline_power_prices
+    # TODO: Iterate over years contained in data set ...
+    weighted_average_price = (combined_data_set["load"] * combined_data_set["price"]).sum() / combined_data_set["load"].sum()
 
 
 def read_tariff_configs(config: Dict, dr_scen: str):
