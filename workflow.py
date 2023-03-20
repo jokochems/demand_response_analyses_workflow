@@ -113,7 +113,6 @@ if __name__ == "__main__":
                 cont.config_workflow["tariff_config"]["mode"]
                 == "from_workflow"
             ):
-                # TODO: Properly extract information and calculate multipliers
                 cont.add_load_shifting_agent(
                     templates["load_shifting"], dr_scen
                 )

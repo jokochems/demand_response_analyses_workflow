@@ -48,10 +48,16 @@ def prepare_tariff_configs(config: Dict, dr_scen: str) -> None:
 
     if config["tariff_config"]["mode"] == "from_file":
         prepare_tariffs_from_file(config, dr_scen, tariff_config_template)
+
     elif config["tariff_config"]["mode"] == "from_workflow":
-        print("Skipping tariff config preparation for now.")
+        prepare_tariffs_skeleton_from_workflow(
+            config, dr_scen, tariff_config_template
+        )
+        print(
+            "Creating skeleton only. "
+            "Postponing actual tariff configuration to later processing."
+        )
         return
-        # prepare_tariffs_from_workflow(config, dr_scen, tariff_config_template)
 
     else:
         raise NotImplementedError(
@@ -108,34 +114,6 @@ def prepare_tariffs_from_file(
             file,
             sort_keys=False,
         )
-
-
-def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
-    """Prepare tariffs while calculating multipliers
-    and payments for each year"""
-    power_prices = pd.read_csv(
-        f"{cont.config_workflow['input_folder']}"
-        f"{cont.config_workflow['data_sub_folder']}/"
-        f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
-        sep=";",
-        header=None,
-        index_col=0,
-    )
-    years = list(
-        power_prices.index.str.slice(start=0, stop=4).astype(int).unique()
-    )
-    baseline_load_profile = pd.read_csv(
-        f"{cont.config_workflow['input_folder']}"
-        f"{cont.config_workflow['data_sub_folder']}/"
-        f"{cont.trimmed_scenario.split('_')[3]}/"
-        f"baseline_load_profile_"
-        f"{cont.config_workflow['load_shifting_focus_cluster']}.csv",
-        sep=";",
-        header=None,
-        index_col=0,
-    )
-    templates["load_shifting"]["Attributes"]["LoadShiftingPortfolio"]["BaselinePeakLoadInMW"]
-    pass
 
 
 def obtain_parameterization_from_file(
@@ -200,6 +178,82 @@ def obtain_parameterization_from_file(
     parameterization.fillna(0, inplace=True)
 
     return parameterization
+
+
+def prepare_tariffs_skeleton_from_workflow(
+    config: Dict, dr_scen: str, tariff_config_template: Dict
+):
+    """Prepare tariffs skeleton"""
+    step_size = config["tariff_config"]["step_size"]
+    shares = list(range(0, 101, step_size))
+
+    parameterization = pd.DataFrame(
+        index=pd.MultiIndex.from_product([shares, shares]), columns=["names"]
+    )
+    parameterization["names"] = (
+        parameterization.index.get_level_values(0).astype(str)
+        + "_dynamic_"
+        + parameterization.index.get_level_values(1).astype(str)
+        + "_LP"
+    )
+    parameterization = drop_duplicate_scenarios(parameterization)
+
+    for el in range(len(parameterization) - 1):
+        tariff_config_template.append(tariff_config_template[0].copy())
+
+    for number, (name, values) in enumerate(parameterization.iterrows()):
+        tariff_config_template[number]["Name"] = values["names"]
+
+    tariff_model_configs = {"Configs": tariff_config_template}
+
+    with open(
+        f"{config['template_folder']}tariff_model_configs_{dr_scen}.yaml",
+        "w",
+    ) as file:
+        yaml.dump(
+            tariff_model_configs,
+            file,
+            sort_keys=False,
+        )
+
+
+def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
+    """Prepare actual tariffs while calculating multipliers
+    and payments for each year"""
+    baseline_power_prices = pd.read_csv(
+        f"{cont.config_workflow['input_folder']}"
+        f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
+        sep=";",
+        header=None,
+        index_col=0,
+    )
+    years = list(
+        baseline_power_prices.index.str.slice(start=0, stop=4)
+        .astype(int)
+        .unique()
+    )
+    baseline_load_profile = pd.read_csv(
+        f"{cont.config_workflow['input_folder']}"
+        f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.trimmed_scenario.split('_')[3]}/"
+        f"baseline_load_profile_"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}.csv",
+        sep=";",
+        header=None,
+        index_col=0,
+    )
+    peak_load = templates["load_shifting"]["Attributes"][
+        "LoadShiftingPortfolio"
+    ]["BaselinePeakLoadInMW"]
+    baseline_load_profile *= peak_load
+    tariff_info = pd.read_csv(
+        f"{cont.config_workflow['input_folder']}/tariffs.csv",
+        index_col=0,
+        header=0,
+        sep=";",
+    )
+    pass
 
 
 def drop_duplicate_scenarios(overview: pd.DataFrame) -> pd.DataFrame:

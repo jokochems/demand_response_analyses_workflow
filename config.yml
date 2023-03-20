@@ -7,6 +7,7 @@ config_workflow:
   tariff_config:
     mode: "from_workflow"  # "from_file"
     config_file: "tariff_configuration"
+    step_size: 20
   output_folder: "./results/"
   data_output: "data_out/"
   plots_output: "plots_out/"
