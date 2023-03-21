@@ -183,7 +183,10 @@ def obtain_parameterization_from_file(
 def prepare_tariffs_skeleton_from_workflow(
     config: Dict, dr_scen: str, tariff_config_template: Dict
 ):
-    """Prepare tariffs skeleton"""
+    """Prepare tariffs skeleton
+
+    Introduce paths to files with actual parameterization
+    """
     step_size = config["tariff_config"]["step_size"]
     shares = list(range(0, 101, step_size))
 
@@ -202,7 +205,25 @@ def prepare_tariffs_skeleton_from_workflow(
         tariff_config_template.append(tariff_config_template[0].copy())
 
     for number, (name, values) in enumerate(parameterization.iterrows()):
+        path = f"./inputs/data/{dr_scen}/"
         tariff_config_template[number]["Name"] = values["names"]
+        tariff_config_template[number][
+            "AverageMarketPriceInEURPerMWH"
+        ] = f"{path}average_price_annual.csv"
+        tariff_config_template[number][
+            "OtherSurchargesInEURPerMWH"
+        ] = f"{path}static_payments_{values['names']}_annual.csv"
+        tariff_config_template[number][
+            "CapacityBasedNetworkChargesInEURPerMW"
+        ] = f"{path}capacity_payments_{values['names']}_annual.csv"
+        tariff_config_template[number]["DynamicTariffComponents"] = [
+            {
+                "ComponentName": "POWER_PRICE",
+                "Multiplier": f"{path}dynamic_multiplier_{values['names']}_annual.csv",
+                "LowerBound": -500,
+                "UpperBound": 3000,
+            }
+        ]
 
     tariff_model_configs = {"Configs": tariff_config_template}
 
@@ -271,7 +292,11 @@ def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
         sep=";",
     )
     calculate_tariffs_for_dr_scen(
-        cont, tariff_info, templates, baseline_load_profile, baseline_power_prices
+        cont,
+        tariff_info,
+        templates,
+        baseline_load_profile,
+        baseline_power_prices,
     )
 
 
@@ -289,18 +314,14 @@ def calculate_tariffs_for_dr_scen(
     ].values[0]
     tariff_configs = templates["tariffs"][cont.trimmed_scenario.split("_")[3]]
     for no in range(len(tariff_configs)):
-        capacity_tariff = (
-            overall_tariff
-            * int(tariff_configs[no]["Name"].split("_")[2])
-            / 100
-        )
+        capacity_share = int(tariff_configs[no]["Name"].split("_")[2]) / 100
+        energy_share = 1 - capacity_share
+        capacity_tariff = overall_tariff * capacity_share
         overall_energy_tariff = overall_tariff - capacity_tariff
-        dynamic_energy_tariff = (
-            overall_energy_tariff
-            * int(tariff_configs[no]["Name"].split("_")[0])
-            / 100
+        dynamic_energy_tariff = overall_energy_tariff * energy_share
+        multiplier = calculate_multiplier(
+            dynamic_energy_tariff, baseline_load_profile, baseline_power_prices
         )
-        multiplier = calculate_multiplier(dynamic_energy_tariff, baseline_load_profile, baseline_power_prices)
         static_energy_tariff = overall_energy_tariff - dynamic_energy_tariff
 
 
@@ -314,7 +335,9 @@ def calculate_multiplier(
     combined_data_set["load"] = baseline_load_profile
     combined_data_set["price"] = baseline_power_prices
     # TODO: Iterate over years contained in data set ...
-    weighted_average_price = (combined_data_set["load"] * combined_data_set["price"]).sum() / combined_data_set["load"].sum()
+    weighted_average_price = (
+        combined_data_set["load"] * combined_data_set["price"]
+    ).sum() / combined_data_set["load"].sum()
 
 
 def read_tariff_configs(config: Dict, dr_scen: str):

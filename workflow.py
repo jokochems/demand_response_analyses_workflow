@@ -109,18 +109,12 @@ if __name__ == "__main__":
         )
 
         if scenario != baseline_scenarios[dr_scen_short]:
-            if (
-                cont.config_workflow["tariff_config"]["mode"]
-                == "from_workflow"
-            ):
+            if config_workflow["tariff_config"]["mode"] == "from_workflow":
                 cont.add_load_shifting_agent(
                     templates["load_shifting"], dr_scen
                 )
                 prepare_tariffs_from_workflow(cont, templates)
-            elif (
-                cont.config_workflow["tariff_config"]["mode"]
-                == "from_file"
-            ):
+            elif config_workflow["tariff_config"]["mode"] == "from_file":
                 cont.add_load_shifting_agent(
                     templates["load_shifting"], dr_scen
                 )
