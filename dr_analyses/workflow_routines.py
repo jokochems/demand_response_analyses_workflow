@@ -3,6 +3,7 @@ import shutil
 from typing import List, Dict
 
 import pandas as pd
+import numpy as np
 import yaml
 from fameio.scripts.convert_results import run as convert_results
 from fameio.scripts.make_config import run as make_config
@@ -185,7 +186,7 @@ def prepare_tariffs_skeleton_from_workflow(
 ):
     """Prepare tariffs skeleton
 
-    Introduce paths to files with actual parameterization
+    Introduce paths to files containing actual parameterization
     """
     step_size = config["tariff_config"]["step_size"]
     shares = list(range(0, 101, step_size))
@@ -266,11 +267,6 @@ def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
         header=None,
         index_col=0,
     )
-    years = list(
-        baseline_power_prices.index.str.slice(start=0, stop=4)
-        .astype(int)
-        .unique()
-    )
     baseline_load_profile = pd.read_csv(
         f"{cont.config_workflow['input_folder']}"
         f"{cont.config_workflow['data_sub_folder']}/"
@@ -287,57 +283,136 @@ def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
     baseline_load_profile *= peak_load
     tariff_info = pd.read_csv(
         f"{cont.config_workflow['input_folder']}/tariffs.csv",
-        index_col=0,
+        index_col=[0, 1],
         header=0,
         sep=";",
     )
-    calculate_tariffs_for_dr_scen(
-        cont,
-        tariff_info,
-        templates,
-        baseline_load_profile,
-        baseline_power_prices,
+    baseline_prices_and_load = create_combined_prices_and_load_data(
+        baseline_load_profile, baseline_power_prices
     )
+    calculate_tariffs_for_dr_scen(
+        cont, tariff_info, templates, baseline_prices_and_load
+    )
+
+
+def create_combined_prices_and_load_data(
+    baseline_load_profile: pd.DataFrame,
+    baseline_power_prices: pd.DataFrame,
+) -> pd.DataFrame:
+    """Combine baseline power prices and baseline load"""
+    combined_df = pd.DataFrame(index=baseline_load_profile.index)
+    combined_df["load"] = baseline_load_profile
+    combined_df["price"] = baseline_power_prices
+    combined_df["year"] = combined_df.index.str[:4]
+
+    return combined_df.loc[combined_df["year"].astype(int) <= 2045]
 
 
 def calculate_tariffs_for_dr_scen(
     cont: Container,
     tariff_info: pd.DataFrame,
     templates: Dict,
-    baseline_load_profile: pd.DataFrame,
-    baseline_power_prices: pd.DataFrame,
+    baseline_prices_and_load: pd.DataFrame,
 ):
-    """Calculate and return different tariff components resp. multipliers"""
+    """Calculate and store different tariff components resp. multipliers"""
     overall_tariff = tariff_info.loc[
-        tariff_info["dr_scen"] == int(cont.trimmed_scenario.split("_")[3]),
+        tariff_info.index.get_level_values(1)
+        == int(cont.trimmed_scenario.split("_")[3]),
         "value",
-    ].values[0]
+    ].droplevel(1)
+
     tariff_configs = templates["tariffs"][cont.trimmed_scenario.split("_")[3]]
     for no in range(len(tariff_configs)):
-        capacity_share = int(tariff_configs[no]["Name"].split("_")[2]) / 100
-        energy_share = 1 - capacity_share
-        capacity_tariff = overall_tariff * capacity_share
-        overall_energy_tariff = overall_tariff - capacity_tariff
-        dynamic_energy_tariff = overall_energy_tariff * energy_share
-        multiplier = calculate_multiplier(
-            dynamic_energy_tariff, baseline_load_profile, baseline_power_prices
-        )
-        static_energy_tariff = overall_energy_tariff - dynamic_energy_tariff
+        if (
+            tariff_configs[no]["Name"]
+            == cont.trimmed_scenario.split("_", 4)[-1]
+        ):
+            tariff_config = tariff_configs[no]
+            tariff_components = calculate_tariff_components(
+                tariff_config, overall_tariff, baseline_prices_and_load
+            )
+            for key, component in tariff_components.items():
+                component.index = (
+                    component.index.astype(str) + "-01-01_00:00:00"
+                )
+                if key != "Multiplier":
+                    component.to_csv(
+                        tariff_config[key], header=False, sep=";"
+                    )
+                elif key == "Multiplier":
+                    component.to_csv(
+                        tariff_config["DynamicTariffComponents"][0][key],
+                        header=False,
+                        sep=";",
+                    )
+                else:
+                    raise ValueError("Invalid key for tariff configurations.")
 
 
-def calculate_multiplier(
-    dynamic_energy_tariff: float,
-    baseline_load_profile: pd.DataFrame,
-    baseline_power_prices: pd.DataFrame,
-) -> float:
-    """Calculate and return multiplier for given dynamic tariff"""
-    combined_data_set = pd.DataFrame(index=baseline_load_profile.index)
-    combined_data_set["load"] = baseline_load_profile
-    combined_data_set["price"] = baseline_power_prices
-    # TODO: Iterate over years contained in data set ...
-    weighted_average_price = (
-        combined_data_set["load"] * combined_data_set["price"]
-    ).sum() / combined_data_set["load"].sum()
+def file_exists(file: str) -> bool:
+    """Returns True if given file exists and False otherwise"""
+    return os.path.exists(file)
+
+
+def calculate_tariff_components(
+    tariff_config: Dict,
+    overall_tariff: pd.Series,
+    baseline_prices_and_load: pd.DataFrame,
+) -> Dict:
+    """Calculate tariff components for given tariff model"""
+    capacity_share = int(tariff_config["Name"].split("_")[2]) / 100
+    dynamic_share = int(tariff_config["Name"].split("_")[0]) / 100
+    energy_share = 1 - capacity_share
+    capacity_tariff = overall_tariff * capacity_share
+    overall_energy_tariff = overall_tariff - capacity_tariff
+    dynamic_energy_tariff = (
+        overall_energy_tariff * energy_share * dynamic_share
+    )
+    weighted_average_price = calculate_average_power_price(
+        baseline_prices_and_load
+    )
+    multiplier = weighted_average_price * dynamic_energy_tariff
+    capacity_tariff_per_mw = calculate_capacity_tariff_per_mw(
+        capacity_tariff, baseline_prices_and_load
+    )
+    static_energy_tariff = overall_energy_tariff - dynamic_energy_tariff
+
+    tariff_components = {
+        "AverageMarketPriceInEURPerMWH": weighted_average_price,
+        "OtherSurchargesInEURPerMWH": static_energy_tariff,
+        "CapacityBasedNetworkChargesInEURPerMW": capacity_tariff_per_mw,
+        "Multiplier": multiplier,
+    }
+
+    return tariff_components
+
+
+def calculate_average_power_price(
+    baseline_prices_and_load: pd.DataFrame,
+) -> pd.Series:
+    """Calculate and return volume-weighted average power price"""
+    weighted_average_price = baseline_prices_and_load.groupby("year").apply(
+        lambda x: np.average(x["price"], weights=x["load"])
+    )
+    weighted_average_price.index = weighted_average_price.index.astype(int)
+    return weighted_average_price
+
+
+def calculate_capacity_tariff_per_mw(
+    capacity_tariff: pd.Series,
+    baseline_prices_and_load: pd.DataFrame,
+):
+    """Calculate the capacity tariff in EUR/MW from given EUR/MWh value"""
+    peak_load = baseline_prices_and_load.groupby("year").apply(
+        lambda x: np.max(x["load"])
+    )
+    annual_consumption = baseline_prices_and_load.groupby("year").apply(
+        lambda x: (x["load"] * x["price"]).sum()
+    )
+    peak_load.index = peak_load.index.astype(int)
+    annual_consumption.index = annual_consumption.index.astype(int)
+    overall_annual_capacity_payment = annual_consumption * capacity_tariff
+    return overall_annual_capacity_payment / peak_load
 
 
 def read_tariff_configs(config: Dict, dr_scen: str):
