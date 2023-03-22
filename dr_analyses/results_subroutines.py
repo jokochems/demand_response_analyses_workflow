@@ -110,7 +110,7 @@ def calculate_dynamic_price_component_from_workflow(
             group.values
             * multiplier.loc[multiplier.index.str[:4] == year, 1].values[0]
             < component["LowerBound"],
-            power_prices["ElectricityPriceInEURperMWH"].values
+            group.values
             * multiplier.loc[multiplier.index.str[:4] == year, 1].values[0]
             > component["UpperBound"],
         ]
@@ -123,7 +123,7 @@ def calculate_dynamic_price_component_from_workflow(
                 np.select(
                     conditions,
                     choices,
-                    power_prices["ElectricityPriceInEURperMWH"].values
+                    group.values
                     * multiplier.loc[
                         multiplier.index.str[:4] == year, 1
                     ].values[0],
