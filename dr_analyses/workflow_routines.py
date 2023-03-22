@@ -259,6 +259,7 @@ def drop_duplicate_scenarios(overview: pd.DataFrame) -> pd.DataFrame:
 def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
     """Prepare actual tariffs while calculating multipliers
     and payments for each year"""
+    print(f"Preparing tariffs for scenario {cont.trimmed_scenario}.")
     baseline_power_prices = pd.read_csv(
         f"{cont.config_workflow['input_folder']}"
         f"{cont.config_workflow['data_sub_folder']}/"
@@ -293,6 +294,7 @@ def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
     calculate_tariffs_for_dr_scen(
         cont, tariff_info, templates, baseline_prices_and_load
     )
+    print(f"Tariffs for scenario {cont.trimmed_scenario} compiled.")
 
 
 def create_combined_prices_and_load_data(
@@ -347,11 +349,6 @@ def calculate_tariffs_for_dr_scen(
                     )
                 else:
                     raise ValueError("Invalid key for tariff configurations.")
-
-
-def file_exists(file: str) -> bool:
-    """Returns True if given file exists and False otherwise"""
-    return os.path.exists(file)
 
 
 def calculate_tariff_components(
