@@ -7,6 +7,8 @@ import yaml
 from fameio.source.cli import Options
 from fameio.source.loader import load_yaml
 
+from dr_analyses.time import cut_leap_days, create_time_index
+
 
 def trim_file_name(file_name: str) -> str:
     """Return the useful part of a scenario name"""
@@ -154,49 +156,6 @@ def add_load_shifting_tariff(
                 },
                 group="BusinessModel",
             )
-
-
-def create_time_index(start_time: str, end_time: str):
-    """Create and return pd.date_range from FAME timestamps"""
-    start_time = pd.to_datetime(start_time.replace("_", " ")) + pd.Timedelta(
-        "2m"
-    )
-    end_time = pd.to_datetime(end_time.replace("_", " ")) + pd.Timedelta("2m")
-    return pd.date_range(start=start_time, end=end_time, freq="H")[:-1]
-
-
-def is_leap_year(year: int) -> bool:
-    """Check whether given year is a leap year or not"""
-    leap_year = False
-
-    if year % 4 == 0:
-        leap_year = True
-    if year % 100 == 0:
-        leap_year = False
-    if year % 400 == 0:
-        leap_year = True
-
-    return leap_year
-
-
-def cut_leap_days(time_series: pd.DataFrame) -> pd.DataFrame:
-    """Take a time series index with real dates and cut the leap days out"""
-    years = sorted(list(set(getattr(time_series.index, "year"))))
-    for year in years:
-        if is_leap_year(year):
-            try:
-                time_series.drop(
-                    time_series.loc[
-                        (time_series.index.year == year)
-                        & (time_series.index.month == 12)
-                        & (time_series.index.day == 31)
-                    ].index,
-                    inplace=True,
-                )
-            except KeyError:
-                continue
-
-    return time_series
 
 
 def save_to_fame_time_series(ts: pd.DataFrame, config: Dict, key: str):
@@ -533,3 +492,17 @@ class Container:
     def set_investment_expenses(self, investment_expenses: float):
         """Set investment expenses for load shifting focus cluster"""
         self.investment_expenses = investment_expenses
+
+    def get_number_of_simulated_year(self) -> int:
+        """Return the number of the simulated year
+
+        0 = start year, where investment occur; 1 = first year"""
+        return (
+            int(
+                self.scenario_yaml["GeneralProperties"]["Simulation"][
+                    "StartTime"
+                ][:4]
+            )
+            - 2019
+            + 1
+        )

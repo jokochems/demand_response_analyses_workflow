@@ -1,7 +1,7 @@
 import math
 
 from dr_analyses.container import Container
-from dr_analyses.results_workflow import AMIRIS_TIMESTEPS_PER_YEAR
+from dr_analyses.time import AMIRIS_TIMESTEPS_PER_YEAR
 
 
 def calc_summary_parameters(cont: Container) -> None:

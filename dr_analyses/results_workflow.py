@@ -1,4 +1,3 @@
-import math
 from typing import Dict, List
 
 import numpy as np
@@ -12,9 +11,10 @@ from dr_analyses.results_subroutines import (
     add_baseline_load_profile,
     add_static_prices,
     calculate_dynamic_price_time_series,
+    derive_lifetime_from_simulation_horizon,
+    calculate_annuity_factor,
 )
-
-AMIRIS_TIMESTEPS_PER_YEAR = 8760
+from dr_analyses.time import AMIRIS_TIMESTEPS_PER_YEAR
 
 
 def calc_load_shifting_results(cont: Container, key: str) -> None:
@@ -41,6 +41,9 @@ def calc_load_shifting_results(cont: Container, key: str) -> None:
     results["LoadAfterShifting"] = (
         results["BaselineLoadProfile"] + results["NetAwardedPower"]
     )
+    if cont.config_workflow["tariff_config"]["mode"] == "from_workflow":
+        results
+
     cont.set_results(results)
 
 
@@ -139,7 +142,7 @@ def calculate_load_shifting_annuity(cont: Container) -> float:
         annuity = cont.npv * annuity_factor
     elif mode == "single_year":
         invest_annuity = -cont.investment_expenses * annuity_factor
-        simulated_year = get_number_of_simulated_year(cont)
+        simulated_year = cont.get_number_of_simulated_year()
         simulation_year_discounted_cashflow = (
             cont.cashflows[0]
             * (1 + cont.config_workflow["interest_rate"]) ** -simulated_year
@@ -147,31 +150,6 @@ def calculate_load_shifting_annuity(cont: Container) -> float:
         annuity = invest_annuity + simulation_year_discounted_cashflow
 
     return annuity
-
-
-def derive_lifetime_from_simulation_horizon(cont: Container) -> int:
-    """Return the simulation horizon in years"""
-    return math.ceil(len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR)
-
-
-def calculate_annuity_factor(n, interest) -> float:
-    """Return annuity factor for given number of years and interest rate"""
-    return ((1 + interest) ** n * interest) / ((1 + interest) ** n - 1)
-
-
-def get_number_of_simulated_year(cont: Container) -> int:
-    """Return the number of the simulated year
-
-    0 = start year, where investment occur; 1 = first year"""
-    return (
-        int(
-            cont.scenario_yaml["GeneralProperties"]["Simulation"]["StartTime"][
-                :4
-            ]
-        )
-        - 2019
-        + 1
-    )
 
 
 def add_discounted_payments_to_results(
@@ -182,6 +160,7 @@ def add_discounted_payments_to_results(
     :param list(str) cols: Columns for which discounted values shall be added
     :param Container cont: object holding results
     """
+    cont.results.reset_index(inplace=True, drop=True)
     for i in range(derive_lifetime_from_simulation_horizon(cont)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
             stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
@@ -199,6 +178,7 @@ def add_discounted_payments_to_results(
             ) ** (
                 -i
             )
+    # cont.results.set_index("index", inplace=True)
 
 
 def obtain_scenario_and_baseline_prices(cont: Container) -> None:
@@ -227,12 +207,15 @@ def add_power_payments(
     """
     cont.results["BaselineTotalPayments"] = 0
     cont.results["ShiftingTotalPayments"] = 0
-    for col in cont.power_prices.columns:
+    power_prices = cont.power_prices.reset_index(drop=True)
+    baseline_power_prices = cont.baseline_power_prices.reset_index(drop=True)
+
+    for col in power_prices.columns:
 
         if use_baseline_prices_for_comparison:
-            price = cont.baseline_power_prices[col]
+            price = baseline_power_prices[col]
         else:
-            price = cont.power_prices[col]
+            price = power_prices[col]
         cont.results[f"Baseline{col}Payment"] = (
             cont.results["BaselineLoadProfile"] * price
         )
@@ -241,7 +224,7 @@ def add_power_payments(
             f"Baseline{col}Payment"
         ]
         cont.results[f"Shifting{col}Payment"] = (
-            cont.results["LoadAfterShifting"] * cont.power_prices[col]
+            cont.results["LoadAfterShifting"] * power_prices[col]
         )
 
         cont.results["ShiftingTotalPayments"] += cont.results[
@@ -257,9 +240,31 @@ def add_capacity_payments(cont: Container) -> None:
     """
     cont.results["BaselineCapacityPayment"] = 0
     cont.results["ShiftingCapacityPayment"] = 0
-    capacity_charge = cont.load_shifting_data["Attributes"]["Policy"][
-        "CapacityBasedNetworkChargesInEURPerMW"
-    ]
+
+    if cont.config_workflow["tariff_config"]["mode"] == "from_file":
+        capacity_charge = cont.load_shifting_data["Attributes"]["Policy"][
+            "CapacityBasedNetworkChargesInEURPerMW"
+        ]
+        calculate_capacity_payments_from_file(cont, capacity_charge)
+    elif cont.config_workflow["tariff_config"]["mode"] == "from_workflow":
+        capacity_charge = pd.read_csv(
+            cont.load_shifting_data["Attributes"]["Policy"][
+                "CapacityBasedNetworkChargesInEURPerMW"
+            ],
+            index_col=0,
+            sep=";",
+            header=None,
+        )
+        calculate_capacity_payments_from_workflow(cont, capacity_charge)
+
+    else:
+        raise ValueError("Invalid tariff configuration mode selected!")
+
+
+def calculate_capacity_payments_from_file(
+    cont: Container, capacity_charge: float
+):
+    """Calculate capacity payment obligations"""
     for i in range(derive_lifetime_from_simulation_horizon(cont)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
             stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
@@ -281,6 +286,31 @@ def add_capacity_payments(cont: Container) -> None:
             .max()
             * capacity_charge
         )
+
+
+def calculate_capacity_payments_from_workflow(
+    cont: Container, capacity_charge: pd.DataFrame
+):
+    """Calculate capacity payment obligations"""
+    results = cont.results.copy()
+    results = results.set_index(cont.power_prices.index)
+    to_concat = []
+    for year, group in results.groupby(results.index.str[:4]):
+        group.at[group.iloc[0].name, "BaselineCapacityPayment"] = (
+            group["BaselineLoadProfile"].max()
+            * capacity_charge.loc[
+                capacity_charge.index.str[:4] == year, 1
+            ].values[0]
+        )
+        group.at[group.iloc[0].name, "ShiftingCapacityPayment"] = (
+            group["LoadAfterShifting"].max()
+            * capacity_charge.loc[
+                capacity_charge.index.str[:4] == year, 1
+            ].values[0]
+        )
+        to_concat.append(group)
+
+    cont.results = pd.concat(to_concat)
 
 
 def write_results(cont: Container) -> None:
