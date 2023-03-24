@@ -104,8 +104,11 @@ if __name__ == "__main__":
             baseline_scenarios[dr_scen_short],
         )
 
+        cont.adapt_simulation_time_frame(
+            cont.config_workflow["simulation"]
+        )
         cont.adapt_shortage_capacity(
-            config_workflow["artificial_shortage_capacity_in_MW"]
+            config_workflow["simulation"]["artificial_shortage_capacity_in_MW"]
         )
 
         if scenario != baseline_scenarios[dr_scen_short]:

@@ -268,6 +268,12 @@ class Container:
             sep=";",
         )
 
+    def adapt_simulation_time_frame(self, simulation_parameters: Dict):
+        """Adapt the simulation time frame according to config"""
+        simulation = self.scenario_yaml["GeneralProperties"]["Simulation"]
+        simulation["StartTime"] = simulation_parameters["StartTime"]
+        simulation["StopTime"] = simulation_parameters["StopTime"]
+
     def adapt_shortage_capacity(self, shortage_capacity: float) -> None:
         """Adapt the capacity of artificial shortage units to given value"""
         shortage_agent = [

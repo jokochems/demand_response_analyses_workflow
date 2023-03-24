@@ -23,7 +23,10 @@ config_workflow:
   ]
   interest_rate: 0.05
   prepare_tariff_config: True
-  artificial_shortage_capacity_in_MW: 100000
+  simulation:
+    StartTime: 2026-12-31_23:58:00  # 2019-12-31_23:58:00
+    StopTime: 2027-12-31_23:58:00  # 2035-12-31_23:58:00
+    artificial_shortage_capacity_in_MW: 100000
   amiris_analyses:
     start_web_service: True
     make_scenario: True
@@ -63,7 +66,7 @@ config_make:
 
 # AMIRIS run properties
 run_properties:
-  exe: "amiris/amiris-core_1.2.9-jar-with-dependencies_time_series.jar -Xmx16000M"
+  exe: "amiris/amiris-core_1.2.9-jar-with-dependencies_micro_model.jar -Xmx16000M"
   logging: "-Dlog4j.configuration=file:amiris/log4j.properties"
   main: "de.dlr.gitlab.fame.setup.FameRunner"
   setup: "amiris/fameSetup.yaml"
