@@ -205,13 +205,13 @@ if __name__ == "__main__":
     if config_workflow["evaluate_cross_scenarios"]:
         if not scenario_results:
             for dr_scen, scenario in scenario_files.items():
-                if dr_scen != "none":
+                if "_wo_dr" not in scenario:
                     scenario_results[dr_scen_short][
                         dr_scen
                     ] = read_scenario_result(config_workflow, scenario)
 
         for dr_scen, dr_scen_results in scenario_results.items():
-            if dr_scen == "none":
+            if "_wo_dr" in dr_scen:
                 continue
 
             overall_results = concat_results(dr_scen_results)
