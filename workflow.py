@@ -42,6 +42,7 @@ from dr_analyses.workflow_routines import (
     prepare_scenario_dicts,
     store_price_forecast_from_baseline,
     read_investment_results_template,
+    prepare_tariffs_from_workflow,
 )
 from load_shifting_api.main import LoadShiftingApiThread
 
@@ -103,11 +104,25 @@ if __name__ == "__main__":
             baseline_scenarios[dr_scen_short],
         )
 
+        cont.adapt_simulation_time_frame(
+            cont.config_workflow["simulation"]
+        )
         cont.adapt_shortage_capacity(
-            config_workflow["artificial_shortage_capacity_in_MW"]
+            config_workflow["simulation"]["artificial_shortage_capacity_in_MW"]
         )
 
         if scenario != baseline_scenarios[dr_scen_short]:
+            if config_workflow["tariff_config"]["mode"] == "from_workflow":
+                cont.add_load_shifting_agent(
+                    templates["load_shifting"], dr_scen
+                )
+                prepare_tariffs_from_workflow(cont, templates)
+            elif config_workflow["tariff_config"]["mode"] == "from_file":
+                cont.add_load_shifting_agent(
+                    templates["load_shifting"], dr_scen
+                )
+            else:
+                raise ValueError("Invalid tariff config mode!")
             cont.add_load_shifting_config(dr_scen, templates)
             cont.update_load_shedding_config(
                 dr_scen, templates["load_shedding"]
@@ -190,13 +205,13 @@ if __name__ == "__main__":
     if config_workflow["evaluate_cross_scenarios"]:
         if not scenario_results:
             for dr_scen, scenario in scenario_files.items():
-                if dr_scen != "none":
+                if "_wo_dr" not in scenario:
                     scenario_results[dr_scen_short][
                         dr_scen
                     ] = read_scenario_result(config_workflow, scenario)
 
         for dr_scen, dr_scen_results in scenario_results.items():
-            if dr_scen == "none":
+            if "_wo_dr" in dr_scen:
                 continue
 
             overall_results = concat_results(dr_scen_results)

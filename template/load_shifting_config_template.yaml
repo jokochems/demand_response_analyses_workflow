@@ -35,7 +35,7 @@ Agents:
         ElectricityTaxInEURPerMWH: 0.0
         OtherSurchargesInEURPerMWH: 0.0
         DynamicTariffComponents: []
-        VAT: 1.19
+        VAT: 1.0  # No value added tax for commercial consumer
         CapacityBasedNetworkChargesInEURPerMW: 0.0
         FixedNetworkChargesInEURPerYear: 0.0
       BusinessModel:

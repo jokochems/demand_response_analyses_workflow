@@ -416,19 +416,19 @@ AgentTypes:
         List: false
         NestedAttributes:
           EEGSurchargeInEURPerMWH:
-            AttributeType: double
+            AttributeType: time_series
             Mandatory: false
             List: false
           VolumetricNetworkChargeInEURPerMWH:
-            AttributeType: double
+            AttributeType: time_series
             Mandatory: false
             List: false
           ElectricityTaxInEURPerMWH:
-            AttributeType: double
+            AttributeType: time_series
             Mandatory: false
             List: false
           OtherSurchargesInEURPerMWH:
-            AttributeType: double
+            AttributeType: time_series
             Mandatory: false
             List: false            
           DynamicTariffComponents:
@@ -442,7 +442,7 @@ AgentTypes:
                 List: false
                 Values: [ 'POWER_PRICE', 'EEG_SURCHARGE', 'VOLUMETRIC_NETWORK_CHARGE', 'OTHER_COMPONENTS', 'DUMMY' ]  
               Multiplier:
-                AttributeType: double
+                AttributeType: time_series
                 Mandatory: true
                 List: false
               LowerBound:
@@ -458,11 +458,11 @@ AgentTypes:
             Mandatory: false
             List: false
           CapacityBasedNetworkChargesInEURPerMW:
-            AttributeType: double
+            AttributeType: time_series
             Mandatory: false
             List: false
           FixedNetworkChargesInEURPerYear:
-            AttributeType: double
+            AttributeType: time_series
             Mandatory: false
             List: false
       BusinessModel:
@@ -475,7 +475,7 @@ AgentTypes:
             Mandatory: false
             List: false
           AverageMarketPriceInEURPerMWH:
-            AttributeType: double
+            AttributeType: time_series
             Mandatory: false
             List: false
     Products: [ 'Bids', 'Payout', 'DispatchAssignment', 'BidsForecast', 'MeritOrderForecastRequest', 'PriceForecastRequest', 'GateClosureForward', 'ForecastRequestForward' ]
@@ -601,19 +601,19 @@ AgentTypes:
               Mandatory: false
               List: false
             EEGSurchargeInEuroPerMWh:
-              AttributeType: double
+              AttributeType: time_series
               Mandatory: false
               List: false
             VolumetricNetworkChargeInEuroPerMWh:
-              AttributeType: double
+              AttributeType: time_series
               Mandatory: false
               List: false
             ElectricityTaxInEuroPerMWh:
-              AttributeType: double
+              AttributeType: time_series
               Mandatory: false
               List: false
             OtherSurchargesInEuroPerMWh:
-              AttributeType: double
+              AttributeType: time_series
               Mandatory: false
               List: false            
             FeedInTariffScheme: 
@@ -632,7 +632,7 @@ AgentTypes:
                   List: false
                   Values: [ 'POWER_PRICE', 'EEG_SURCHARGE', 'VOLUMETRIC_NETWORK_CHARGE', 'OTHER_COMPONENTS', 'DUMMY' ]  
                 Multiplier:
-                  AttributeType: double
+                  AttributeType: time_series
                   Mandatory: true
                   List: false
                 LowerBound:
@@ -661,7 +661,7 @@ AgentTypes:
               Mandatory: false
               List: false
             AverageMarketPriceInEuroPerMWh:
-              AttributeType: double
+              AttributeType: time_series
               Mandatory: false
               List: false
         PriceForecastRequestOffsetInSeconds:
