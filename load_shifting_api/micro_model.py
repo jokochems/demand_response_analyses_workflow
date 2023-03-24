@@ -38,7 +38,7 @@ class ModelResponse(BaseModel):
     demand_after: List[float]
     upshift: List[float]
     downshift: List[float]
-    variable_costs: float
+    overall_variable_costs: float
 
 
 def micro_model_api(inputs: Inputs) -> ModelResponse:
