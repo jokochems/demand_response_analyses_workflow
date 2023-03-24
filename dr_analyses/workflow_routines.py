@@ -359,16 +359,15 @@ def calculate_tariff_components(
     """Calculate tariff components for given tariff model"""
     capacity_share = int(tariff_config["Name"].split("_")[2]) / 100
     dynamic_share = int(tariff_config["Name"].split("_")[0]) / 100
-    energy_share = 1 - capacity_share
     capacity_tariff = overall_tariff * capacity_share
     overall_energy_tariff = overall_tariff - capacity_tariff
     dynamic_energy_tariff = (
-        overall_energy_tariff * energy_share * dynamic_share
+        overall_energy_tariff * dynamic_share
     )
     weighted_average_price = calculate_average_power_price(
         baseline_prices_and_load
     )
-    multiplier = weighted_average_price * dynamic_energy_tariff
+    multiplier = dynamic_energy_tariff / weighted_average_price
     capacity_tariff_per_mw = calculate_capacity_tariff_per_mw(
         capacity_tariff, baseline_prices_and_load
     )
@@ -386,7 +385,7 @@ def calculate_tariff_components(
 
 def calculate_average_power_price(
     baseline_prices_and_load: pd.DataFrame,
-) -> pd.Series:
+) -> pd.DataFrame:
     """Calculate and return volume-weighted average power price"""
     weighted_average_price = baseline_prices_and_load.groupby("year").apply(
         lambda x: np.average(x["price"], weights=x["load"])
@@ -404,7 +403,7 @@ def calculate_capacity_tariff_per_mw(
         lambda x: np.max(x["load"])
     )
     annual_consumption = baseline_prices_and_load.groupby("year").apply(
-        lambda x: (x["load"] * x["price"]).sum()
+        lambda x: (x["load"]).sum()
     )
     peak_load.index = peak_load.index.astype(int)
     annual_consumption.index = annual_consumption.index.astype(int)
