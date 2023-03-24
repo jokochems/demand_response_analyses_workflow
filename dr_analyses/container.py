@@ -413,7 +413,7 @@ class Container:
                 key,
                 f"{shedding_cluster}_variable_costs_2020.csv",
             )
-            parameters[shedding_cluster]["ValueOfLostLoad"] = min(
+            parameters[shedding_cluster]["ValueOfLostLoad"] = max(
                 float(
                     self.config_workflow["simulation"][
                         "minimum_value_of_lost_load"

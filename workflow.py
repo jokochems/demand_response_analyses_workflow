@@ -112,21 +112,12 @@ if __name__ == "__main__":
         )
 
         if scenario != baseline_scenarios[dr_scen_short]:
-            if config_workflow["tariff_config"]["mode"] == "from_workflow":
-                cont.add_load_shifting_agent(
-                    templates["load_shifting"], dr_scen
-                )
-                prepare_tariffs_from_workflow(cont, templates)
-            elif config_workflow["tariff_config"]["mode"] == "from_file":
-                cont.add_load_shifting_agent(
-                    templates["load_shifting"], dr_scen
-                )
-            else:
-                raise ValueError("Invalid tariff config mode!")
-            cont.add_load_shifting_config(dr_scen, templates)
-            cont.update_load_shedding_config(
-                dr_scen, templates["load_shedding"]
+            cont.add_load_shifting_agent(
+                templates["load_shifting"], dr_scen
             )
+            if config_workflow["tariff_config"]["mode"] == "from_workflow":
+                prepare_tariffs_from_workflow(cont, templates)
+            cont.add_load_shifting_config(dr_scen, templates)
             cont.update_price_forecast(dr_scen)
             cont.change_contract_location(
                 f"{cont.config_workflow['input_folder']}/contracts_w_dr"
@@ -135,6 +126,9 @@ if __name__ == "__main__":
             cont.create_dummy_price_forecast(dr_scen)
             cont.update_price_forecast(dr_scen)
 
+        cont.update_load_shedding_config(
+            dr_scen, templates["load_shedding"]
+        )
         cont.add_investment_capacities_for_scenario(
             dr_scen, templates["investment_results"]
         )
