@@ -1,5 +1,6 @@
 from typing import List
 
+import pyomo.environ as pyo
 from pydantic import BaseModel
 
 from .model.loadshiftmodel import (
@@ -37,6 +38,7 @@ class ModelResponse(BaseModel):
     demand_after: List[float]
     upshift: List[float]
     downshift: List[float]
+    variable_costs: float
 
 
 def micro_model_api(inputs: Inputs) -> ModelResponse:
@@ -50,10 +52,10 @@ def micro_model_api(inputs: Inputs) -> ModelResponse:
     Returns:
         ModelResponse
     """
-    demand_after, upshift, downshift = run_model(inputs)
+    demand_after, upshift, downshift, overall_variable_costs = run_model(inputs)
 
     return ModelResponse(
-        demand_after=demand_after, upshift=upshift, downshift=downshift
+        demand_after=demand_after, upshift=upshift, downshift=downshift, overall_variable_costs=overall_variable_costs
     )
 
 
@@ -76,6 +78,6 @@ def run_model(inputs: Inputs):
         activate_annual_limits=inputs.activate_annual_limits,
         solver=inputs.solver,
     )
-    extract_results(lsm, rounding_precision=3)
+    extract_results(lsm, rounding_precision=4)
 
-    return lsm.demand_after, lsm.upshift, lsm.downshift
+    return lsm.demand_after, lsm.upshift, lsm.downshift, pyo.value(lsm.model.overall_variable_costs)
