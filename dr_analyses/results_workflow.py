@@ -41,8 +41,6 @@ def calc_load_shifting_results(cont: Container, key: str) -> None:
     results["LoadAfterShifting"] = (
         results["BaselineLoadProfile"] + results["NetAwardedPower"]
     )
-    if cont.config_workflow["tariff_config"]["mode"] == "from_workflow":
-        results
 
     cont.set_results(results)
 
@@ -178,7 +176,6 @@ def add_discounted_payments_to_results(
             ) ** (
                 -i
             )
-    # cont.results.set_index("index", inplace=True)
 
 
 def obtain_scenario_and_baseline_prices(cont: Container) -> None:
