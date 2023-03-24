@@ -27,6 +27,7 @@ config_workflow:
     StartTime: 2026-12-31_23:58:00  # 2019-12-31_23:58:00
     StopTime: 2027-12-31_23:58:00  # 2035-12-31_23:58:00
     artificial_shortage_capacity_in_MW: 100000
+    minimum_value_of_lost_load: 300
   amiris_analyses:
     start_web_service: True
     make_scenario: True

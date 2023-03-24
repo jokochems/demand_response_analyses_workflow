@@ -413,8 +413,13 @@ class Container:
                 key,
                 f"{shedding_cluster}_variable_costs_2020.csv",
             )
-            parameters[shedding_cluster]["ValueOfLostLoad"] = float(
-                costs_parameters["variable_costs_shed"]
+            parameters[shedding_cluster]["ValueOfLostLoad"] = min(
+                float(
+                    self.config_workflow["simulation"][
+                        "minimum_value_of_lost_load"
+                    ]
+                ),
+                float(costs_parameters["variable_costs_shed"]),
             )
 
         replace_yaml_entries(
