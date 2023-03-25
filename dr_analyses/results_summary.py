@@ -144,7 +144,7 @@ def add_total_costs_and_savings_summary(cont: Container) -> None:
         - cont.summary["TotalPaymentBeforeShifting"]
     )
     cont.summary["TotalShiftingCosts"] = cont.results[
-        "DiscountedVariableShiftingCosts"
+        "DiscountedVariableShiftingCostsFromOptimiser"
     ].sum()
     cont.summary["NetSavings"] = (
         -cont.summary["TotalPaymentChange"]
