@@ -174,7 +174,7 @@ if __name__ == "__main__":
                 [
                     "BaselineTotalPayments",
                     "ShiftingTotalPayments",
-                    "VariableShiftingCosts",
+                    "VariableShiftingCostsFromOptimiser",
                 ],
                 cont,
             )

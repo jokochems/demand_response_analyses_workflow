@@ -28,10 +28,16 @@ def calc_load_shifting_results(cont: Container, key: str) -> None:
         sep=";",
     )
 
+    # Hack: Shift output for variable costs from optimizer
+    # to align with other results
+    results["VariableShiftingCostsFromOptimiser"] = results[
+        "VariableShiftingCostsFromOptimiser"
+    ].shift(periods=1)
+    results.set_index(["AgentId", "TimeStep"], inplace=True)
     results = (
         results[[col for col in results.columns if "Offered" not in col]]
-        .dropna()
-        .reset_index(drop=True)
+        .dropna(how="all")
+        .reset_index(drop=False)
     )
     add_abs_values(results, ["NetAwardedPower", "StoredMWh"])
     results["ShiftCycleEnd"] = np.where(
@@ -100,7 +106,7 @@ def extract_load_shifting_cashflows(cont: Container) -> List:
             baseline_annual_payments - shifting_annual_payments
         )
         costs = (
-            cont.results["VariableShiftingCosts"]
+            cont.results["VariableShiftingCostsFromOptimiser"]
             .loc[i * AMIRIS_TIMESTEPS_PER_YEAR : stop]
             .sum()
         )
