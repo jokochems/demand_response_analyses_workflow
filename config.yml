@@ -22,13 +22,14 @@ config_workflow:
     "hoho_cluster_shift_shed",
   ]
   interest_rate: 0.05
-  prepare_tariff_config: True
+  prepare_tariff_config: False
   simulation:
     StartTime: 2026-12-31_23:58:00  # 2019-12-31_23:58:00
     StopTime: 2027-12-31_23:58:00  # 2035-12-31_23:58:00
     artificial_shortage_capacity_in_MW: 100000
     minimum_value_of_lost_load: 300
   amiris_analyses:
+    skip_simulation: False
     start_web_service: True
     make_scenario: True
     run_amiris: True
@@ -51,10 +52,15 @@ config_plotting:
   width: 10
   height: 7
   drop_list: []
+  division: {"Annuity": 1e6}
+  y_limits: {"Annuity": [-50, 750]}
   rename_dict:
     columns: {}
     rows: {}
-    parameters: {}
+    derive_column_names: True
+    index_name: "capacity tariff share"
+    columns_name: "dynamic tariff share"
+    parameters: {"NoOfFullShiftCycles": "Number of full shift cycles in 1", "Annuity": 'Annuity in Mio. EUR'}
   x_label: None
   save_plot: True
   show_plot: False
