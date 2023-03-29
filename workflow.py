@@ -85,124 +85,128 @@ if __name__ == "__main__":
 
     scenario_results = initialize_scenario_results_dict(config_workflow)
 
-    if config_workflow["amiris_analyses"]["start_web_service"]:
-        load_shifting_api_thread = LoadShiftingApiThread()
-        load_shifting_api_thread.start()
+    if not config_workflow["amiris_analyses"]["skip_simulation"]:
+        if config_workflow["amiris_analyses"]["start_web_service"]:
+            load_shifting_api_thread = LoadShiftingApiThread()
+            load_shifting_api_thread.start()
 
-        service_url = load_shifting_api_thread.get_url()
-        templates["load_shifting"]["Attributes"]["Strategy"]["Api"][
-            "ServiceUrl"
-        ] = service_url
+            service_url = load_shifting_api_thread.get_url()
+            templates["load_shifting"]["Attributes"]["Strategy"]["Api"][
+                "ServiceUrl"
+            ] = service_url
 
-    for dr_scen, scenario in scenario_files.items():
-        dr_scen_short = dr_scen.split("_", 1)[0]
-        cont = Container(
-            scenario,
-            config_workflow,
-            config_convert,
-            config_make,
-            baseline_scenarios[dr_scen_short],
-        )
-
-        cont.adapt_simulation_time_frame(
-            cont.config_workflow["simulation"]
-        )
-        cont.adapt_shortage_capacity(
-            config_workflow["simulation"]["artificial_shortage_capacity_in_MW"]
-        )
-
-        if scenario != baseline_scenarios[dr_scen_short]:
-            cont.add_load_shifting_agent(
-                templates["load_shifting"], dr_scen
+        for dr_scen, scenario in scenario_files.items():
+            dr_scen_short = dr_scen.split("_", 1)[0]
+            cont = Container(
+                scenario,
+                config_workflow,
+                config_convert,
+                config_make,
+                baseline_scenarios[dr_scen_short],
             )
-            if config_workflow["tariff_config"]["mode"] == "from_workflow":
-                prepare_tariffs_from_workflow(cont, templates)
-            cont.add_load_shifting_config(dr_scen, templates)
-            cont.update_price_forecast(dr_scen)
-            cont.change_contract_location(
-                f"{cont.config_workflow['input_folder']}/contracts_w_dr"
-            )
-        else:
-            cont.create_dummy_price_forecast(dr_scen)
-            cont.update_price_forecast(dr_scen)
 
-        cont.update_load_shedding_config(
-            dr_scen, templates["load_shedding"]
-        )
-        cont.add_investment_capacities_for_scenario(
-            dr_scen, templates["investment_results"]
-        )
-        cont.update_opex_for_scenario(dr_scen)
-        cont.save_scenario_yaml()
+            cont.adapt_simulation_time_frame(
+                cont.config_workflow["simulation"]
+            )
+            cont.adapt_shortage_capacity(
+                config_workflow["simulation"]["artificial_shortage_capacity_in_MW"]
+            )
 
-        # Uncomment the following code for dev purposes; Remove once finalized
-        # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
-        # if dr_scen not in [
-        #     "none",
-        #     "5_20_dynamic_0_LP",
-        #     "5_0_dynamic_0_LP",
-        #     "5_0_dynamic_20_LP",
-        # ]:
-        #     continue
-
-        if config_workflow["amiris_analyses"]["make_scenario"]:
-            make_scenario_config(cont)
-        if config_workflow["amiris_analyses"]["run_amiris"]:
-            if not load_shifting_api_thread.is_alive():
-                raise Exception("LoadShiftingAPI is not available.")
-            run_amiris(run_properties[dr_scen_short], cont)
-        if config_workflow["amiris_analyses"]["convert_results"]:
-            convert_amiris_results(cont)
-            if scenario == baseline_scenarios[dr_scen_short]:
-                store_price_forecast_from_baseline(cont)
-        if (
-            config_workflow["amiris_analyses"]["process_results"]
-            and "_wo_dr" not in scenario
-        ):
-            obtain_scenario_and_baseline_prices(cont)
-            calc_load_shifting_results(cont, dr_scen)
-            add_power_payments(
-                cont,
-                config_workflow["amiris_analyses"][
-                    "use_baseline_prices_for_comparison"
-                ],
-            )
-            add_capacity_payments(
-                cont,
-            )
-            add_discounted_payments_to_results(
-                [
-                    "BaselineTotalPayments",
-                    "ShiftingTotalPayments",
-                    "VariableShiftingCostsFromOptimiser",
-                ],
-                cont,
-            )
-            cont.add_cashflows(extract_load_shifting_cashflows(cont))
-            cont.add_npv(
-                calculate_net_present_values(
-                    cont, dr_scen, investment_expenses
+            if scenario != baseline_scenarios[dr_scen_short]:
+                cont.add_load_shifting_agent(
+                    templates["load_shifting"], dr_scen
                 )
+                if config_workflow["tariff_config"]["mode"] == "from_workflow":
+                    prepare_tariffs_from_workflow(cont, templates)
+                cont.add_load_shifting_config(dr_scen, templates)
+                cont.update_price_forecast(dr_scen)
+                cont.change_contract_location(
+                    f"{cont.config_workflow['input_folder']}/contracts_w_dr"
+                )
+            else:
+                cont.create_dummy_price_forecast(dr_scen)
+                cont.update_price_forecast(dr_scen)
+
+            cont.update_load_shedding_config(
+                dr_scen, templates["load_shedding"]
             )
-            cont.add_annuity(calculate_load_shifting_annuity(cont))
-            if config_workflow["write_results"]:
-                write_results(cont)
-        if (
-            config_workflow["amiris_analyses"]["aggregate_results"]
-            and "_wo_dr" not in scenario
-        ):
-            calc_summary_parameters(cont)
-            scenario_results[dr_scen_short][
-                cont.trimmed_scenario
-            ] = cont.summary_series
+            cont.add_investment_capacities_for_scenario(
+                dr_scen, templates["investment_results"]
+            )
+            cont.update_opex_for_scenario(dr_scen)
+            cont.save_scenario_yaml()
+
+            # Uncomment the following code for dev purposes; Remove once finalized
+            # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
+            # if dr_scen not in [
+            #     "none",
+            #     "5_20_dynamic_0_LP",
+            #     "5_0_dynamic_0_LP",
+            #     "5_0_dynamic_20_LP",
+            # ]:
+            #     continue
+
+            if config_workflow["amiris_analyses"]["make_scenario"]:
+                make_scenario_config(cont)
+            if config_workflow["amiris_analyses"]["run_amiris"]:
+                if not load_shifting_api_thread.is_alive():
+                    raise Exception("LoadShiftingAPI is not available.")
+                run_amiris(run_properties[dr_scen_short], cont)
+            if config_workflow["amiris_analyses"]["convert_results"]:
+                convert_amiris_results(cont)
+                if scenario == baseline_scenarios[dr_scen_short]:
+                    store_price_forecast_from_baseline(cont)
+            if (
+                config_workflow["amiris_analyses"]["process_results"]
+                and "_wo_dr" not in scenario
+            ):
+                obtain_scenario_and_baseline_prices(cont)
+                calc_load_shifting_results(cont, dr_scen)
+                add_power_payments(
+                    cont,
+                    config_workflow["amiris_analyses"][
+                        "use_baseline_prices_for_comparison"
+                    ],
+                )
+                add_capacity_payments(
+                    cont,
+                )
+                add_discounted_payments_to_results(
+                    [
+                        "BaselineTotalPayments",
+                        "ShiftingTotalPayments",
+                        "VariableShiftingCostsFromOptimiser",
+                    ],
+                    cont,
+                )
+                cont.add_cashflows(extract_load_shifting_cashflows(cont))
+                cont.add_npv(
+                    calculate_net_present_values(
+                        cont, dr_scen, investment_expenses
+                    )
+                )
+                cont.add_annuity(calculate_load_shifting_annuity(cont))
+                if config_workflow["write_results"]:
+                    write_results(cont)
+            if (
+                config_workflow["amiris_analyses"]["aggregate_results"]
+                and "_wo_dr" not in scenario
+            ):
+                calc_summary_parameters(cont)
+                scenario_results[dr_scen_short][
+                    cont.trimmed_scenario
+                ] = cont.summary_series
 
     if config_workflow["evaluate_cross_scenarios"]:
-        if not scenario_results:
-            for dr_scen, scenario in scenario_files.items():
-                if "_wo_dr" not in scenario:
-                    scenario_results[dr_scen_short][
-                        dr_scen
-                    ] = read_scenario_result(config_workflow, scenario)
+        for key in scenario_results:
+            if not scenario_results[key]:
+                for dr_scen, scenario in scenario_files.items():
+                    if "_wo_dr" not in scenario:
+                        dr_scen_short = dr_scen.split("_", 1)[0]
+                        scenario_results[dr_scen_short][
+                            dr_scen
+                        ] = read_scenario_result(config_workflow, scenario)
+                break
 
         for dr_scen, dr_scen_results in scenario_results.items():
             if "_wo_dr" in dr_scen:

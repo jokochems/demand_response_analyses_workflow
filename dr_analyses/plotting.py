@@ -23,20 +23,18 @@ def plot_bar_charts(
     config_workflow: Dict,
     all_parameter_results: Dict[str, pd.DataFrame],
     config_plotting: Dict = None,
-        dr_scen: str = "",
+    dr_scen: str = "",
 ) -> None:
     """Plot and save bar charts for the different parameters"""
     if not config_plotting:
         config_plotting = initialize_empty_plot_config()
 
-    plots_output_folder = (
-        f"{config_workflow['output_folder']}{config_workflow['plots_output']}{dr_scen}/"
-    )
+    plots_output_folder = f"{config_workflow['output_folder']}{config_workflow['plots_output']}{dr_scen}/"
     make_directory_if_missing(plots_output_folder)
 
-    for param, param_results in all_parameter_results.items():
+    for original_param, param_results in all_parameter_results.items():
         param, param_results = prepare_param_data_for_plotting(
-            config_plotting, param, param_results
+            config_plotting, original_param, param_results
         )
         fig, ax = plt.subplots(figsize=config_plotting["figsize"])
         _ = param_results.plot(
@@ -58,6 +56,9 @@ def plot_bar_charts(
             shadow=False,
             ncol=3,
         )
+        if config_plotting["y_limits"]:
+            if original_param in config_plotting["y_limits"]:
+                _ = plt.ylim(config_plotting["y_limits"][original_param])
         _ = ax.set_ylabel(param)
         _ = plt.tight_layout()
 
@@ -76,11 +77,37 @@ def prepare_param_data_for_plotting(
         param_results = param_results.drop(
             columns=config_plotting["drop_list"]
         )
+    if config_plotting["division"]:
+        if param in config_plotting["division"]:
+            param_results = param_results / float(
+                config_plotting["division"][param]
+            )
     if config_plotting["rename_dict"]:
         param_results = param_results.rename(
             index=config_plotting["rename_dict"]["rows"],
             columns=config_plotting["rename_dict"]["columns"],
         )
+        if config_plotting["rename_dict"]["derive_column_names"]:
+            if config_plotting["rename_dict"]["columns"]:
+                raise UserWarning(
+                    "If columns are to be renamed, "
+                    "configuration parameter 'derive_column_names' has no effect."
+                )
+            else:
+                param_results = param_results.rename(
+                    columns={
+                        col: f"{col}% dyn." for col in param_results.columns
+                    },
+                )
+
+        if "index_name" in config_plotting["rename_dict"].keys():
+            param_results.index.name = config_plotting["rename_dict"][
+                "index_name"
+            ]
+        if "columns_name" in config_plotting["rename_dict"].keys():
+            param_results.columns.name = config_plotting["rename_dict"][
+                "columns_name"
+            ]
     if config_plotting["x_label"]:
         param_results.index.name = config_plotting["x_label"]
     if param in config_plotting["rename_dict"]["parameters"]:
@@ -192,9 +219,7 @@ def plot_heat_maps(
     if not config_plotting:
         config_plotting = initialize_empty_plot_config()
 
-    plots_output_folder = (
-        f"{config_workflow['output_folder']}{config_workflow['plots_output']}{dr_scen}/"
-    )
+    plots_output_folder = f"{config_workflow['output_folder']}{config_workflow['plots_output']}{dr_scen}/"
     make_directory_if_missing(plots_output_folder)
 
     for param, param_results in all_parameter_results.items():
@@ -228,9 +253,7 @@ def plot_heat_maps(
             file_name = f"{plots_output_folder}{param}_heatmap"
             if not annotate:
                 file_name += "_no_annotations"
-            _ = fig.savefig(
-                f"{file_name}.png", dpi=300
-            )
+            _ = fig.savefig(f"{file_name}.png", dpi=300)
         plt.close(fig)
         if config_plotting["show_plot"]:
             plt.show()
