@@ -83,7 +83,7 @@ def extract_load_shifting_cashflows(cont: Container) -> List:
 
     for i in range(derive_lifetime_from_simulation_horizon(cont)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
-            stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
+            stop = len(cont.results) - 1
         else:
             stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR
 
