@@ -80,6 +80,7 @@ if __name__ == "__main__":
     (
         scenario_files,
         investment_expenses,
+        fixed_costs,
         baseline_scenarios,
     ) = prepare_scenario_dicts(templates, config_workflow)
 
@@ -109,7 +110,9 @@ if __name__ == "__main__":
                 cont.config_workflow["simulation"]
             )
             cont.adapt_shortage_capacity(
-                config_workflow["simulation"]["artificial_shortage_capacity_in_MW"]
+                config_workflow["simulation"][
+                    "artificial_shortage_capacity_in_MW"
+                ]
             )
 
             if scenario != baseline_scenarios[dr_scen_short]:
@@ -179,7 +182,9 @@ if __name__ == "__main__":
                     ],
                     cont,
                 )
-                cont.add_cashflows(extract_load_shifting_cashflows(cont))
+                cont.add_cashflows(
+                    extract_load_shifting_cashflows(cont, dr_scen, fixed_costs)
+                )
                 cont.add_npv(
                     calculate_net_present_values(
                         cont, dr_scen, investment_expenses

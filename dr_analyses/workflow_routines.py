@@ -338,9 +338,7 @@ def calculate_tariffs_for_dr_scen(
                     component.index.astype(str) + "-01-01_00:00:00"
                 )
                 if key != "Multiplier":
-                    component.to_csv(
-                        tariff_config[key], header=False, sep=";"
-                    )
+                    component.to_csv(tariff_config[key], header=False, sep=";")
                 elif key == "Multiplier":
                     component.to_csv(
                         tariff_config["DynamicTariffComponents"][0][key],
@@ -361,9 +359,7 @@ def calculate_tariff_components(
     dynamic_share = int(tariff_config["Name"].split("_")[0]) / 100
     capacity_tariff = overall_tariff * capacity_share
     overall_energy_tariff = overall_tariff - capacity_tariff
-    dynamic_energy_tariff = (
-        overall_energy_tariff * dynamic_share
-    )
+    dynamic_energy_tariff = overall_energy_tariff * dynamic_share
     weighted_average_price = calculate_average_power_price(
         baseline_prices_and_load
     )
@@ -441,16 +437,18 @@ def read_investment_results_template(config: Dict) -> Dict:
 
 def prepare_scenario_dicts(
     templates: Dict, config: Dict
-) -> (Dict, Dict, Dict):
+) -> (Dict, Dict, Dict, Dict):
     """Prepare dictionaries and return them
 
     Prepares the following dicts:
     - scenario_files: mapping string name to respective scenario.yaml file
     - investment_expenses: investment expenses per demand response scenario
+    - fixed_costs: fixed costs per demand response scenario
     - baseline_scenarios: baseline scenario per demand response scenario
     """
     scenario_files = {}
     investment_expenses = {}
+    fixed_costs = {}
     baseline_scenarios = {}
 
     for dr_scen, dr_scen_name in config["demand_response_scenarios"].items():
@@ -481,19 +479,27 @@ def prepare_scenario_dicts(
             )
             scenario_files[f"{dr_scen}_{tariff_name}"] = scenario
 
-        investment_expenses[dr_scen] = read_investment_expenses(
+        investment_expenses[dr_scen] = read_capital_expenses(
             config,
             dr_scen,
+            piece_of_information="specific_investments",
+        )
+        fixed_costs[dr_scen] = read_capital_expenses(
+            config,
+            dr_scen,
+            piece_of_information="fixed_costs",
         )
 
-    return scenario_files, investment_expenses, baseline_scenarios
+    return scenario_files, investment_expenses, fixed_costs, baseline_scenarios
 
 
-def read_investment_expenses(config: Dict, dr_scen: str) -> pd.Series:
+def read_capital_expenses(
+    config: Dict, dr_scen: str, piece_of_information: str
+) -> pd.Series:
     """Read and return investment expenses"""
     path = f"{config['input_folder']}/{config['data_sub_folder']}/{dr_scen}/"
     file_name = (
-        f"{config['load_shifting_focus_cluster']}_specific_investments.csv"
+        f"{config['load_shifting_focus_cluster']}_{piece_of_information}.csv"
     )
     return pd.read_csv(path + file_name, sep=";", index_col=0, header=None)
 
