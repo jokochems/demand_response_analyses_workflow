@@ -52,7 +52,9 @@ def calc_load_shifting_results(cont: Container, key: str) -> None:
 
 
 def calculate_net_present_values(
-    cont: Container, dr_scen: str, investment_expenses: Dict
+    cont: Container,
+    dr_scen: str,
+    investment_expenses: Dict,
 ) -> float:
     """Calculate and return net present values for demand response investments made
     :return float: net present value for the respective case
@@ -72,11 +74,13 @@ def calculate_net_present_values(
     return npv
 
 
-def extract_load_shifting_cashflows(cont: Container) -> List:
+def extract_load_shifting_cashflows(
+    cont: Container, dr_scen: str, fixed_costs: Dict
+) -> List:
     """Extract annual cashflows from raw load shifting results
 
     Opportunity revenues: the reduction in payments compared to the baseline
-    Costs: Variable shifting costs
+    Costs: Variable shifting costs and fixed costs
     """
     cashflows = []
     payment_columns = ["TotalPayments", "CapacityPayment"]
@@ -105,13 +109,20 @@ def extract_load_shifting_cashflows(cont: Container) -> List:
         opportunity_revenues = (
             baseline_annual_payments - shifting_annual_payments
         )
-        costs = (
+        variable_costs = (
             cont.results["VariableShiftingCostsFromOptimiser"]
             .loc[i * AMIRIS_TIMESTEPS_PER_YEAR : stop]
             .sum()
         )
+        annual_fixed_costs = (
+            cont.load_shifting_data["Attributes"]["LoadShiftingPortfolio"][
+                "PowerInMW"
+            ]
+        ) * fixed_costs[dr_scen.split("_", 1)[0]][1].iloc[i]
 
-        cashflows.append(opportunity_revenues - costs)
+        cashflows.append(
+            opportunity_revenues - variable_costs - annual_fixed_costs
+        )
 
     return cashflows
 

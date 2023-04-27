@@ -80,6 +80,7 @@ if __name__ == "__main__":
     (
         scenario_files,
         investment_expenses,
+        fixed_costs,
         baseline_scenarios,
     ) = prepare_scenario_dicts(templates, config_workflow)
 
@@ -109,7 +110,9 @@ if __name__ == "__main__":
                 cont.config_workflow["simulation"]
             )
             cont.adapt_shortage_capacity(
-                config_workflow["simulation"]["artificial_shortage_capacity_in_MW"]
+                config_workflow["simulation"][
+                    "artificial_shortage_capacity_in_MW"
+                ]
             )
 
             if scenario != baseline_scenarios[dr_scen_short]:
@@ -138,13 +141,13 @@ if __name__ == "__main__":
 
             # Uncomment the following code for dev purposes; Remove once finalized
             # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
-            # if dr_scen not in [
-            #     "5_wo_dr",
-            #     "5_20_dynamic_0_LP",
-            #     "5_0_dynamic_0_LP",
-            #     "5_0_dynamic_20_LP",
-            # ]:
-            #     continue
+            if dr_scen not in [
+                "5_wo_dr",
+                "5_20_dynamic_0_LP",
+                # "5_0_dynamic_0_LP",
+                # "5_0_dynamic_20_LP",
+            ]:
+                continue
 
             if config_workflow["amiris_analyses"]["make_scenario"]:
                 make_scenario_config(cont)
@@ -179,7 +182,9 @@ if __name__ == "__main__":
                     ],
                     cont,
                 )
-                cont.add_cashflows(extract_load_shifting_cashflows(cont))
+                cont.add_cashflows(
+                    extract_load_shifting_cashflows(cont, dr_scen, fixed_costs)
+                )
                 cont.add_npv(
                     calculate_net_present_values(
                         cont, dr_scen, investment_expenses
