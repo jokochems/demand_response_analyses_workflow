@@ -24,10 +24,10 @@ class LoadShiftOptimizationModel:
     peak_load_price: float
         Price for peak demand (capacity)
 
-    variable_costs_down: float
+    variable_costs_down: list
         Variable costs for a downshift
 
-    variable_costs_up: float
+    variable_costs_up: list
         Variable costs for a upshift
 
     shifting_times: list
@@ -464,12 +464,12 @@ class LoadShiftOptimizationModel:
                     sum(model.dsm_do_shift[h, t] for h in self.shifting_times)
                     + sum(model.balance_dsm_up[h, t] for h in self.shifting_times)
                 )
-                * self.variable_costs_down
+                * self.variable_costs_down[t]
                 + (
                     sum(model.dsm_up[h, t] for h in self.shifting_times)
                     + sum(model.balance_dsm_do[h, t] for h in self.shifting_times)
                 )
-                * self.variable_costs_up
+                * self.variable_costs_up[t]
                 for t in model.T
             )
 
