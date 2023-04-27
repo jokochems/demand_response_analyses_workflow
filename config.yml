@@ -73,7 +73,7 @@ config_make:
 
 # AMIRIS run properties
 run_properties:
-  exe: "amiris/amiris-core_1.2.9-jar-with-dependencies_micro_model.jar -Xmx16000M"
+  exe: "amiris/amiris-core_1.2.10-jar-with-dependencies.jar -Xmx16000M"
   logging: "-Dlog4j.configuration=file:amiris/log4j.properties"
   main: "de.dlr.gitlab.fame.setup.FameRunner"
   setup: "amiris/fameSetup.yaml"
