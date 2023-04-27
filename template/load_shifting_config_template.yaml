@@ -7,13 +7,13 @@ Agents:
         InitialEnergyLevelInMWH: 0.0
         InitialShiftTimeInHours: 0
         PowerInMW: 0
-        PowerUpAvailability: "./inputs/data/50/availability_shifting_neg_ind_cluster_shift_only.csv" # normalized to PowerInMW; TODO: check!
-        PowerDownAvailability: "./inputs/data/50/availability_shifting_pos_ind_cluster_shift_only.csv" # normalized to PowerInMW; TODO: check!
+        PowerUpAvailability: "./inputs/data/50/availability_shifting_neg_ind_cluster_shift_only.csv" # normalized to PowerInMW
+        PowerDownAvailability: "./inputs/data/50/availability_shifting_pos_ind_cluster_shift_only.csv" # normalized to PowerInMW
         EnergyResolutionInMWH: 1000.0  # Not used
         EnergyLimitUpInMWH: 1000.0  # Dummy value to be replaced
         EnergyLimitDownInMWH: 1000.0  # Dummy value to be replaced
         MaximumShiftTimeInHours: 0  # shifting_duration
-        VariableShiftCostsInEURPerMWH: 0
+        VariableShiftCostsInEURPerMWH: "./inputs/data/50/ind_cluster_shift_only_variable_costs.csv"
         BaselineLoadTimeSeries: "./inputs/data/50/baseline_load_profile_ind_cluster_shift_only.csv" # normalized to PeakLoadInMW
         BaselinePeakLoadInMW: 0  # max_cap (assumed simultaneity of industrial loads is 90%)
         Efficiency: 1.0

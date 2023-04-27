@@ -14,8 +14,8 @@ class Inputs(BaseModel):
 
     # Model parameters from yaml
     peak_load_price: float
-    variable_costs_down: float
-    variable_costs_up: float
+    variable_costs_down: List[float]
+    variable_costs_up: List[float]
     max_shifting_time: int
     interference_time: int
     peak_demand_before: float

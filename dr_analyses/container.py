@@ -304,6 +304,7 @@ class Container:
             entries=[
                 "PowerUpAvailability",
                 "PowerDownAvailability",
+                "VariableShiftCostsInEURPerMWH",
                 "BaselineLoadTimeSeries",
             ],
             group="LoadShiftingPortfolio",
@@ -314,13 +315,6 @@ class Container:
             (
                 f"{self.config_workflow['load_shifting_focus_cluster']}"
                 f"_potential_parameters_2020.csv"
-            ),
-        )
-        costs_parameters = self.read_parameter_info(
-            key,
-            (
-                f"{self.config_workflow['load_shifting_focus_cluster']}"
-                f"_variable_costs_2020.csv"
             ),
         )
         interference_duration = math.ceil(
@@ -342,9 +336,6 @@ class Container:
             "EnergyLimitUpInMWH": interference_duration * power,
             "EnergyLimitDownInMWH": interference_duration * power,
             "BaselinePeakLoadInMW": float(potential_parameters["max_cap"]),
-            "VariableShiftCostsInEURPerMWH": float(
-                costs_parameters["variable_costs"]
-            ),
         }
         replace_yaml_entries(
             load_shifting_config,
