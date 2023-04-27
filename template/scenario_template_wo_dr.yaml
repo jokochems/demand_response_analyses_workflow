@@ -107,8 +107,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_ST_uranium.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/ST_uranium_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/ST_uranium_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/ST_uranium_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_uranium_unclustered_efficiency_max.csv"
       BlockSizeInMW: 900.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/ST_uranium_exogenous_installed_cap.csv"
 
@@ -133,8 +133,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_ST_lignite.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/ST_lignite_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/ST_lignite_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/ST_lignite_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_lignite_unclustered_efficiency_max.csv"
       BlockSizeInMW: 500.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/ST_lignite_exogenous_installed_cap.csv"
 
@@ -159,8 +159,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_ST_hardcoal.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/ST_hardcoal_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/ST_hardcoal_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/ST_hardcoal_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_hardcoal_unclustered_efficiency_max.csv"
       BlockSizeInMW: 300.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/ST_hardcoal_exogenous_installed_cap.csv"
 
@@ -185,8 +185,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_CC_natgas.csv"
         CyclingCostInEURperMW: 0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/CC_natgas_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/CC_natgas_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/CC_natgas_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/CC_natgas_unclustered_efficiency_max.csv"
       BlockSizeInMW: 200.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/CC_natgas_exogenous_installed_cap.csv"
 
@@ -211,8 +211,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_GT_natgas.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/GT_natgas_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/GT_natgas_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/GT_natgas_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_natgas_unclustered_efficiency_max.csv"
       BlockSizeInMW: 100.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/GT_natgas_exogenous_installed_cap.csv"
 
@@ -237,8 +237,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_M_natgas.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/M_natgas_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/M_natgas_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/M_natgas_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/M_natgas_unclustered_efficiency_max.csv"
       BlockSizeInMW: 30.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/M_natgas_exogenous_installed_cap.csv"
 
@@ -263,8 +263,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_ST_natgas.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/ST_natgas_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/ST_natgas_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/ST_natgas_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_natgas_unclustered_efficiency_max.csv"
       BlockSizeInMW: 100.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/ST_natgas_exogenous_installed_cap.csv"
 
@@ -289,8 +289,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_CC_oil.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/CC_oil_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/CC_oil_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/CC_oil_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/CC_oil_unclustered_efficiency_max.csv"
       BlockSizeInMW: 100.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/CC_oil_exogenous_installed_cap.csv"
 
@@ -315,8 +315,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_GT_oil.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/GT_oil_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/GT_oil_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/GT_oil_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_oil_unclustered_efficiency_max.csv"
       BlockSizeInMW: 100.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/GT_oil_exogenous_installed_cap.csv"
 
@@ -341,8 +341,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_ST_oil.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/ST_oil_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/ST_oil_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/ST_oil_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_oil_unclustered_efficiency_max.csv"
       BlockSizeInMW: 100.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/ST_oil_exogenous_installed_cap.csv"
 
@@ -367,8 +367,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_GT_biomass.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/GT_biomass_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/GT_biomass_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/GT_biomass_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_biomass_unclustered_efficiency_max.csv"
       BlockSizeInMW: 100.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/GT_biomass_exogenous_installed_cap.csv"
 
@@ -393,8 +393,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_ST_biomass.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/ST_biomass_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/ST_biomass_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/ST_biomass_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_biomass_unclustered_efficiency_max.csv"
       BlockSizeInMW: 100.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/ST_biomass_exogenous_installed_cap.csv"
 
@@ -419,8 +419,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_GT_hydrogen.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/GT_hydrogen_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/GT_hydrogen_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/GT_hydrogen_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_hydrogen_unclustered_efficiency_max.csv"
       BlockSizeInMW: 100.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/GT_hydrogen_exogenous_installed_cap.csv"
 
@@ -445,8 +445,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_ST_waste.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/ST_waste_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/ST_waste_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/ST_waste_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_waste_unclustered_efficiency_max.csv"
       BlockSizeInMW: 100.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/ST_waste_exogenous_installed_cap.csv"
 
@@ -471,8 +471,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_ST_otherfossil.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/ST_otherfossil_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/ST_otherfossil_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/ST_otherfossil_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_otherfossil_unclustered_efficiency_max.csv"
       BlockSizeInMW: 100.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/ST_otherfossil_exogenous_installed_cap.csv"
 
@@ -497,8 +497,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_GT_otherfossil.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/GT_otherfossil_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/GT_otherfossil_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/GT_otherfossil_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_otherfossil_unclustered_efficiency_max.csv"
       BlockSizeInMW: 100.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/GT_otherfossil_exogenous_installed_cap.csv"
 
@@ -523,8 +523,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_ST_mixedfuels.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/ST_mixedfuels_efficiency_min.csv"
-        Maximal: "./inputs/data/all_scenarios/ST_mixedfuels_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/ST_mixedfuels_unclustered_efficiency_min.csv"
+        Maximal: "./inputs/data/all_scenarios/ST_mixedfuels_unclustered_efficiency_max.csv"
       BlockSizeInMW: 100.0
       InstalledPowerInMW: "./inputs/data/all_scenarios/ST_mixedfuels_exogenous_installed_cap.csv"
 
@@ -550,8 +550,8 @@ Agents:
         OpexVarInEURperMWH: "./inputs/data/none/opex_GT_otherfossil.csv"
         CyclingCostInEURperMW: 0.0
       Efficiency:
-        Minimal: "./inputs/data/all_scenarios/GT_otherfossil_efficiency_max.csv"
-        Maximal: "./inputs/data/all_scenarios/GT_otherfossil_efficiency_max.csv"
+        Minimal: "./inputs/data/all_scenarios/GT_otherfossil_unclustered_efficiency_max.csv"
+        Maximal: "./inputs/data/all_scenarios/GT_otherfossil_unclustered_efficiency_max.csv"
       BlockSizeInMW: 10000.0
       InstalledPowerInMW: 10000.0
 
