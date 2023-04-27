@@ -141,13 +141,13 @@ if __name__ == "__main__":
 
             # Uncomment the following code for dev purposes; Remove once finalized
             # For time reasons, only evaluate two scenarios in dev stadium before moving to cross-scenario comparison
-            if dr_scen not in [
-                "5_wo_dr",
-                "5_20_dynamic_0_LP",
-                # "5_0_dynamic_0_LP",
-                # "5_0_dynamic_20_LP",
-            ]:
-                continue
+            # if dr_scen not in [
+            #     "5_wo_dr",
+            #     "5_20_dynamic_0_LP",
+            #     "5_0_dynamic_0_LP",
+            #     "5_0_dynamic_20_LP",
+            # ]:
+            #     continue
 
             if config_workflow["amiris_analyses"]["make_scenario"]:
                 make_scenario_config(cont)
