@@ -396,29 +396,6 @@ class Container:
             entries=["DemandSeries"],
             group="Loads",
         )
-        # Update scalar VOLL information with information from file
-        parameters = {}
-        for shedding_cluster in self.config_workflow["load_shedding_clusters"]:
-            parameters[shedding_cluster] = {}
-            costs_parameters = self.read_parameter_info(
-                key,
-                f"{shedding_cluster}_variable_costs_2020.csv",
-            )
-            parameters[shedding_cluster]["ValueOfLostLoad"] = max(
-                float(
-                    self.config_workflow["simulation"][
-                        "minimum_value_of_lost_load"
-                    ]
-                ),
-                float(costs_parameters["variable_costs_shed"]),
-            )
-
-        replace_yaml_entries(
-            demand_trader,
-            key,
-            entries=parameters,
-            group="Loads",
-        )
 
     def add_investment_capacities_for_scenario(
         self, key: str, investment_results: Dict
