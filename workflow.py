@@ -187,7 +187,7 @@ if __name__ == "__main__":
                 )
                 cont.add_npv(
                     calculate_net_present_values(
-                        cont, dr_scen, investment_expenses
+                        cont, dr_scen, investment_expenses, fixed_costs
                     )
                 )
                 cont.add_annuity(calculate_load_shifting_annuity(cont))
