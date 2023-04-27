@@ -55,6 +55,7 @@ def calculate_net_present_values(
     cont: Container,
     dr_scen: str,
     investment_expenses: Dict,
+    fixed_costs: Dict,
 ) -> float:
     """Calculate and return net present values for demand response investments made
     :return float: net present value for the respective case
@@ -68,7 +69,9 @@ def calculate_net_present_values(
     )
     interest_rate = cont.config_workflow["interest_rate"]
     cash_flows = [-cont.investment_expenses]
-    cash_flows.extend(extract_load_shifting_cashflows(cont))
+    cash_flows.extend(
+        extract_load_shifting_cashflows(cont, dr_scen, fixed_costs)
+    )
     npv = npf.npv(interest_rate, cash_flows)
 
     return npv
