@@ -316,17 +316,23 @@ class Container:
                 f"{self.config_workflow['load_shifting_focus_cluster']}"
                 f"_potential_parameters_2020.csv"
             ),
-        )
+        ).to_dict()["2020"]
         interference_duration = math.ceil(
             min(
                 float(potential_parameters["interference_duration_neg"]),
                 float(potential_parameters["interference_duration_pos"]),
             )
         )
-        power = max(
-            float(potential_parameters["potential_neg_overall"]),
-            float(potential_parameters["potential_pos_overall"]),
-        )
+        power = float(self.read_parameter_info(
+            key,
+            (
+                f"installed_capacity_ts_"
+                f"{self.config_workflow['load_shifting_focus_cluster']}_"
+                f"{self.config_workflow['load_shifting_focus_cluster']}.csv"
+            ),
+            sep=";",
+            header=None,
+        ).at["2020-01-01_00:00:00", 1])
         parameters = {
             "PowerInMW": power,
             "MaximumShiftTimeInHours": math.ceil(
@@ -344,14 +350,18 @@ class Container:
             group="LoadShiftingPortfolio",
         )
 
-    def read_parameter_info(self, key: str, file_name: str) -> Dict:
+    def read_parameter_info(
+        self, key: str, file_name: str, sep=",", header=0
+    ) -> pd.DataFrame:
         """Read and return parameter info"""
         return pd.read_csv(
             f"{self.config_workflow['input_folder']}/data/"
             f"{key.split('_', 1)[0]}/"
             f"{file_name}",
             index_col=0,
-        ).to_dict()["2020"]
+            sep=sep,
+            header=header,
+        )
 
     def update_opex_for_scenario(self, key: str) -> None:
         """Update OPEX time series values for a given scenario"""

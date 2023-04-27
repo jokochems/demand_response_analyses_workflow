@@ -28,7 +28,7 @@ Agents:
         Api:
           ServiceUrl: http://127.0.0.1:8000/load_shift/
           UseAnnualLimit: 0
-          Solver: cplex
+          Solver: gurobi
       Policy:
         EEGSurchargeInEURPerMWH: 0.0
         VolumetricNetworkChargeInEURPerMWH: 0.0
