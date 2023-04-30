@@ -64,8 +64,9 @@ def calculate_net_present_values(
     installed_power = cont.load_shifting_data["Attributes"][
         "LoadShiftingPortfolio"
     ]["PowerInMW"]
+    year_index = int(cont.config_workflow["investment_year"]) - 2020
     cont.set_investment_expenses(
-        investment_expenses.iloc[0, 0] * installed_power
+        investment_expenses.iloc[year_index, 0] * installed_power
     )
     interest_rate = cont.config_workflow["interest_rate"]
     cash_flows = [-cont.investment_expenses]
@@ -87,6 +88,7 @@ def extract_load_shifting_cashflows(
     """
     cashflows = []
     payment_columns = ["TotalPayments", "CapacityPayment"]
+    year_index_shift = int(cont.config_workflow["investment_year"]) - 2020
 
     for i in range(derive_lifetime_from_simulation_horizon(cont)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
@@ -121,7 +123,7 @@ def extract_load_shifting_cashflows(
             cont.load_shifting_data["Attributes"]["LoadShiftingPortfolio"][
                 "PowerInMW"
             ]
-        ) * fixed_costs[dr_scen.split("_", 1)[0]][1].iloc[i]
+        ) * fixed_costs[dr_scen.split("_", 1)[0]][1].iloc[i + year_index_shift]
 
         cashflows.append(
             opportunity_revenues - variable_costs - annual_fixed_costs
@@ -179,6 +181,7 @@ def add_discounted_payments_to_results(
     :param Container cont: object holding results
     """
     cont.results.reset_index(inplace=True, drop=True)
+    year_index_shift = int(cont.config_workflow["investment_year"]) - 2020
     for i in range(derive_lifetime_from_simulation_horizon(cont)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
             stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
@@ -194,7 +197,7 @@ def add_discounted_payments_to_results(
             ] * (
                 1 + cont.config_workflow["interest_rate"]
             ) ** (
-                -i
+                -(i + year_index_shift)
             )
 
 
