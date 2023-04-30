@@ -322,7 +322,7 @@ class Container:
                 f"{self.config_workflow['load_shifting_focus_cluster']}"
                 f"_potential_parameters_{investment_year}.csv"
             ),
-        ).to_dict()[investment_year]
+        ).to_dict()[str(investment_year)]
         interference_duration = math.ceil(
             min(
                 float(potential_parameters["interference_duration_neg"]),
