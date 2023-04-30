@@ -16,6 +16,7 @@ config_workflow:
     "50": "scenario_w_dr_50"
     "95": "scenario_w_dr_95"
   load_shifting_focus_cluster: "ind_cluster_shift_only"
+  investment_year: 2020
   interest_rate: 0.05
   prepare_tariff_config: False
   simulation:
