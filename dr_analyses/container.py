@@ -310,29 +310,37 @@ class Container:
             group="LoadShiftingPortfolio",
         )
         # Update scalar information with information from file
+        investment_year = int(self.config_workflow["investment_year"])
+        if investment_year > 2030 or investment_year < 2020:
+            raise ValueError(
+                "Investment year must be >= 2020 and <= 2030 in order"
+                "to simulate load shifting performance over lifetime."
+            )
         potential_parameters = self.read_parameter_info(
             key,
             (
                 f"{self.config_workflow['load_shifting_focus_cluster']}"
-                f"_potential_parameters_2020.csv"
+                f"_potential_parameters_{investment_year}.csv"
             ),
-        ).to_dict()["2020"]
+        ).to_dict()[str(investment_year)]
         interference_duration = math.ceil(
             min(
                 float(potential_parameters["interference_duration_neg"]),
                 float(potential_parameters["interference_duration_pos"]),
             )
         )
-        power = float(self.read_parameter_info(
-            key,
-            (
-                f"installed_capacity_ts_"
-                f"{self.config_workflow['load_shifting_focus_cluster']}_"
-                f"{self.config_workflow['load_shifting_focus_cluster']}.csv"
-            ),
-            sep=";",
-            header=None,
-        ).at["2020-01-01_00:00:00", 1])
+        power = float(
+            self.read_parameter_info(
+                key,
+                (
+                    f"installed_capacity_ts_"
+                    f"{self.config_workflow['load_shifting_focus_cluster']}_"
+                    f"{self.config_workflow['load_shifting_focus_cluster']}.csv"
+                ),
+                sep=";",
+                header=None,
+            ).at[f"{investment_year}-01-01_00:00:00", 1]
+        )
         parameters = {
             "PowerInMW": power,
             "MaximumShiftTimeInHours": math.ceil(
@@ -351,7 +359,7 @@ class Container:
         )
 
     def read_parameter_info(
-        self, key: str, file_name: str, sep=",", header=0
+        self, key: str, file_name: str, sep: str = ",", header: int = 0
     ) -> pd.DataFrame:
         """Read and return parameter info"""
         return pd.read_csv(
