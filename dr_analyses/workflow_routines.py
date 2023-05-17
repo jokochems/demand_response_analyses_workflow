@@ -2,15 +2,15 @@ import os
 import shutil
 from typing import List, Dict
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import yaml
 from fameio.scripts.convert_results import run as convert_results
 from fameio.scripts.make_config import run as make_config
 from fameio.source.cli import Options
 from fameio.source.loader import load_yaml
 
-from dr_analyses.container import Container
+from dr_analyses.container import Container, replace_value
 
 
 def make_directory_if_missing(folder: str) -> None:
@@ -339,14 +339,27 @@ def calculate_tariffs_for_dr_scen(
                 component.index = (
                     component.index.astype(str) + "-01-01_00:00:00"
                 )
+                to_be_replaced = "/data/"
+                replacement = (
+                    f"{to_be_replaced}"
+                    f"{cont.config_workflow['load_shifting_focus_cluster']}/"
+                )
                 if key != "Multiplier":
-                    component.to_csv(tariff_config[key], header=False, sep=";")
-                elif key == "Multiplier":
-                    component.to_csv(
-                        tariff_config["DynamicTariffComponents"][0][key],
-                        header=False,
-                        sep=";",
+                    file_name = replace_value(
+                        tariff_config[key],
+                        to_be_replaced,
+                        replacement,
+                        exclude=replacement,
                     )
+                    component.to_csv(file_name, header=False, sep=";")
+                elif key == "Multiplier":
+                    file_name = replace_value(
+                        tariff_config["DynamicTariffComponents"][0][key],
+                        to_be_replaced,
+                        replacement,
+                        exclude=replacement,
+                    )
+                    component.to_csv(file_name, header=False, sep=";")
                 else:
                     raise ValueError("Invalid key for tariff configurations.")
 

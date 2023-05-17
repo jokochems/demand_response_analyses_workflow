@@ -171,11 +171,16 @@ def save_to_fame_time_series(ts: pd.DataFrame, config: Dict, key: str):
     )
 
 
-def replace_value(value: str, to_be_replaced: str, replacement: str) -> str:
-    """Replaces value with value stored in dmgr as defined in mapping"""
-    substrings = value.split(to_be_replaced)
-    new_string = f"{substrings[0]}{replacement}{substrings[-1]}"
-    return new_string
+def replace_value(
+    value: str, to_be_replaced: str, replacement: str, exclude: str
+) -> str:
+    """Replace string to_be_replaced with replacement except exclude in value"""
+    if exclude not in value:
+        substrings = value.split(to_be_replaced)
+        new_string = f"{substrings[0]}{replacement}{substrings[-1]}"
+        return new_string
+    else:
+        return value
 
 
 class Container:
@@ -373,7 +378,8 @@ class Container:
     ) -> pd.DataFrame:
         """Read and return parameter info"""
         return pd.read_csv(
-            f"{self.config_workflow['input_folder']}/data/"
+            f"{self.config_workflow['input_folder']}/"
+            f"data/{self.config_workflow['load_shifting_focus_cluster']}/"
             f"{key.split('_', 1)[0]}/"
             f"{file_name}",
             index_col=0,
@@ -541,10 +547,11 @@ class Container:
         replacement: str,
     ):
         """Recursively replaces value when given string is found in `value`"""
-
         if isinstance(value, str):
             if to_be_replaced in value:
-                agent[key] = replace_value(value, to_be_replaced, replacement)
+                agent[key] = replace_value(
+                    value, to_be_replaced, replacement, exclude=replacement
+                )
         elif isinstance(value, dict):
             for k, v in value.items():
                 self.replace_recursively(
