@@ -263,6 +263,7 @@ def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
     baseline_power_prices = pd.read_csv(
         f"{cont.config_workflow['input_folder']}"
         f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}/"
         f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
         sep=";",
         header=None,
@@ -271,6 +272,7 @@ def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
     baseline_load_profile = pd.read_csv(
         f"{cont.config_workflow['input_folder']}"
         f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}/"
         f"{cont.trimmed_scenario.split('_')[3]}/"
         f"baseline_load_profile_"
         f"{cont.config_workflow['load_shifting_focus_cluster']}.csv",
@@ -497,7 +499,12 @@ def read_capital_expenses(
     config: Dict, dr_scen: str, piece_of_information: str
 ) -> pd.Series:
     """Read and return investment expenses"""
-    path = f"{config['input_folder']}/{config['data_sub_folder']}/{dr_scen}/"
+    path = (
+        f"{config['input_folder']}/"
+        f"{config['data_sub_folder']}/"
+        f"{config['load_shifting_focus_cluster']}/"
+        f"{dr_scen}/"
+    )
     file_name = (
         f"{config['load_shifting_focus_cluster']}_{piece_of_information}.csv"
     )
@@ -579,6 +586,7 @@ def store_price_forecast_from_baseline(cont: Container) -> None:
     price_forecast = pd.read_csv(
         f"{cont.config_workflow['input_folder']}"
         f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}/"
         f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
         sep=";",
         header=None,
@@ -588,6 +596,7 @@ def store_price_forecast_from_baseline(cont: Container) -> None:
     price_forecast.to_csv(
         f"{cont.config_workflow['input_folder']}"
         f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}/"
         f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
         sep=";",
         header=False,

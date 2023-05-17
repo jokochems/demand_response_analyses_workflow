@@ -1,6 +1,6 @@
 import math
 import os
-from typing import Dict, List
+from typing import Dict, List, Any
 
 import pandas as pd
 import yaml
@@ -162,10 +162,20 @@ def save_to_fame_time_series(ts: pd.DataFrame, config: Dict, key: str):
     """Save given time series to FAME format for given scenario (key)"""
     ts.index = ts.index.astype(str).str.replace(" ", "_")
     ts.to_csv(
-        f"{config['input_folder']}{config['data_sub_folder']}/{key.split('_')[0]}/price_forecast.csv",
+        f"{config['input_folder']}"
+        f"{config['data_sub_folder']}/"
+        f"{config['load_shifting_focus_cluster']}/"
+        f"{key.split('_')[0]}/price_forecast.csv",
         header=False,
         sep=";",
     )
+
+
+def replace_value(value: str, to_be_replaced: str, replacement: str) -> str:
+    """Replaces value with value stored in dmgr as defined in mapping"""
+    substrings = value.split(to_be_replaced)
+    new_string = f"{substrings[0]}{replacement}{substrings[-1]}"
+    return new_string
 
 
 class Container:
@@ -503,3 +513,52 @@ class Container:
             - 2019
             + 1
         )
+
+    def update_all_paths_with_focus_cluster(self):
+        """Update all paths in yaml with load shifting focus cluster"""
+        to_be_replaced = "/data/"
+        replacement = (
+            f"{to_be_replaced}"
+            f"{self.config_workflow['load_shifting_focus_cluster']}/"
+        )
+        for agent in self.scenario_yaml["Agents"]:
+            if "Attributes" in agent:
+                for key, val in agent["Attributes"].items():
+                    self.replace_recursively(
+                        agent["Attributes"],
+                        key,
+                        val,
+                        to_be_replaced,
+                        replacement,
+                    )
+
+    def replace_recursively(
+        self,
+        agent: Dict,
+        key: str,
+        value: Any,
+        to_be_replaced: str,
+        replacement: str,
+    ):
+        """Recursively replaces value when given string is found in `value`"""
+
+        if isinstance(value, str):
+            if to_be_replaced in value:
+                agent[key] = replace_value(value, to_be_replaced, replacement)
+        elif isinstance(value, dict):
+            for k, v in value.items():
+                self.replace_recursively(
+                    value, k, v, to_be_replaced, replacement
+                )
+        elif isinstance(value, list):
+            for item in value:
+                for k, v in item.items():
+                    self.replace_recursively(
+                        item, k, v, to_be_replaced, replacement
+                    )
+        elif isinstance(value, int) or isinstance(value, float):
+            pass
+        else:
+            raise ValueError(
+                f"Unexpected type of `{value}`. Should be either str/list/dict."
+            )

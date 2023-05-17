@@ -137,6 +137,7 @@ if __name__ == "__main__":
                 dr_scen, templates["investment_results"]
             )
             cont.update_opex_for_scenario(dr_scen)
+            cont.update_all_paths_with_focus_cluster()
             cont.save_scenario_yaml()
 
             # Uncomment the following code for dev purposes; Remove once finalized
