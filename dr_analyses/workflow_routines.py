@@ -290,6 +290,10 @@ def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
         header=0,
         sep=";",
     )
+    tariff_info = tariff_info.loc[
+        tariff_info["cluster"]
+        == cont.config_workflow["load_shifting_focus_cluster"]
+    ]
     baseline_prices_and_load = create_combined_prices_and_load_data(
         baseline_load_profile, baseline_power_prices
     )
