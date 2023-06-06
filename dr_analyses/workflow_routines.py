@@ -70,7 +70,7 @@ def prepare_tariff_configs(config: Dict, dr_scen: str) -> None:
 
 
 def prepare_tariffs_from_file(
-    config: Dict, dr_scen: str, tariff_config_template: Dict
+    config: Dict, dr_scen: str, tariff_config_template: List
 ):
     """Prepare tariffs using excel file with tariff models
     and multipliers precalculated"""
@@ -135,7 +135,8 @@ def obtain_parameterization_from_file(
         ]
     )
     overview = pd.read_excel(
-        f"{config['input_folder']}{config['tariff_config']['config_file']}_{dr_scen}.xlsx",
+        f"{config['input_folder']}{config['tariff_config']['config_file']}"
+        f"_{dr_scen}.xlsx",
         sheet_name="tariff_shares",
         nrows=36,
         index_col=[0, 1],
@@ -156,7 +157,8 @@ def obtain_parameterization_from_file(
 
     for sheet in sheet_names:
         multiplier = pd.read_excel(
-            f"{config['input_folder']}{config['tariff_config']['config_file']}_{dr_scen}.xlsx",
+            f"{config['input_folder']}{config['tariff_config']['config_file']}"
+            f"_{dr_scen}.xlsx",
             sheet_name=sheet,
             usecols="H:I",
             nrows=13,
@@ -182,7 +184,7 @@ def obtain_parameterization_from_file(
 
 
 def prepare_tariffs_skeleton_from_workflow(
-    config: Dict, dr_scen: str, tariff_config_template: Dict
+    config: Dict, dr_scen: str, tariff_config_template: List
 ):
     """Prepare tariffs skeleton
 
@@ -284,19 +286,10 @@ def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
         "LoadShiftingPortfolio"
     ]["BaselinePeakLoadInMW"]
     baseline_load_profile *= peak_load
-    tariff_info = pd.read_csv(
-        f"{cont.config_workflow['input_folder']}/tariffs.csv",
-        index_col=[0, 1],
-        header=0,
-        sep=";",
-    )
-    tariff_info = tariff_info.loc[
-        tariff_info["cluster"]
-        == cont.config_workflow["load_shifting_focus_cluster"]
-    ]
     baseline_prices_and_load = create_combined_prices_and_load_data(
         baseline_load_profile, baseline_power_prices
     )
+    tariff_info = preprocess_tariff_information(cont, baseline_prices_and_load)
     calculate_tariffs_for_dr_scen(
         cont, tariff_info, templates, baseline_prices_and_load
     )
@@ -316,6 +309,94 @@ def create_combined_prices_and_load_data(
     return combined_df.loc[combined_df["year"].astype(int) <= 2045]
 
 
+def preprocess_tariff_information(
+    cont: Container,
+    baseline_prices_and_load: pd.DataFrame,
+):
+    """Preprocess original tariffs and provide basis for tariff calculation
+
+    Original tariffs are calculated out of three building blocks
+    that are combined here:
+    - volume-weighted average wholesale power price
+      (derived from model-endogenous result)
+    - state-administered taxes and levies incl. energy-related network charges
+      (model-exogenous)
+    - capacity-related network charges (model-exogenous)
+
+    Store original tariff information in dedicated folder and return it
+    """
+    tariff_component_details = pd.read_excel(
+        f"{cont.config_workflow['input_folder']}"
+        f"{cont.config_workflow['tariff_config']['config_file']}.xlsx",
+        sheet_name=cont.config_workflow["load_shifting_focus_cluster"],
+        index_col=0,
+    )
+    original_tariff_excl_wholesale_and_capacity_price = (
+        tariff_component_details.at[
+            "SUM EXCL WHOLESALE AND CAPACITY PRICE",
+            "Applicable Value in EUR/MWh (incl. possible reductions)",
+        ]
+    )
+    peak_load = extract_annual_peak_load(baseline_prices_and_load)
+    annual_consumption = extract_annual_consumption(baseline_prices_and_load)
+
+    original_capacity_charge = (
+        tariff_component_details.at[
+            "Capacity-related Network Charges", "Regular Value in EUR/MWh"
+        ]
+        * 1000
+    )  # Price is given in €/kW * a
+    overall_capacity_payment = original_capacity_charge * peak_load
+    specific_capacity_payment = overall_capacity_payment / annual_consumption
+    specific_capacity_payment.index = specific_capacity_payment.index.astype(
+        int
+    )
+
+    dr_scen_short = cont.trimmed_scenario.split("_")[3]
+    tariff_info = pd.DataFrame(
+        index=specific_capacity_payment.index,
+        columns=["value", "unit"],
+    )
+    tariff_info["unit"] = "EUR/MWh"
+
+    tariff_info["value"] = original_tariff_excl_wholesale_and_capacity_price
+    tariff_info["value"] += specific_capacity_payment
+    volume_weighted_average_price = calculate_average_power_price(
+        baseline_prices_and_load
+    )
+    tariff_info["value"] += np.where(
+        volume_weighted_average_price.notna(),
+        volume_weighted_average_price,
+        0
+    )
+    tariff_info.to_csv(
+        f"{cont.config_workflow['input_folder']}/tariff_configuration/tariffs_"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}_"
+        f"{dr_scen_short}.csv",
+        sep=";",
+    )
+
+    return tariff_info
+
+
+def extract_annual_peak_load(
+    baseline_prices_and_load: pd.DataFrame,
+) -> pd.DataFrame:
+    """Extract the peak load values in MW per year"""
+    return baseline_prices_and_load.groupby("year").apply(
+        lambda x: np.max(x["load"])
+    )
+
+
+def extract_annual_consumption(
+    baseline_prices_and_load: pd.DataFrame,
+) -> pd.DataFrame:
+    """Extract the annual consumption in MWh"""
+    return baseline_prices_and_load.groupby("year").apply(
+        lambda x: (x["load"]).sum()
+    )
+
+
 def calculate_tariffs_for_dr_scen(
     cont: Container,
     tariff_info: pd.DataFrame,
@@ -323,11 +404,7 @@ def calculate_tariffs_for_dr_scen(
     baseline_prices_and_load: pd.DataFrame,
 ):
     """Calculate and store different tariff components resp. multipliers"""
-    overall_tariff = tariff_info.loc[
-        tariff_info.index.get_level_values(1)
-        == int(cont.trimmed_scenario.split("_")[3]),
-        "value",
-    ].droplevel(1)
+    overall_tariff = tariff_info["value"]
 
     tariff_configs = templates["tariffs"][cont.trimmed_scenario.split("_")[3]]
     for no in range(len(tariff_configs)):
@@ -392,7 +469,7 @@ def calculate_tariff_components(
         "AverageMarketPriceInEURPerMWH": weighted_average_price,
         "OtherSurchargesInEURPerMWH": static_energy_tariff,
         "CapacityBasedNetworkChargesInEURPerMW": capacity_tariff_per_mw,
-        "Multiplier": multiplier,
+        "Multiplier": multiplier.fillna(0),
     }
 
     return tariff_components
@@ -414,12 +491,8 @@ def calculate_capacity_tariff_per_mw(
     baseline_prices_and_load: pd.DataFrame,
 ):
     """Calculate the capacity tariff in EUR/MW from given EUR/MWh value"""
-    peak_load = baseline_prices_and_load.groupby("year").apply(
-        lambda x: np.max(x["load"])
-    )
-    annual_consumption = baseline_prices_and_load.groupby("year").apply(
-        lambda x: (x["load"]).sum()
-    )
+    peak_load = extract_annual_peak_load(baseline_prices_and_load)
+    annual_consumption = extract_annual_consumption(baseline_prices_and_load)
     peak_load.index = peak_load.index.astype(int)
     annual_consumption.index = annual_consumption.index.astype(int)
     overall_annual_capacity_payment = annual_consumption * capacity_tariff
