@@ -20,7 +20,9 @@ def add_baseline_load_profile(
 ) -> None:
     """Add baseline load profile to results data"""
     baseline_load_profile = pd.read_csv(
-        f"{cont.config_workflow['input_folder']}/data/{key.split('_', 1)[0]}/"
+        f"{cont.config_workflow['input_folder']}"
+        f"/data/{cont.config_workflow['load_shifting_focus_cluster']}/"
+        f"{key.split('_', 1)[0]}/"
         f"{cont.config_workflow['baseline_load_file']}_"
         f"{cont.config_workflow['load_shifting_focus_cluster']}.csv",
         sep=";",

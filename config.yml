@@ -6,7 +6,7 @@ config_workflow:
   scenario_sub_folder: "scenarios"
   tariff_config:
     mode: "from_workflow"  # "from_file"
-    config_file: "tariff_configuration"
+    config_file: "tariff_configuration_ALL"  # "tariff_configuration"
     step_size: 20
   output_folder: "./results/"
   data_output: "data_out/"
@@ -18,7 +18,7 @@ config_workflow:
   load_shifting_focus_cluster: "ind_cluster_shift_only"
   investment_year: 2020
   interest_rate: 0.05
-  prepare_tariff_config: False
+  prepare_tariff_config: True
   simulation:
     StartTime: 2026-12-31_23:58:00  # 2019-12-31_23:58:00
     StopTime: 2027-12-31_23:58:00  # 2035-12-31_23:58:00

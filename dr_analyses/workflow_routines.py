@@ -2,15 +2,34 @@ import os
 import shutil
 from typing import List, Dict
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import yaml
 from fameio.scripts.convert_results import run as convert_results
 from fameio.scripts.make_config import run as make_config
 from fameio.source.cli import Options
 from fameio.source.loader import load_yaml
 
-from dr_analyses.container import Container
+from dr_analyses.container import Container, replace_value
+
+
+FLH_ASSERTIONS = {
+    "hoho_cluster_shift_only": "smaller",
+    "hoho_cluster_shift_shed": "smaller",
+    "ind_cluster_shift_only": "greater",
+    "ind_cluster_shift_shed": "greater",
+    "tcs+hoho_cluster_shift_only": "smaller",
+    "tcs_cluster_shift_only": "smaller",
+}
+FLH_THRESHOLD = 2500
+REDUCED_TARIFFS = {
+    "KWKG levy": {"threshold_in_MW": 1000, "reduced_value": "15 percent"},
+    "§ 17f EnWG levy": {
+        "threshold_in_MW": 1000,
+        "reduced_value": "15 percent",
+    },
+    "§ 19 (2) StromNEV levy": {"threshold_in_MW": 1000, "reduced_value": 0.25},
+}
 
 
 def make_directory_if_missing(folder: str) -> None:
@@ -70,7 +89,7 @@ def prepare_tariff_configs(config: Dict, dr_scen: str) -> None:
 
 
 def prepare_tariffs_from_file(
-    config: Dict, dr_scen: str, tariff_config_template: Dict
+    config: Dict, dr_scen: str, tariff_config_template: List
 ):
     """Prepare tariffs using excel file with tariff models
     and multipliers precalculated"""
@@ -135,7 +154,8 @@ def obtain_parameterization_from_file(
         ]
     )
     overview = pd.read_excel(
-        f"{config['input_folder']}{config['tariff_config']['config_file']}_{dr_scen}.xlsx",
+        f"{config['input_folder']}{config['tariff_config']['config_file']}"
+        f"_{dr_scen}.xlsx",
         sheet_name="tariff_shares",
         nrows=36,
         index_col=[0, 1],
@@ -156,7 +176,8 @@ def obtain_parameterization_from_file(
 
     for sheet in sheet_names:
         multiplier = pd.read_excel(
-            f"{config['input_folder']}{config['tariff_config']['config_file']}_{dr_scen}.xlsx",
+            f"{config['input_folder']}{config['tariff_config']['config_file']}"
+            f"_{dr_scen}.xlsx",
             sheet_name=sheet,
             usecols="H:I",
             nrows=13,
@@ -182,7 +203,7 @@ def obtain_parameterization_from_file(
 
 
 def prepare_tariffs_skeleton_from_workflow(
-    config: Dict, dr_scen: str, tariff_config_template: Dict
+    config: Dict, dr_scen: str, tariff_config_template: List
 ):
     """Prepare tariffs skeleton
 
@@ -263,6 +284,7 @@ def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
     baseline_power_prices = pd.read_csv(
         f"{cont.config_workflow['input_folder']}"
         f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}/"
         f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
         sep=";",
         header=None,
@@ -271,6 +293,7 @@ def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
     baseline_load_profile = pd.read_csv(
         f"{cont.config_workflow['input_folder']}"
         f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}/"
         f"{cont.trimmed_scenario.split('_')[3]}/"
         f"baseline_load_profile_"
         f"{cont.config_workflow['load_shifting_focus_cluster']}.csv",
@@ -282,15 +305,10 @@ def prepare_tariffs_from_workflow(cont: Container, templates: Dict):
         "LoadShiftingPortfolio"
     ]["BaselinePeakLoadInMW"]
     baseline_load_profile *= peak_load
-    tariff_info = pd.read_csv(
-        f"{cont.config_workflow['input_folder']}/tariffs.csv",
-        index_col=[0, 1],
-        header=0,
-        sep=";",
-    )
     baseline_prices_and_load = create_combined_prices_and_load_data(
         baseline_load_profile, baseline_power_prices
     )
+    tariff_info = preprocess_tariff_information(cont, baseline_prices_and_load)
     calculate_tariffs_for_dr_scen(
         cont, tariff_info, templates, baseline_prices_and_load
     )
@@ -310,6 +328,163 @@ def create_combined_prices_and_load_data(
     return combined_df.loc[combined_df["year"].astype(int) <= 2045]
 
 
+def preprocess_tariff_information(
+    cont: Container,
+    baseline_prices_and_load: pd.DataFrame,
+):
+    """Preprocess original tariffs and provide basis for tariff calculation
+
+    Original tariffs are calculated out of three building blocks
+    that are combined here:
+    - volume-weighted average wholesale power price
+      (derived from model-endogenous result)
+    - state-administered taxes and levies incl. energy-related network charges
+      (model-exogenous)
+    - capacity-related network charges (model-exogenous)
+
+    Also include sanity check for full load hour-range.
+
+    Store original tariff information in dedicated folder and return it
+    """
+    tariff_component_details = pd.read_excel(
+        f"{cont.config_workflow['input_folder']}"
+        f"{cont.config_workflow['tariff_config']['config_file']}.xlsx",
+        sheet_name=cont.config_workflow["load_shifting_focus_cluster"],
+        index_col=0,
+    )
+    original_tariff_excl_wholesale_and_capacity_price = (
+        tariff_component_details.at[
+            "SUM EXCL WHOLESALE AND CAPACITY PRICE",
+            "Applicable Value in EUR/MWh (incl. possible reductions)",
+        ]
+    )
+    peak_load = extract_annual_peak_load(baseline_prices_and_load)
+    annual_consumption = extract_annual_consumption(baseline_prices_and_load)
+    check_full_load_hours(cont.config_workflow, peak_load, annual_consumption)
+
+    if tariff_component_details["to be calculated?"].sum() >= 1:
+        original_tariff_excl_wholesale_and_capacity_price += (
+            calc_tariff_exemptions(
+                tariff_component_details, annual_consumption
+            )
+        )
+
+    specific_capacity_payment = calculate_specific_capacity_payment(
+        tariff_component_details, peak_load, annual_consumption
+    )
+
+    dr_scen_short = cont.trimmed_scenario.split("_")[3]
+    tariff_info = pd.DataFrame(
+        index=specific_capacity_payment.index,
+        columns=["value", "unit"],
+    )
+    tariff_info["unit"] = "EUR/MWh"
+
+    tariff_info["value"] = original_tariff_excl_wholesale_and_capacity_price
+    tariff_info["value"] += specific_capacity_payment
+    volume_weighted_average_price = calculate_average_power_price(
+        baseline_prices_and_load
+    )
+    tariff_info["value"] += np.where(
+        volume_weighted_average_price.notna(), volume_weighted_average_price, 0
+    )
+    tariff_info.to_csv(
+        f"{cont.config_workflow['input_folder']}/tariff_configuration/tariffs_"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}_"
+        f"{dr_scen_short}.csv",
+        sep=";",
+    )
+
+    return tariff_info
+
+
+def extract_annual_peak_load(
+    baseline_prices_and_load: pd.DataFrame,
+) -> pd.DataFrame:
+    """Extract the peak load values in MW per year"""
+    return baseline_prices_and_load.groupby("year").apply(
+        lambda x: np.max(x["load"])
+    )
+
+
+def extract_annual_consumption(
+    baseline_prices_and_load: pd.DataFrame,
+) -> pd.DataFrame:
+    """Extract the annual consumption in MWh"""
+    return baseline_prices_and_load.groupby("year").apply(
+        lambda x: (x["load"]).sum()
+    )
+
+
+def check_full_load_hours(
+    config: Dict, peak_load: pd.DataFrame, annual_consumption: pd.DataFrame
+):
+    """Perform a sanity check for full load hours"""
+    full_load_hours = annual_consumption / peak_load
+    comparator = FLH_ASSERTIONS[config["load_shifting_focus_cluster"]]
+    msg = (
+        f"At least one entry of full load hours data set is not {comparator} "
+        f"than {FLH_THRESHOLD}.\n"
+        f"Given data set:\n{full_load_hours}"
+    )
+    if comparator == "smaller":
+        assert (full_load_hours < FLH_THRESHOLD).all(), msg
+    elif comparator == "greater":
+        assert (full_load_hours > FLH_THRESHOLD).all(), msg
+    else:
+        raise ValueError(f"Unsupported comparator value: {comparator}")
+
+
+def calc_tariff_exemptions(
+    tariff_component_details: pd.DataFrame, annual_consumption: pd.DataFrame
+) -> float:
+    """Calculate and return specific tariffs for components with exemptions"""
+    components = tariff_component_details.loc[
+        tariff_component_details["to be calculated?"] == 1
+    ]
+    payment_obligation = 0
+    for component_name, values in components.iterrows():
+        threshold = REDUCED_TARIFFS[component_name]["threshold_in_MW"]
+        reduced_value = REDUCED_TARIFFS[component_name]["reduced_value"]
+        if (annual_consumption > threshold).all():
+            full_tariff = (
+                values["Regular Value in EUR/MWh"]
+                * threshold
+                / annual_consumption
+            )
+            if isinstance(reduced_value, str):
+                percentage_share = float(reduced_value.split()[0]) / 100
+                reduced_value = (
+                    values["Regular Value in EUR/MWh"] * percentage_share
+                )
+            reduced_tariff = (
+                reduced_value
+                * (annual_consumption - threshold)
+                / annual_consumption
+            )
+            payment_obligation += full_tariff + reduced_tariff
+        else:
+            payment_obligation += values["Regular Value in EUR/MWh"]
+
+    return payment_obligation
+
+
+def calculate_specific_capacity_payment(
+    tariff_component_details: pd.DataFrame,
+    peak_load: pd.DataFrame,
+    annual_consumption: pd.DataFrame,
+) -> pd.Series:
+    """Calculate and return specific capacity payment from network charges"""
+    original_capacity_charge = (
+        tariff_component_details.at[
+            "Capacity-related Network Charges", "Regular Value in EUR/MWh"
+        ]
+        * 1000
+    )  # Price is given in €/kW * a
+    overall_capacity_payment = original_capacity_charge * peak_load
+    return overall_capacity_payment / annual_consumption
+
+
 def calculate_tariffs_for_dr_scen(
     cont: Container,
     tariff_info: pd.DataFrame,
@@ -317,11 +492,7 @@ def calculate_tariffs_for_dr_scen(
     baseline_prices_and_load: pd.DataFrame,
 ):
     """Calculate and store different tariff components resp. multipliers"""
-    overall_tariff = tariff_info.loc[
-        tariff_info.index.get_level_values(1)
-        == int(cont.trimmed_scenario.split("_")[3]),
-        "value",
-    ].droplevel(1)
+    overall_tariff = tariff_info["value"]
 
     tariff_configs = templates["tariffs"][cont.trimmed_scenario.split("_")[3]]
     for no in range(len(tariff_configs)):
@@ -337,14 +508,27 @@ def calculate_tariffs_for_dr_scen(
                 component.index = (
                     component.index.astype(str) + "-01-01_00:00:00"
                 )
+                to_be_replaced = "/data/"
+                replacement = (
+                    f"{to_be_replaced}"
+                    f"{cont.config_workflow['load_shifting_focus_cluster']}/"
+                )
                 if key != "Multiplier":
-                    component.to_csv(tariff_config[key], header=False, sep=";")
-                elif key == "Multiplier":
-                    component.to_csv(
-                        tariff_config["DynamicTariffComponents"][0][key],
-                        header=False,
-                        sep=";",
+                    file_name = replace_value(
+                        tariff_config[key],
+                        to_be_replaced,
+                        replacement,
+                        exclude=replacement,
                     )
+                    component.to_csv(file_name, header=False, sep=";")
+                elif key == "Multiplier":
+                    file_name = replace_value(
+                        tariff_config["DynamicTariffComponents"][0][key],
+                        to_be_replaced,
+                        replacement,
+                        exclude=replacement,
+                    )
+                    component.to_csv(file_name, header=False, sep=";")
                 else:
                     raise ValueError("Invalid key for tariff configurations.")
 
@@ -373,7 +557,7 @@ def calculate_tariff_components(
         "AverageMarketPriceInEURPerMWH": weighted_average_price,
         "OtherSurchargesInEURPerMWH": static_energy_tariff,
         "CapacityBasedNetworkChargesInEURPerMW": capacity_tariff_per_mw,
-        "Multiplier": multiplier,
+        "Multiplier": multiplier.fillna(0),
     }
 
     return tariff_components
@@ -386,7 +570,6 @@ def calculate_average_power_price(
     weighted_average_price = baseline_prices_and_load.groupby("year").apply(
         lambda x: np.average(x["price"], weights=x["load"])
     )
-    weighted_average_price.index = weighted_average_price.index.astype(int)
     return weighted_average_price
 
 
@@ -395,14 +578,8 @@ def calculate_capacity_tariff_per_mw(
     baseline_prices_and_load: pd.DataFrame,
 ):
     """Calculate the capacity tariff in EUR/MW from given EUR/MWh value"""
-    peak_load = baseline_prices_and_load.groupby("year").apply(
-        lambda x: np.max(x["load"])
-    )
-    annual_consumption = baseline_prices_and_load.groupby("year").apply(
-        lambda x: (x["load"]).sum()
-    )
-    peak_load.index = peak_load.index.astype(int)
-    annual_consumption.index = annual_consumption.index.astype(int)
+    peak_load = extract_annual_peak_load(baseline_prices_and_load)
+    annual_consumption = extract_annual_consumption(baseline_prices_and_load)
     overall_annual_capacity_payment = annual_consumption * capacity_tariff
     return overall_annual_capacity_payment / peak_load
 
@@ -497,7 +674,12 @@ def read_capital_expenses(
     config: Dict, dr_scen: str, piece_of_information: str
 ) -> pd.Series:
     """Read and return investment expenses"""
-    path = f"{config['input_folder']}/{config['data_sub_folder']}/{dr_scen}/"
+    path = (
+        f"{config['input_folder']}/"
+        f"{config['data_sub_folder']}/"
+        f"{config['load_shifting_focus_cluster']}/"
+        f"{dr_scen}/"
+    )
     file_name = (
         f"{config['load_shifting_focus_cluster']}_{piece_of_information}.csv"
     )
@@ -579,6 +761,7 @@ def store_price_forecast_from_baseline(cont: Container) -> None:
     price_forecast = pd.read_csv(
         f"{cont.config_workflow['input_folder']}"
         f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}/"
         f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
         sep=";",
         header=None,
@@ -588,6 +771,7 @@ def store_price_forecast_from_baseline(cont: Container) -> None:
     price_forecast.to_csv(
         f"{cont.config_workflow['input_folder']}"
         f"{cont.config_workflow['data_sub_folder']}/"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}/"
         f"{cont.trimmed_scenario.split('_')[3]}/price_forecast.csv",
         sep=";",
         header=False,
