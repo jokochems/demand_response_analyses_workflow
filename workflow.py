@@ -200,19 +200,18 @@ if __name__ == "__main__":
             ):
                 calc_summary_parameters(cont)
                 scenario_results[dr_scen_short][
-                    cont.trimmed_scenario
+                    dr_scen
                 ] = cont.summary_series
 
     if config_workflow["evaluate_cross_scenarios"]:
-        for key in scenario_results:
-            if not scenario_results[key]:
-                for dr_scen, scenario in scenario_files.items():
-                    if "_wo_dr" not in scenario:
-                        dr_scen_short = dr_scen.split("_", 1)[0]
-                        scenario_results[dr_scen_short][
-                            dr_scen
-                        ] = read_scenario_result(config_workflow, scenario)
-                break
+        for dr_scen, scenario in scenario_files.items():
+            if "_wo_dr" not in scenario:
+                dr_scen_short = dr_scen.split("_", 1)[0]
+                # Read only missing entries from file
+                if dr_scen not in scenario_results[dr_scen_short].keys():
+                    scenario_results[dr_scen_short][
+                        dr_scen
+                    ] = read_scenario_result(config_workflow, scenario)
 
         for dr_scen, dr_scen_results in scenario_results.items():
             if "_wo_dr" in dr_scen:
