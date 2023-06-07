@@ -8,6 +8,7 @@ from dr_analyses.workflow_routines import make_directory_if_missing
 
 def read_scenario_result(config_workflow: Dict, scenario: str) -> pd.Series:
     """Read the scenario result and return it"""
+    print(f"Adding results for scenario {scenario} from file.")
     return pd.read_csv(
         config_workflow["output_folder"]
         + f"{trim_file_name(scenario).split('_')[3]}/"
