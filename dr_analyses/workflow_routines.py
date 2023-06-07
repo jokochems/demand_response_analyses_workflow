@@ -13,6 +13,17 @@ from fameio.source.loader import load_yaml
 from dr_analyses.container import Container, replace_value
 
 
+FLH_ASSERTIONS = {
+    "hoho_cluster_shift_only": "smaller",
+    "hoho_cluster_shift_shed": "smaller",
+    "ind_cluster_shift_only": "greater",
+    "ind_cluster_shift_shed": "greater",
+    "tcs+hoho_cluster_shift_only": "smaller",
+    "tcs_cluster_shift_only": "smaller",
+}
+FLH_THRESHOLD = 2500
+
+
 def make_directory_if_missing(folder: str) -> None:
     """Add directories if missing; works with at maximum 2 sub-levels"""
     if os.path.exists(folder):
@@ -323,6 +334,8 @@ def preprocess_tariff_information(
       (model-exogenous)
     - capacity-related network charges (model-exogenous)
 
+    Also include sanity check for full load hour-range.
+
     Store original tariff information in dedicated folder and return it
     """
     tariff_component_details = pd.read_excel(
@@ -339,6 +352,7 @@ def preprocess_tariff_information(
     )
     peak_load = extract_annual_peak_load(baseline_prices_and_load)
     annual_consumption = extract_annual_consumption(baseline_prices_and_load)
+    check_full_load_hours(cont.config_workflow, peak_load, annual_consumption)
 
     original_capacity_charge = (
         tariff_component_details.at[
@@ -365,9 +379,7 @@ def preprocess_tariff_information(
         baseline_prices_and_load
     )
     tariff_info["value"] += np.where(
-        volume_weighted_average_price.notna(),
-        volume_weighted_average_price,
-        0
+        volume_weighted_average_price.notna(), volume_weighted_average_price, 0
     )
     tariff_info.to_csv(
         f"{cont.config_workflow['input_folder']}/tariff_configuration/tariffs_"
@@ -377,6 +389,25 @@ def preprocess_tariff_information(
     )
 
     return tariff_info
+
+
+def check_full_load_hours(
+    config: Dict, peak_load: pd.DataFrame, annual_consumption: pd.DataFrame
+):
+    """Perform a sanity check for full load hours"""
+    full_load_hours = annual_consumption / peak_load
+    comparator = FLH_ASSERTIONS[config["load_shifting_focus_cluster"]]
+    msg = (
+        f"At least one entry of full load hours data set is not {comparator} "
+        f"than {FLH_THRESHOLD}.\n"
+        f"Given data set:\n{full_load_hours}"
+    )
+    if comparator == "smaller":
+        assert (full_load_hours < FLH_THRESHOLD).all(), msg
+    elif comparator == "greater":
+        assert (full_load_hours > FLH_THRESHOLD).all(), msg
+    else:
+        raise ValueError(f"Unsupported comparator value: {comparator}")
 
 
 def extract_annual_peak_load(
