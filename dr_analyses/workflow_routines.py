@@ -342,7 +342,7 @@ def preprocess_tariff_information(
       (model-exogenous)
     - capacity-related network charges (model-exogenous)
 
-    Also include sanity check for full load hour-range.
+    Also include sanity check for full load hour range.
 
     Store original tariff information in dedicated folder and return it
     """
@@ -438,11 +438,11 @@ def check_full_load_hours(
 def calc_tariff_exemptions(
     tariff_component_details: pd.DataFrame, annual_consumption: pd.DataFrame
 ) -> float:
-    """Calculate and return specific tariffs for components with exemptions"""
+    """Calculate overall specific tariff for components with exemptions"""
     components = tariff_component_details.loc[
         tariff_component_details["to be calculated?"] == 1
     ]
-    payment_obligation = 0
+    overall_specific_tariff = 0
     for component_name, values in components.iterrows():
         threshold = REDUCED_TARIFFS[component_name]["threshold_in_MW"]
         reduced_value = REDUCED_TARIFFS[component_name]["reduced_value"]
@@ -462,11 +462,11 @@ def calc_tariff_exemptions(
                 * (annual_consumption - threshold)
                 / annual_consumption
             )
-            payment_obligation += full_tariff + reduced_tariff
+            overall_specific_tariff += full_tariff + reduced_tariff
         else:
-            payment_obligation += values["Regular Value in EUR/MWh"]
+            overall_specific_tariff += values["Regular Value in EUR/MWh"]
 
-    return payment_obligation
+    return overall_specific_tariff
 
 
 def calculate_specific_capacity_payment(
