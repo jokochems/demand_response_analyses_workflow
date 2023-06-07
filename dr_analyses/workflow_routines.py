@@ -22,6 +22,14 @@ FLH_ASSERTIONS = {
     "tcs_cluster_shift_only": "smaller",
 }
 FLH_THRESHOLD = 2500
+REDUCED_TARIFFS = {
+    "KWKG levy": {"threshold_in_MW": 1000, "reduced_value": "15 percent"},
+    "§ 17f EnWG levy": {
+        "threshold_in_MW": 1000,
+        "reduced_value": "15 percent",
+    },
+    "§ 19 (2) StromNEV levy": {"threshold_in_MW": 1000, "reduced_value": 0.25},
+}
 
 
 def make_directory_if_missing(folder: str) -> None:
@@ -354,16 +362,15 @@ def preprocess_tariff_information(
     annual_consumption = extract_annual_consumption(baseline_prices_and_load)
     check_full_load_hours(cont.config_workflow, peak_load, annual_consumption)
 
-    original_capacity_charge = (
-        tariff_component_details.at[
-            "Capacity-related Network Charges", "Regular Value in EUR/MWh"
-        ]
-        * 1000
-    )  # Price is given in €/kW * a
-    overall_capacity_payment = original_capacity_charge * peak_load
-    specific_capacity_payment = overall_capacity_payment / annual_consumption
-    specific_capacity_payment.index = specific_capacity_payment.index.astype(
-        int
+    if tariff_component_details["to be calculated?"].sum() >= 1:
+        original_tariff_excl_wholesale_and_capacity_price += (
+            calc_tariff_exemptions(
+                tariff_component_details, annual_consumption
+            )
+        )
+
+    specific_capacity_payment = calculate_specific_capacity_payment(
+        tariff_component_details, peak_load, annual_consumption
     )
 
     dr_scen_short = cont.trimmed_scenario.split("_")[3]
@@ -391,6 +398,24 @@ def preprocess_tariff_information(
     return tariff_info
 
 
+def extract_annual_peak_load(
+    baseline_prices_and_load: pd.DataFrame,
+) -> pd.DataFrame:
+    """Extract the peak load values in MW per year"""
+    return baseline_prices_and_load.groupby("year").apply(
+        lambda x: np.max(x["load"])
+    )
+
+
+def extract_annual_consumption(
+    baseline_prices_and_load: pd.DataFrame,
+) -> pd.DataFrame:
+    """Extract the annual consumption in MWh"""
+    return baseline_prices_and_load.groupby("year").apply(
+        lambda x: (x["load"]).sum()
+    )
+
+
 def check_full_load_hours(
     config: Dict, peak_load: pd.DataFrame, annual_consumption: pd.DataFrame
 ):
@@ -410,22 +435,54 @@ def check_full_load_hours(
         raise ValueError(f"Unsupported comparator value: {comparator}")
 
 
-def extract_annual_peak_load(
-    baseline_prices_and_load: pd.DataFrame,
-) -> pd.DataFrame:
-    """Extract the peak load values in MW per year"""
-    return baseline_prices_and_load.groupby("year").apply(
-        lambda x: np.max(x["load"])
-    )
+def calc_tariff_exemptions(
+    tariff_component_details: pd.DataFrame, annual_consumption: pd.DataFrame
+) -> float:
+    """Calculate and return specific tariffs for components with exemptions"""
+    components = tariff_component_details.loc[
+        tariff_component_details["to be calculated?"] == 1
+    ]
+    payment_obligation = 0
+    for component_name, values in components.iterrows():
+        threshold = REDUCED_TARIFFS[component_name]["threshold_in_MW"]
+        reduced_value = REDUCED_TARIFFS[component_name]["reduced_value"]
+        if (annual_consumption > threshold).all():
+            full_tariff = (
+                values["Regular Value in EUR/MWh"]
+                * threshold
+                / annual_consumption
+            )
+            if isinstance(reduced_value, str):
+                percentage_share = float(reduced_value.split()[0]) / 100
+                reduced_value = (
+                    values["Regular Value in EUR/MWh"] * percentage_share
+                )
+            reduced_tariff = (
+                reduced_value
+                * (annual_consumption - threshold)
+                / annual_consumption
+            )
+            payment_obligation += full_tariff + reduced_tariff
+        else:
+            payment_obligation += values["Regular Value in EUR/MWh"]
+
+    return payment_obligation
 
 
-def extract_annual_consumption(
-    baseline_prices_and_load: pd.DataFrame,
-) -> pd.DataFrame:
-    """Extract the annual consumption in MWh"""
-    return baseline_prices_and_load.groupby("year").apply(
-        lambda x: (x["load"]).sum()
-    )
+def calculate_specific_capacity_payment(
+    tariff_component_details: pd.DataFrame,
+    peak_load: pd.DataFrame,
+    annual_consumption: pd.DataFrame,
+) -> pd.Series:
+    """Calculate and return specific capacity payment from network charges"""
+    original_capacity_charge = (
+        tariff_component_details.at[
+            "Capacity-related Network Charges", "Regular Value in EUR/MWh"
+        ]
+        * 1000
+    )  # Price is given in €/kW * a
+    overall_capacity_payment = original_capacity_charge * peak_load
+    return overall_capacity_payment / annual_consumption
 
 
 def calculate_tariffs_for_dr_scen(
@@ -513,7 +570,6 @@ def calculate_average_power_price(
     weighted_average_price = baseline_prices_and_load.groupby("year").apply(
         lambda x: np.average(x["price"], weights=x["load"])
     )
-    weighted_average_price.index = weighted_average_price.index.astype(int)
     return weighted_average_price
 
 
@@ -524,8 +580,6 @@ def calculate_capacity_tariff_per_mw(
     """Calculate the capacity tariff in EUR/MW from given EUR/MWh value"""
     peak_load = extract_annual_peak_load(baseline_prices_and_load)
     annual_consumption = extract_annual_consumption(baseline_prices_and_load)
-    peak_load.index = peak_load.index.astype(int)
-    annual_consumption.index = annual_consumption.index.astype(int)
     overall_annual_capacity_payment = annual_consumption * capacity_tariff
     return overall_annual_capacity_payment / peak_load
 
