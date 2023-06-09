@@ -209,11 +209,24 @@ def prepare_tariffs_skeleton_from_workflow(
 
     Introduce paths to files containing actual parameterization
     """
-    step_size = config["tariff_config"]["step_size"]
-    shares = list(range(0, 101, step_size))
+    shares_energy = list(
+        range(
+            config["tariff_config"]["energy"]["min_share"],
+            config["tariff_config"]["energy"]["max_share"] + 1,
+            config["tariff_config"]["energy"]["step_size"],
+        )
+    )
+    shares_capacity = list(
+        range(
+            config["tariff_config"]["capacity"]["min_share"],
+            config["tariff_config"]["capacity"]["max_share"] + 1,
+            config["tariff_config"]["capacity"]["step_size"],
+        )
+    )
 
     parameterization = pd.DataFrame(
-        index=pd.MultiIndex.from_product([shares, shares]), columns=["names"]
+        index=pd.MultiIndex.from_product([shares_energy, shares_capacity]),
+        columns=["names"],
     )
     parameterization["names"] = (
         parameterization.index.get_level_values(0).astype(str)
