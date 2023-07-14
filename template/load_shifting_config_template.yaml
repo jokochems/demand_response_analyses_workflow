@@ -28,7 +28,7 @@ Agents:
           PurchaseLeviesAndTaxesInEURperMWH: 0.0
         Api:
           ServiceUrl: http://127.0.0.1:8000/load_shift/
-          UseAnnualLimit: 0
+          UseAnnualLimit: 1
           Solver: cplex
       Policy:
         EEGSurchargeInEURPerMWH: 0.0
