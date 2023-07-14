@@ -365,6 +365,9 @@ class Container:
             "EnergyLimitUpInMWH": interference_duration * power,
             "EnergyLimitDownInMWH": interference_duration * power,
             "BaselinePeakLoadInMW": float(potential_parameters["max_cap"]),
+            "MaximumActivations": int(
+                float(potential_parameters["maximum_activations_year"])
+            ),
         }
         replace_yaml_entries(
             load_shifting_config,
