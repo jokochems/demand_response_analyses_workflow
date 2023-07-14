@@ -382,7 +382,8 @@ class Container:
         """Read and return parameter info"""
         return pd.read_csv(
             f"{self.config_workflow['input_folder']}/"
-            f"data/{self.config_workflow['load_shifting_focus_cluster']}/"
+            f"{self.config_workflow['data_sub_folder']}/"
+            f"{self.config_workflow['load_shifting_focus_cluster']}/"
             f"{key.split('_', 1)[0]}/"
             f"{file_name}",
             index_col=0,

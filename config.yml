@@ -12,9 +12,9 @@ config_workflow:
       min_share: 0
       max_share: 100
     capacity:
-      step_size: 4
+      step_size: 20
       min_share: 0
-      max_share: 20
+      max_share: 100
   output_folder: "./results/"
   data_output: "data_out/"
   plots_output: "plots_out/"

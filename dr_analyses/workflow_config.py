@@ -61,19 +61,25 @@ def extract_fame_config(config: Dict, key: str):
     return fame_config
 
 
-def update_run_properties(default_run_properties: Dict, dr_scen: str):
+def update_run_properties(
+    default_run_properties: Dict,
+    dr_scen: str,
+    load_shifting_focus_cluster: str,
+):
     """Create a duplicate of fameSetup.yaml and adjust output file"""
     new_setup_file = (
-        f"{default_run_properties['setup'].split('.')[0]}_{dr_scen}.yaml"
+        f"{default_run_properties['setup'].split('.')[0]}_"
+        f"{load_shifting_focus_cluster}_{dr_scen}.yaml"
     )
     shutil.copyfile(
         f"{default_run_properties['setup']}",
         new_setup_file,
     )
     fame_setup = load_yaml(new_setup_file)
-    fame_setup[
-        "outputFilePrefix"
-    ] = f"{fame_setup['outputFilePrefix']}_{dr_scen}"
+    fame_setup["outputFilePrefix"] = (
+        f"{fame_setup['outputFilePrefix']}_"
+        f"{load_shifting_focus_cluster}_{dr_scen}"
+    )
     with open(new_setup_file, "w") as file:
         yaml.dump(fame_setup, file, sort_keys=False)
 

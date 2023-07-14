@@ -10,10 +10,11 @@ def read_scenario_result(config_workflow: Dict, scenario: str) -> pd.Series:
     """Read the scenario result and return it"""
     print(f"Adding results for scenario {scenario} from file.")
     return pd.read_csv(
-        config_workflow["output_folder"]
-        + f"{trim_file_name(scenario).split('_')[3]}/"
-        + trim_file_name(scenario)
-        + "/parameter_summary.csv",
+        f"{config_workflow['output_folder']}"
+        f"{config_workflow['load_shifting_focus_cluster']}/"
+        f"{trim_file_name(scenario).split('_')[3]}/"
+        f"{trim_file_name(scenario)}"
+        f"/parameter_summary.csv",
         sep=";",
         index_col=0,
     )["Summary"]
@@ -80,6 +81,7 @@ def evaluate_parameter_results(
         data_output_folder = (
             f"{config_workflow['output_folder']}"
             f"{config_workflow['data_output']}"
+            f"{config_workflow['load_shifting_focus_cluster']}/"
             f"{dr_scen}/"
         )
         make_directory_if_missing(data_output_folder)

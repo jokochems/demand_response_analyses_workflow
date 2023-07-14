@@ -1,7 +1,7 @@
 # AMIRIS simulation using inputs from pommesinvest for parameterization
 # Simulating a one or multi year horizon
 
-Schema: !include "../../template/schema.yaml"
+Schema: !include "../../../template/schema.yaml"
 
 GeneralProperties:
   RunId: 1
@@ -634,4 +634,4 @@ Agents:
       OpexVarInEURperMWH: 0.0
       YieldProfile: "./inputs/data/all_scenarios/res_generation_ts_DE_source_larga.csv"
 
-Contracts: !include ["../contracts_wo_dr/*.yaml", "Contracts"]
+Contracts: !include ["../../contracts_wo_dr/*.yaml", "Contracts"]
