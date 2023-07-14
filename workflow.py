@@ -60,10 +60,16 @@ if __name__ == "__main__":
     run_properties = {}
     for dr_scen in config_workflow["demand_response_scenarios"]:
         run_properties[dr_scen] = update_run_properties(
-            default_run_properties, dr_scen
+            default_run_properties,
+            dr_scen,
+            config_workflow["load_shifting_focus_cluster"],
         )
 
-    make_directory_if_missing(f"{config_workflow['input_folder']}/scenarios/")
+    make_directory_if_missing(
+        f"{config_workflow['input_folder']}/"
+        f"{config_workflow['scenario_sub_folder']}/"
+        f"{config_workflow['load_shifting_focus_cluster']}/"
+    )
     if config_workflow["prepare_tariff_config"]:
         for dr_scen in config_workflow["demand_response_scenarios"]:
             prepare_tariff_configs(config_workflow, dr_scen)
@@ -199,9 +205,7 @@ if __name__ == "__main__":
                 and "_wo_dr" not in scenario
             ):
                 calc_summary_parameters(cont)
-                scenario_results[dr_scen_short][
-                    dr_scen
-                ] = cont.summary_series
+                scenario_results[dr_scen_short][dr_scen] = cont.summary_series
 
     if config_workflow["evaluate_cross_scenarios"]:
         for dr_scen, scenario in scenario_files.items():

@@ -33,18 +33,13 @@ REDUCED_TARIFFS = {
 
 
 def make_directory_if_missing(folder: str) -> None:
-    """Add directories if missing; works with at maximum 2 sub-levels"""
-    if os.path.exists(folder):
+    """Add directories if missing (solution created querying ChatGPT)"""
+    try:
+        os.makedirs(folder)
+    except FileExistsError:
         pass
-    else:
-        if os.path.exists(folder.rsplit("/", 2)[0]):
-            path = "./" + folder
-            os.mkdir(path)
-        else:
-            path = "./" + folder.rsplit("/", 2)[0]
-            os.mkdir(path)
-            subpath = folder
-            os.mkdir(subpath)
+    except OSError as e:
+        print(f"Failed to create directory: {e}")
 
 
 def get_all_yaml_files_in_folder_except(
@@ -126,7 +121,8 @@ def prepare_tariffs_from_file(
     tariff_model_configs = {"Configs": tariff_config_template}
 
     with open(
-        f"{config['template_folder']}tariff_model_configs_{dr_scen}.yaml",
+        f"{config['template_folder']}tariff_model_configs_"
+        f"{config['load_shifting_focus_cluster']}_{dr_scen}.yaml",
         "w",
     ) as file:
         yaml.dump(
@@ -263,7 +259,8 @@ def prepare_tariffs_skeleton_from_workflow(
     tariff_model_configs = {"Configs": tariff_config_template}
 
     with open(
-        f"{config['template_folder']}tariff_model_configs_{dr_scen}.yaml",
+        f"{config['template_folder']}tariff_model_configs_"
+        f"{config['load_shifting_focus_cluster']}_{dr_scen}.yaml",
         "w",
     ) as file:
         yaml.dump(
@@ -600,7 +597,8 @@ def calculate_capacity_tariff_per_mw(
 def read_tariff_configs(config: Dict, dr_scen: str):
     """Read and return load shifting tariff model configs"""
     return load_yaml(
-        f"{config['template_folder']}tariff_model_configs_{dr_scen}.yaml"
+        f"{config['template_folder']}tariff_model_configs_"
+        f"{config['load_shifting_focus_cluster']}_{dr_scen}.yaml"
     )["Configs"]
 
 
@@ -646,6 +644,7 @@ def prepare_scenario_dicts(
         scenario = (
             f"{config['input_folder']}/"
             f"{config['scenario_sub_folder']}/"
+            f"{config['load_shifting_focus_cluster']}/"
             f"scenario_wo_dr_{dr_scen}.yaml"
         )
         shutil.copyfile(
@@ -661,6 +660,7 @@ def prepare_scenario_dicts(
             scenario = (
                 f"{config['input_folder']}/"
                 f"{config['scenario_sub_folder']}/"
+                f"{config['load_shifting_focus_cluster']}/"
                 f"{dr_scen_name}_{tariff_name}.yaml"
             )
             shutil.copyfile(
@@ -745,18 +745,21 @@ def run_amiris(run_properties: Dict, cont: Container) -> None:
 def convert_amiris_results(cont: Container) -> None:
     """Convert AMIRIS results from a previous model run"""
     print(f"Converting scenario {cont.trimmed_scenario} results")
-    sub_folder_name = cont.trimmed_scenario.split("_")[3]
+    focus_cluster = cont.config_workflow["load_shifting_focus_cluster"]
+    dr_scenario = cont.trimmed_scenario.split("_")[3]
     cont.config_convert[Options.OUTPUT] = (
         f"{cont.config_workflow['output_folder']}/"
-        f"{sub_folder_name}/"
+        f"{focus_cluster}/"
+        f"{dr_scenario}/"
         f"{cont.trimmed_scenario}"
     )
     make_directory_if_missing(
-        f"{cont.config_workflow['output_folder']}/{sub_folder_name}/"
+        f"{cont.config_workflow['output_folder']}/"
+        f"{focus_cluster}/{dr_scenario}/"
     )
     convert_results(
         f"{cont.config_workflow['output_folder']}/"
-        f"amiris-output_{sub_folder_name}.pb",
+        f"amiris-output_{focus_cluster}_{dr_scenario}.pb",
         cont.config_convert,
     )
     print(f"Scenario {cont.trimmed_scenario} results converted")
@@ -766,6 +769,7 @@ def store_price_forecast_from_baseline(cont: Container) -> None:
     """Store price forecast obtained from scenario without demand response"""
     baseline_power_price = pd.read_csv(
         f"{cont.config_workflow['output_folder']}"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}/"
         f"{cont.trimmed_scenario.split('_')[3]}/"
         f"{cont.trimmed_baseline_scenario}"
         f"/EnergyExchangeMulti.csv",
