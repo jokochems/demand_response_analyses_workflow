@@ -128,6 +128,13 @@ class LoadShiftOptimizationModel:
                 "parameter has no effect."
             )
         else:
+            if max_activations == 1000000:
+                raise warnings.warn(
+                    "You did not specify a value to limit the maximum number "
+                    "of activations per year. Thus, the default value of "
+                    "'1,000,000' applies. which is equivalent to not limiting "
+                    "maximum activations at all."
+                )
             self.max_activations = max_activations
         self.model = None
         self.solver = solver
@@ -202,14 +209,14 @@ class LoadShiftOptimizationModel:
             model.T,
             initialize=0,
             within=pyo.NonNegativeReals,
-            doc="fictious energy storage level for (initial) downshifts",
+            doc="fictitious energy storage level for (initial) downshifts",
         )
 
         model.dsm_up_level = pyo.Var(
             model.T,
             initialize=0,
             within=pyo.NonNegativeReals,
-            doc="fictious energy storage level for (initial) upshifts",
+            doc="fictitious energy storage level for (initial) upshifts",
         )
 
         #  ************* CONSTRAINTS *****************************
@@ -333,7 +340,7 @@ class LoadShiftOptimizationModel:
         model.availability_inc_build = pyo.BuildAction(rule=_availability_inc_rule)
 
         def _dr_storage_red_rule(model):
-            """Fictious demand response storage level for load reductions
+            """Fictitious demand response storage level for load reductions
             transition equation"""
             for t in model.T:
                 # avoid time steps prior to t = 0
@@ -354,7 +361,7 @@ class LoadShiftOptimizationModel:
         model.dr_storage_red_build = pyo.BuildAction(rule=_dr_storage_red_rule)
 
         def _dr_storage_inc_rule(model):
-            """Fictious demand response storage level for load increase
+            """Fictitious demand response storage level for load increase
             transition equation"""
             for t in model.T:
                 # avoid time steps prior to t = 0
@@ -374,7 +381,7 @@ class LoadShiftOptimizationModel:
         model.dr_storage_inc_build = pyo.BuildAction(rule=_dr_storage_inc_rule)
 
         def _dr_storage_limit_red_rule(model):
-            """Fictious demand response storage level for reduction limit"""
+            """Fictitious demand response storage level for reduction limit"""
             for t in model.T:
                 lhs = model.dsm_do_level[t]
                 rhs = self.availability_down_mean * self.max_capacity_down * self.interference_time
@@ -384,7 +391,7 @@ class LoadShiftOptimizationModel:
         model.dr_storage_level_red_build = pyo.BuildAction(rule=_dr_storage_limit_red_rule)
 
         def _dr_storage_limit_inc_rule(model):
-            """Fictious demand response storage level for increase limit"""
+            """Fictitious demand response storage level for increase limit"""
             for t in model.T:
                 lhs = model.dsm_up_level[t]
                 rhs = self.availability_up_mean * self.max_capacity_up * self.interference_time
@@ -465,11 +472,13 @@ class LoadShiftOptimizationModel:
                     + sum(model.balance_dsm_up[h, t] for h in self.shifting_times)
                 )
                 * self.variable_costs_down[t]
+                * self.time_increment[t]
                 + (
                     sum(model.dsm_up[h, t] for h in self.shifting_times)
                     + sum(model.balance_dsm_do[h, t] for h in self.shifting_times)
                 )
                 * self.variable_costs_up[t]
+                * self.time_increment[t]
                 for t in model.T
             )
 
