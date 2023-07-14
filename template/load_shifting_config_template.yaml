@@ -18,6 +18,7 @@ Agents:
         BaselinePeakLoadInMW: 0  # max_cap (assumed simultaneity of industrial loads is 90%)
         Efficiency: 1.0
         InterferenceTimeInHours: 0
+        MaximumActivations: 0
       Strategy:
         # SINGLE_AGENT_MAX_PROFIT, SINGLE_AGENT_MIN_SYSTEM_COST, MULTI_AGENT_SIMPLE, DISPATCH_FILE, SINGLE_AGENT_MAX_PROFIT_TARIFFS, SINGLE_AGENT_MAX_PROFIT_EXTERNAL
         StrategistType: SINGLE_AGENT_MAX_PROFIT_EXTERNAL
