@@ -122,14 +122,14 @@ class LoadShiftOptimizationModel:
         self.availability_down_mean = mean(self.availability_down)
         self.availability_up_mean = mean(self.availability_up)
         if max_activations and not activate_annual_limits:
-            raise warnings.warn(
+            warnings.warn(
                 "You specified the number of maximum activations per year, "
                 "but deactivated annual limits. Thus, the `max_activations` "
                 "parameter has no effect."
             )
         else:
             if max_activations == 1000000:
-                raise warnings.warn(
+                warnings.warn(
                     "You did not specify a value to limit the maximum number "
                     "of activations per year. Thus, the default value of "
                     "'1,000,000' applies. which is equivalent to not limiting "
