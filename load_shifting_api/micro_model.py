@@ -24,6 +24,7 @@ class Inputs(BaseModel):
     efficiency: float
     activate_annual_limits: bool
     solver: str
+    max_activations: int
 
     # Time series from file
     normalized_baseline_load: List[float]
@@ -52,10 +53,15 @@ def micro_model_api(inputs: Inputs) -> ModelResponse:
     Returns:
         ModelResponse
     """
-    demand_after, upshift, downshift, overall_variable_costs = run_model(inputs)
+    demand_after, upshift, downshift, overall_variable_costs = run_model(
+        inputs
+    )
 
     return ModelResponse(
-        demand_after=demand_after, upshift=upshift, downshift=downshift, overall_variable_costs=overall_variable_costs
+        demand_after=demand_after,
+        upshift=upshift,
+        downshift=downshift,
+        overall_variable_costs=overall_variable_costs,
     )
 
 
@@ -77,7 +83,13 @@ def run_model(inputs: Inputs):
         efficiency=inputs.efficiency,
         activate_annual_limits=inputs.activate_annual_limits,
         solver=inputs.solver,
+        max_activations=inputs.max_activations,
     )
     extract_results(lsm, rounding_precision=4)
 
-    return lsm.demand_after, lsm.upshift, lsm.downshift, pyo.value(lsm.model.overall_variable_costs)
+    return (
+        lsm.demand_after,
+        lsm.upshift,
+        lsm.downshift,
+        pyo.value(lsm.model.overall_variable_costs),
+    )

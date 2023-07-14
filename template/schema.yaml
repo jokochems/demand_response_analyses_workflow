@@ -454,6 +454,10 @@ AgentTypes:
             AttributeType: integer
             Mandatory: false
             List: false
+          MaximumActivations:
+            AttributeType: integer
+            Mandatory: false
+            List: false
       Strategy:
         AttributeType: block
         Mandatory: true
