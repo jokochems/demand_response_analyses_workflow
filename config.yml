@@ -24,11 +24,11 @@ config_workflow:
     "95": "scenario_w_dr_95"
   load_shifting_focus_cluster: "ind_cluster_shift_only"
   investment_year: 2020
-  interest_rate: 0.05
+  interest_rate: 0.1
   prepare_tariff_config: True
   simulation:
-    StartTime: 2026-12-31_23:58:00  # 2019-12-31_23:58:00
-    StopTime: 2027-12-31_23:58:00  # 2035-12-31_23:58:00
+    StartTime: 2019-12-31_23:58:00  # 2026-12-31_23:58:00
+    StopTime: 2035-12-31_23:58:00  # 2027-12-31_23:58:00
     artificial_shortage_capacity_in_MW: 100000
     minimum_value_of_lost_load: 300
   amiris_analyses:
