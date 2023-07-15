@@ -29,7 +29,10 @@ def plot_bar_charts(
     if not config_plotting:
         config_plotting = initialize_empty_plot_config()
 
-    plots_output_folder = f"{config_workflow['output_folder']}{config_workflow['plots_output']}{dr_scen}/"
+    plots_output_folder = (
+        f"{config_workflow['output_folder']}{config_workflow['plots_output']}"
+        f"{config_workflow['load_shifting_focus_cluster']}/{dr_scen}/"
+    )
     make_directory_if_missing(plots_output_folder)
 
     for original_param, param_results in all_parameter_results.items():
@@ -219,7 +222,10 @@ def plot_heat_maps(
     if not config_plotting:
         config_plotting = initialize_empty_plot_config()
 
-    plots_output_folder = f"{config_workflow['output_folder']}{config_workflow['plots_output']}{dr_scen}/"
+    plots_output_folder = (
+        f"{config_workflow['output_folder']}{config_workflow['plots_output']}"
+        f"{config_workflow['load_shifting_focus_cluster']}{dr_scen}/"
+    )
     make_directory_if_missing(plots_output_folder)
 
     for param, param_results in all_parameter_results.items():
