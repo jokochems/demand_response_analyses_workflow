@@ -526,11 +526,15 @@ class Container:
 
     def update_all_paths_with_focus_cluster(self):
         """Update all paths in yaml with load shifting focus cluster"""
-        to_be_replaced = "/data/"
-        replacement = (
-            f"{to_be_replaced}"
+        data_location_to_be_replaced = "/data/"
+        data_location_replacement = (
+            f"{data_location_to_be_replaced}"
             f"{self.config_workflow['load_shifting_focus_cluster']}/"
         )
+        cluster_string_to_be_replaced = "ind_cluster_shift_only"
+        cluster_string_replacement = self.config_workflow[
+            "load_shifting_focus_cluster"
+        ]
         for agent in self.scenario_yaml["Agents"]:
             if "Attributes" in agent:
                 for key, val in agent["Attributes"].items():
@@ -538,8 +542,15 @@ class Container:
                         agent["Attributes"],
                         key,
                         val,
-                        to_be_replaced,
-                        replacement,
+                        cluster_string_to_be_replaced,
+                        cluster_string_replacement,
+                    )
+                    self.replace_recursively(
+                        agent["Attributes"],
+                        key,
+                        val,
+                        data_location_to_be_replaced,
+                        data_location_replacement,
                     )
 
     def replace_recursively(
