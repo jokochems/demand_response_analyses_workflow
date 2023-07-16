@@ -370,7 +370,10 @@ def preprocess_tariff_information(
     )
     peak_load = extract_annual_peak_load(baseline_prices_and_load)
     annual_consumption = extract_annual_consumption(baseline_prices_and_load)
-    check_full_load_hours(cont.config_workflow, peak_load, annual_consumption)
+    if cont.config_workflow["activate_flh_check"]:
+        check_full_load_hours(
+            cont.config_workflow, peak_load, annual_consumption
+        )
 
     if tariff_component_details["to be calculated?"].sum() >= 1:
         original_tariff_excl_wholesale_and_capacity_price += (

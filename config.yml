@@ -42,6 +42,7 @@ config_workflow:
     aggregate_results: True
   annuity_mode: "single_year"  # "single_year", "multiple_years"
   lifetime: 15  # only for annuity_mode "single_year"
+  activate_flh_check: True
   write_results: True
   evaluate_cross_scenarios: True
   make_plots: True
