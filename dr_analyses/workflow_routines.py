@@ -723,9 +723,11 @@ def set_config_make_output(cont: Container) -> None:
     """Define output for compiling AMIRIS protobuffer input"""
     make_directory_if_missing(
         f"{cont.config_workflow['input_folder']}/configs/"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}/"
     )
     cont.config_make[Options.OUTPUT] = (
         f"{cont.config_workflow['input_folder']}/configs/"
+        f"{cont.config_workflow['load_shifting_focus_cluster']}/"
         f"{cont.trimmed_scenario}.pb"
     )
 
@@ -735,7 +737,7 @@ def run_amiris(run_properties: Dict, cont: Container) -> None:
     if Options.OUTPUT not in cont.config_make.keys():
         set_config_make_output(cont)
 
-    call_amiris = "java -ea -Xmx2000M -cp {} {} {} -f {} -s {}".format(
+    call_amiris = "java -ea -cp {} {} {} -f {} -s {}".format(
         run_properties["exe"],
         run_properties["logging"],
         run_properties["main"],
