@@ -224,7 +224,7 @@ def plot_heat_maps(
 
     plots_output_folder = (
         f"{config_workflow['output_folder']}{config_workflow['plots_output']}"
-        f"{config_workflow['load_shifting_focus_cluster']}{dr_scen}/"
+        f"{config_workflow['load_shifting_focus_cluster']}/{dr_scen}/"
     )
     make_directory_if_missing(plots_output_folder)
 
