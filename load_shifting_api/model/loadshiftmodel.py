@@ -53,6 +53,10 @@ class LoadShiftOptimizationModel:
         Number of maximum activations per year; only applied if boolean switch
         activate_annual_limits in constructor is set to True
 
+    initial_energy_level : float
+        Initial energy level to consider when accounting for load shifting
+        energy limits in the optimization model
+
     time_increment: list of int or float
         Defines the time resolution; if nothing is given, a default value of
          1 for each time step is used, i.e. an hourly resolution can be
@@ -82,6 +86,7 @@ class LoadShiftOptimizationModel:
         efficiency=1,
         activate_annual_limits=False,
         max_activations=None,
+        initial_energy_level=0,
         time_increment=None,
         solver="gurobi",
     ):
@@ -136,6 +141,7 @@ class LoadShiftOptimizationModel:
                     "maximum activations at all."
                 )
             self.max_activations = max_activations
+        self.initial_energy_level = initial_energy_level
         self.model = None
         self.solver = solver
         self._setup_model()
@@ -352,6 +358,15 @@ class LoadShiftOptimizationModel:
                     rhs = model.dsm_do_level[t] - model.dsm_do_level[t - 1]
                     model.dr_storage_red.add(t, (lhs == rhs))
 
+                elif self.initial_energy_level < 0:
+                    red_level_initial = -self.initial_energy_level
+                    lhs = model.dsm_do_level[t]
+                    rhs = (
+                        self.time_increment[t] * sum(model.dsm_do_shift[h, t] for h in self.shifting_times)
+                        + red_level_initial
+                    )
+                    model.dr_storage_red.add(t, (lhs == rhs))
+
                 else:
                     lhs = model.dsm_do_level[t]
                     rhs = self.time_increment[t] * sum(model.dsm_do_shift[h, t] for h in self.shifting_times)
@@ -371,6 +386,15 @@ class LoadShiftOptimizationModel:
                     )
                     rhs = model.dsm_up_level[t] - model.dsm_up_level[t - 1]
                     model.dr_storage_inc.add(t, (lhs == rhs))
+
+                elif self.initial_energy_level > 0:
+                    inc_level_initial = self.initial_energy_level
+                    lhs = model.dsm_do_level[t]
+                    rhs = (
+                        self.time_increment[t] * sum(model.dsm_do_shift[h, t] for h in self.shifting_times)
+                        + inc_level_initial
+                    )
+                    model.dr_storage_red.add(t, (lhs == rhs))
 
                 else:
                     lhs = model.dsm_up_level[t]
