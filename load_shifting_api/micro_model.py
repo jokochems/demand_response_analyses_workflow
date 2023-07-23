@@ -25,6 +25,7 @@ class Inputs(BaseModel):
     activate_annual_limits: bool
     solver: str
     max_activations: int
+    initial_energy_level: float
 
     # Time series from file
     normalized_baseline_load: List[float]
@@ -84,6 +85,7 @@ def run_model(inputs: Inputs):
         activate_annual_limits=inputs.activate_annual_limits,
         solver=inputs.solver,
         max_activations=inputs.max_activations,
+        initial_energy_level=inputs.initial_energy_level,
     )
     extract_results(lsm, rounding_precision=4)
 
