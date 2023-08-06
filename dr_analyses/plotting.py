@@ -3,7 +3,7 @@ from typing import Dict
 import matplotlib
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, ticker
 
 from dr_analyses.workflow_routines import make_directory_if_missing
 
@@ -238,7 +238,10 @@ def plot_heat_maps(
         row_labels = param_results.index.values
         col_labels = param_results.columns.values
 
-        cbar_bounds = np.nanmax([np.nanmin(data), np.nanmax(data)]) * 1.05
+        cbar_bounds = (
+            np.nanmax([np.abs(np.nanmin(data)), np.abs(np.nanmax(data))])
+            * 1.05
+        )
         im, cbar = heatmap(
             data,
             row_labels,
@@ -247,11 +250,12 @@ def plot_heat_maps(
             vmin=-cbar_bounds,
             vmax=cbar_bounds,
             cbar_kw={"shrink": 1.0},
-            cmap="coolwarm",
+            cmap=plt.cm.get_cmap("coolwarm").reversed(),
             cbarlabel=param,
         )
+        annotate = config_plotting["annotate"]
         if annotate:
-            texts = annotate_heatmap(im, valfmt="{x:,.0f}")
+            _ = annotate_heatmap(im, valfmt="{x:,.2e}")
 
         _ = fig.tight_layout()
 
@@ -344,7 +348,7 @@ def annotate_heatmap(
         The AxesImage to be labeled.
     data: np.ndarray
         Data used to annotate.  If None, the image's data is used.  Optional.
-    valfmt: str
+    valfmt: str or matplotlib.ticker
         The format of the annotations inside the heatmap.  This should either
         use the string format method, e.g. "$ {x:.2f}", or be a
         `matplotlib.ticker.Formatter`.  Optional.
@@ -389,10 +393,13 @@ def annotate_heatmap(
         for j in range(data.shape[1]):
             kw.update(color=textcolors[int(im.norm(data[i, j]) > threshold)])
             try:
-                text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
+                # text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
+                # TODO: Check whether it works the way in comment below!
+                text = im.axes.text(j, i, abbreviate(data[i, j]), **kw)
                 texts.append(text)
             except Exception:
-                print("Failed to annotate heat map.")
+                raise
+                # print("Failed to annotate heat map.")
 
     return texts
 
@@ -402,16 +409,27 @@ def abbreviate(x: float or None) -> str:
 
     Solution is taken from this stackoverflow issue:
     https://stackoverflow.com/questions/3158132/verbally-format-a-number-in-python
+
+    with some minor modifications in terms of formatting
     """  # noqa: E501
-    if x is np.nan:
+    if isinstance(x, np.ma.core.MaskedConstant):
         return "--"
-    abbreviations = ["", "* 10^3", "* 10^6", "* 10^9", "* 10^12"]
+    x = int(x)
+    abbreviations = [
+        "",
+        r" $\times 10^{3}$",
+        r" $\times 10^{6}$",
+        r" $\times 10^{9}$",
+        r" $\times 10^{12}$",
+    ]
     thing = "1"
     a = 0
-    while len(thing) < len(str(x)) - 3:
+    # Correct for minus sign in case of negative values
+    length = len(str(x)) if x > 0 else len(str(x)) - 1
+    while len(thing) < length - 3:
         thing += "000"
         a += 1
     b = int(thing)
     thing = round(x / b, 2)
 
-    return str(thing) + " " + abbreviations[a]
+    return f"{thing}{abbreviations[a]}"
