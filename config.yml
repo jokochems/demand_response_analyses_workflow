@@ -66,6 +66,7 @@ config_plotting:
     columns_name: "dynamic tariff share"
     parameters: {"NoOfFullShiftCycles": "Number of full shift cycles in 1", "Annuity": 'Annuity in Mio. EUR'}
   x_label: None
+  annotate: True
   save_plot: True
   show_plot: False
 
