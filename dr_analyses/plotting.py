@@ -417,19 +417,19 @@ def abbreviate(x: float or None) -> str:
     x = int(x)
     abbreviations = [
         "",
-        r" $\times 10^{3}$",
-        r" $\times 10^{6}$",
-        r" $\times 10^{9}$",
-        r" $\times 10^{12}$",
+        r"\times 10^{3}",
+        r"\times 10^{6}",
+        r"\times 10^{9}",
+        r"\times 10^{12}",
     ]
     thing = "1"
     a = 0
     # Correct for minus sign in case of negative values
     length = len(str(x)) if x > 0 else len(str(x)) - 1
-    while len(thing) < length - 3:
+    while len(thing) <= length - 3:
         thing += "000"
         a += 1
     b = int(thing)
     thing = round(x / b, 2)
 
-    return f"{thing}{abbreviations[a]}"
+    return f"${thing}{abbreviations[a]}$"
