@@ -255,7 +255,7 @@ def plot_heat_maps(
         )
         annotate = config_plotting["annotate"]
         if annotate:
-            _ = annotate_heatmap(im, valfmt="{x:,.2e}")
+            _ = annotate_heatmap(im)
 
         _ = fig.tight_layout()
 
@@ -330,10 +330,9 @@ def heatmap(
 def annotate_heatmap(
     im,
     data=None,
-    valfmt="{x:,.0f}",
     textcolors=("black", "white"),
-    threshold=2,
-    use_abbreviation=True,
+    lower_threshold=0.33,
+    upper_threshold=0.67,
     **textkw,
 ):
     """A function to annotate a heatmap.
@@ -348,20 +347,14 @@ def annotate_heatmap(
         The AxesImage to be labeled.
     data: np.ndarray
         Data used to annotate.  If None, the image's data is used.  Optional.
-    valfmt: str or matplotlib.ticker
-        The format of the annotations inside the heatmap.  This should either
-        use the string format method, e.g. "$ {x:.2f}", or be a
-        `matplotlib.ticker.Formatter`.  Optional.
     textcolors: tuple
         A pair of colors.  The first is used for values below a threshold,
         the second for those above.  Optional.
-    threshold: int
-        Value in data units according to which the colors from textcolors are
-        applied.  If None (the default) uses the middle of the colormap as
-        separation.  Optional.
-    use_abbreviation: bool
-        If True, use abbreviations for numbers instead of string formatter.
-    **kwargs
+    lower_threshold: float
+        Lower threshold for text color formatting
+    upper_threshold: float
+        Upper threshold for text color formatting
+    **textkw
         All other arguments are forwarded to each call to `text` used to create
         the text labels.
     """  # noqa: E501
@@ -369,32 +362,18 @@ def annotate_heatmap(
     if not isinstance(data, (list, np.ndarray)):
         data = im.get_array()
 
-    # Normalize the threshold to the images color range.
-    if threshold is not None:
-        threshold = im.norm(threshold)
-    else:
-        threshold = im.norm(data.max()) / 2.0
-
-    # Set default alignment to center, but allow it to be
-    # overwritten by textkw.
+    # Set default alignment to center, but allow it to be overwritten by textkw.
     kw = dict(horizontalalignment="center", verticalalignment="center")
     kw.update(textkw)
-
-    # Get the formatter in case a string is supplied
-    # if use_abbreviation:
-    #     valfmt = "{x:}"
-    if isinstance(valfmt, str):
-        valfmt = matplotlib.ticker.StrMethodFormatter(valfmt)
 
     # Loop over the data and create a `Text` for each "pixel".
     # Change the text's color depending on the data.
     texts = []
     for i in range(data.shape[0]):
         for j in range(data.shape[1]):
-            kw.update(color=textcolors[int(im.norm(data[i, j]) > threshold)])
+            color_condition = int(im.norm(data[i, j]) > upper_threshold) or int(im.norm(data[i, j]) < lower_threshold)
+            kw.update(color=textcolors[color_condition])
             try:
-                # text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
-                # TODO: Check whether it works the way in comment below!
                 text = im.axes.text(j, i, abbreviate(data[i, j]), **kw)
                 texts.append(text)
             except Exception:
