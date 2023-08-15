@@ -1,9 +1,8 @@
 from typing import Dict
 
-import matplotlib
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt, ticker
+from matplotlib import pyplot as plt
 
 from dr_analyses.workflow_routines import make_directory_if_missing
 
@@ -94,7 +93,8 @@ def prepare_param_data_for_plotting(
             if config_plotting["rename_dict"]["columns"]:
                 raise UserWarning(
                     "If columns are to be renamed, "
-                    "configuration parameter 'derive_column_names' has no effect."
+                    "configuration parameter 'derive_column_names' "
+                    "has no effect."
                 )
             else:
                 param_results = param_results.rename(
@@ -371,7 +371,9 @@ def annotate_heatmap(
     texts = []
     for i in range(data.shape[0]):
         for j in range(data.shape[1]):
-            color_condition = int(im.norm(data[i, j]) > upper_threshold) or int(im.norm(data[i, j]) < lower_threshold)
+            color_condition = int(
+                im.norm(data[i, j]) > upper_threshold
+            ) or int(im.norm(data[i, j]) < lower_threshold)
             kw.update(color=textcolors[color_condition])
             try:
                 text = im.axes.text(j, i, abbreviate(data[i, j]), **kw)
