@@ -399,7 +399,6 @@ def annotate_heatmap(
                 texts.append(text)
             except Exception:
                 raise
-                # print("Failed to annotate heat map.")
 
     return texts
 
@@ -417,10 +416,10 @@ def abbreviate(x: float or None) -> str:
     x = int(x)
     abbreviations = [
         "",
-        r"\times 10^{3}",
-        r"\times 10^{6}",
-        r"\times 10^{9}",
-        r"\times 10^{12}",
+        r"\cdot 10^{3}",
+        r"\cdot 10^{6}",
+        r"\cdot 10^{9}",
+        r"\cdot 10^{12}",
     ]
     thing = "1"
     a = 0
