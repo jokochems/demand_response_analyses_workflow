@@ -1,6 +1,5 @@
 from typing import Dict
 
-import matplotlib
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -94,7 +93,8 @@ def prepare_param_data_for_plotting(
             if config_plotting["rename_dict"]["columns"]:
                 raise UserWarning(
                     "If columns are to be renamed, "
-                    "configuration parameter 'derive_column_names' has no effect."
+                    "configuration parameter 'derive_column_names' "
+                    "has no effect."
                 )
             else:
                 param_results = param_results.rename(
@@ -238,7 +238,10 @@ def plot_heat_maps(
         row_labels = param_results.index.values
         col_labels = param_results.columns.values
 
-        cbar_bounds = np.nanmax([np.nanmin(data), np.nanmax(data)]) * 1.05
+        cbar_bounds = (
+            np.nanmax([np.abs(np.nanmin(data)), np.abs(np.nanmax(data))])
+            * 1.05
+        )
         im, cbar = heatmap(
             data,
             row_labels,
@@ -247,11 +250,12 @@ def plot_heat_maps(
             vmin=-cbar_bounds,
             vmax=cbar_bounds,
             cbar_kw={"shrink": 1.0},
-            cmap="coolwarm",
+            cmap=plt.cm.get_cmap("coolwarm").reversed(),
             cbarlabel=param,
         )
+        annotate = config_plotting["annotate"]
         if annotate:
-            texts = annotate_heatmap(im, valfmt="{x:,.0f}")
+            _ = annotate_heatmap(im)
 
         _ = fig.tight_layout()
 
@@ -326,10 +330,9 @@ def heatmap(
 def annotate_heatmap(
     im,
     data=None,
-    valfmt="{x:,.0f}",
     textcolors=("black", "white"),
-    threshold=2,
-    use_abbreviation=True,
+    lower_threshold=0.33,
+    upper_threshold=0.67,
     **textkw,
 ):
     """A function to annotate a heatmap.
@@ -344,20 +347,14 @@ def annotate_heatmap(
         The AxesImage to be labeled.
     data: np.ndarray
         Data used to annotate.  If None, the image's data is used.  Optional.
-    valfmt: str
-        The format of the annotations inside the heatmap.  This should either
-        use the string format method, e.g. "$ {x:.2f}", or be a
-        `matplotlib.ticker.Formatter`.  Optional.
     textcolors: tuple
         A pair of colors.  The first is used for values below a threshold,
         the second for those above.  Optional.
-    threshold: int
-        Value in data units according to which the colors from textcolors are
-        applied.  If None (the default) uses the middle of the colormap as
-        separation.  Optional.
-    use_abbreviation: bool
-        If True, use abbreviations for numbers instead of string formatter.
-    **kwargs
+    lower_threshold: float
+        Lower threshold for text color formatting
+    upper_threshold: float
+        Upper threshold for text color formatting
+    **textkw
         All other arguments are forwarded to each call to `text` used to create
         the text labels.
     """  # noqa: E501
@@ -365,34 +362,24 @@ def annotate_heatmap(
     if not isinstance(data, (list, np.ndarray)):
         data = im.get_array()
 
-    # Normalize the threshold to the images color range.
-    if threshold is not None:
-        threshold = im.norm(threshold)
-    else:
-        threshold = im.norm(data.max()) / 2.0
-
-    # Set default alignment to center, but allow it to be
-    # overwritten by textkw.
+    # Set default alignment to center, but allow it to be overwritten by textkw.
     kw = dict(horizontalalignment="center", verticalalignment="center")
     kw.update(textkw)
-
-    # Get the formatter in case a string is supplied
-    # if use_abbreviation:
-    #     valfmt = "{x:}"
-    if isinstance(valfmt, str):
-        valfmt = matplotlib.ticker.StrMethodFormatter(valfmt)
 
     # Loop over the data and create a `Text` for each "pixel".
     # Change the text's color depending on the data.
     texts = []
     for i in range(data.shape[0]):
         for j in range(data.shape[1]):
-            kw.update(color=textcolors[int(im.norm(data[i, j]) > threshold)])
+            color_condition = int(
+                im.norm(data[i, j]) > upper_threshold
+            ) or int(im.norm(data[i, j]) < lower_threshold)
+            kw.update(color=textcolors[color_condition])
             try:
-                text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
+                text = im.axes.text(j, i, abbreviate(data[i, j]), **kw)
                 texts.append(text)
             except Exception:
-                print("Failed to annotate heat map.")
+                raise
 
     return texts
 
@@ -402,16 +389,27 @@ def abbreviate(x: float or None) -> str:
 
     Solution is taken from this stackoverflow issue:
     https://stackoverflow.com/questions/3158132/verbally-format-a-number-in-python
+
+    with some minor modifications in terms of formatting
     """  # noqa: E501
-    if x is np.nan:
+    if isinstance(x, np.ma.core.MaskedConstant):
         return "--"
-    abbreviations = ["", "* 10^3", "* 10^6", "* 10^9", "* 10^12"]
+    x = int(x)
+    abbreviations = [
+        "",
+        r"\cdot 10^{3}",
+        r"\cdot 10^{6}",
+        r"\cdot 10^{9}",
+        r"\cdot 10^{12}",
+    ]
     thing = "1"
     a = 0
-    while len(thing) < len(str(x)) - 3:
+    # Correct for minus sign in case of negative values
+    length = len(str(x)) if x > 0 else len(str(x)) - 1
+    while len(thing) <= length - 3:
         thing += "000"
         a += 1
     b = int(thing)
     thing = round(x / b, 2)
 
-    return str(thing) + " " + abbreviations[a]
+    return f"${thing}{abbreviations[a]}$"
