@@ -239,7 +239,7 @@ def plot_heat_maps(
         col_labels = param_results.columns.values
 
         cbar_bounds = (
-            np.nanmax([np.abs(np.nanmin(data)), np.abs(np.nanmax(data))])
+            np.nanmax([np.abs(np.nanquantile(data, 0.1)), np.abs(np.nanquantile(data, 0.9))])
             * 1.05
         )
         im, cbar = heatmap(
