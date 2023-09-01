@@ -182,6 +182,8 @@ def add_discounted_payments_to_results(
     """
     cont.results.reset_index(inplace=True, drop=True)
     year_index_shift = int(cont.config_workflow["investment_year"]) - 2020
+    for col in cols:
+        cont.results[f"Discounted{col}"] = 0
     for i in range(derive_lifetime_from_simulation_horizon(cont)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
             stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
@@ -189,7 +191,6 @@ def add_discounted_payments_to_results(
             stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR
 
         for col in cols:
-            cont.results[f"Discounted{col}"] = 0
             cont.results[f"Discounted{col}"].loc[
                 i * AMIRIS_TIMESTEPS_PER_YEAR : stop
             ] = cont.results[f"{col}"].loc[
