@@ -362,8 +362,8 @@ class Container:
                 float(potential_parameters["shifting_duration"])
             ),
             "InterferenceTimeInHours": interference_duration,
-            "EnergyLimitUpInMWH": interference_duration * power,
-            "EnergyLimitDownInMWH": interference_duration * power,
+            "EnergyLimitUpInMWH": interference_duration * power * 10,
+            "EnergyLimitDownInMWH": interference_duration * power * 10,
             "BaselinePeakLoadInMW": float(potential_parameters["max_cap"]),
             "MaximumActivations": int(
                 float(potential_parameters["maximum_activations_year"])
