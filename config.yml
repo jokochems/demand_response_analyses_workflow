@@ -50,6 +50,7 @@ config_workflow:
 
 # Plotting control
 config_plotting:
+  very_small_size: 10
   small_size: 12
   medium_size: 14
   bigger_size: 15

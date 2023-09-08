@@ -216,7 +216,6 @@ def plot_heat_maps(
     all_parameter_results: Dict[str, pd.DataFrame],
     config_plotting: Dict = None,
     dr_scen: str = "",
-    annotate: bool = False,
 ) -> None:
     """Plot and save an annotated heat map for given parameters"""
     if not config_plotting:
@@ -239,7 +238,12 @@ def plot_heat_maps(
         col_labels = param_results.columns.values
 
         cbar_bounds = (
-            np.nanmax([np.abs(np.nanquantile(data, 0.1)), np.abs(np.nanquantile(data, 0.9))])
+            np.nanmax(
+                [
+                    np.abs(np.nanquantile(data, 0.1)),
+                    np.abs(np.nanquantile(data, 0.9)),
+                ]
+            )
             * 1.05
         )
         im, cbar = heatmap(
@@ -255,7 +259,7 @@ def plot_heat_maps(
         )
         annotate = config_plotting["annotate"]
         if annotate:
-            _ = annotate_heatmap(im)
+            _ = annotate_heatmap(im, config_plotting)
 
         _ = fig.tight_layout()
 
@@ -329,6 +333,7 @@ def heatmap(
 
 def annotate_heatmap(
     im,
+    config_plotting: Dict,
     data=None,
     textcolors=("black", "white"),
     lower_threshold=0.33,
@@ -363,7 +368,11 @@ def annotate_heatmap(
         data = im.get_array()
 
     # Set default alignment to center, but allow it to be overwritten by textkw.
-    kw = dict(horizontalalignment="center", verticalalignment="center")
+    kw = dict(
+        horizontalalignment="center",
+        verticalalignment="center",
+        fontsize=config_plotting["very_small_size"],
+    )
     kw.update(textkw)
 
     # Loop over the data and create a `Text` for each "pixel".
