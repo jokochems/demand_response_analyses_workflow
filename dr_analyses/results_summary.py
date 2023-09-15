@@ -157,3 +157,4 @@ def add_investments_and_npv_summary(cont: Container) -> None:
     cont.summary["InvestmentExpenses"] = cont.investment_expenses
     cont.summary["NetPresentValue"] = cont.npv
     cont.summary["Annuity"] = cont.annuity
+    cont.summary["NetPresentValuePerCapacity"] = cont.npv_per_capacity

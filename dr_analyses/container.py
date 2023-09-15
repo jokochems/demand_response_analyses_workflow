@@ -231,6 +231,7 @@ class Container:
         self.cashflows = None
         self.investment_expenses = None
         self.npv = None
+        self.npv_per_capacity = None
         self.annuity = None
         self.summary = None
         self.summary_series = None
@@ -501,7 +502,11 @@ class Container:
     def add_npv(self, npv: float):
         """Save net present value (NPV) results in container object"""
         self.npv = npv
-
+    
+    def add_npv_per_capacity(self, npv_per_capacity: float):
+        """Save NPV per capacity in container object"""
+        self.npv_per_capacity = npv_per_capacity
+    
     def add_annuity(self, annuity: float):
         """Save annuity results in container object"""
         self.annuity = annuity
