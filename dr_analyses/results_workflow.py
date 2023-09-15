@@ -65,13 +65,13 @@ def check_for_rescheduling(results: pd.DataFrame):
         )
 
 
-def calculate_net_present_values(
+def calculate_net_present_value(
     cont: Container,
     dr_scen: str,
     investment_expenses: Dict,
     fixed_costs: Dict,
 ) -> float:
-    """Calculate and return net present values for demand response investments made
+    """Calculate and return net present value for demand response investment made
     :return float: net present value for the respective case
     """
     investment_expenses = investment_expenses[dr_scen.split("_", 1)[0]]
@@ -144,6 +144,16 @@ def extract_load_shifting_cashflows(
         )
 
     return cashflows
+
+
+def calculate_net_present_value_per_capacity(
+    cont: Container,
+) -> float:
+    """Calculate net present value per flexible load shifting capacity"""
+    capacity = cont.load_shifting_data["Attributes"][
+        "LoadShiftingPortfolio"
+    ]["PowerInMW"]
+    return cont.npv / capacity
 
 
 def calculate_load_shifting_annuity(cont: Container) -> float:

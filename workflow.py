@@ -19,9 +19,10 @@ from dr_analyses.results_workflow import (
     write_results,
     extract_load_shifting_cashflows,
     add_capacity_payments,
-    calculate_net_present_values,
+    calculate_net_present_value,
     add_discounted_payments_to_results,
     calculate_load_shifting_annuity,
+    calculate_net_present_value_per_capacity,
 )
 from dr_analyses.workflow_config import (
     add_args,
@@ -183,9 +184,12 @@ if __name__ == "__main__":
                     extract_load_shifting_cashflows(cont, dr_scen, fixed_costs)
                 )
                 cont.add_npv(
-                    calculate_net_present_values(
+                    calculate_net_present_value(
                         cont, dr_scen, investment_expenses, fixed_costs
                     )
+                )
+                cont.add_npv_per_capacity(
+                    calculate_net_present_value_per_capacity(cont)
                 )
                 cont.add_annuity(calculate_load_shifting_annuity(cont))
                 if config_workflow["write_results"]:
