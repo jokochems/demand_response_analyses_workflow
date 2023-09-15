@@ -150,10 +150,10 @@ def calculate_net_present_value_per_capacity(
     cont: Container,
 ) -> float:
     """Calculate net present value per flexible load shifting capacity"""
-    installed_capacity = cont.load_shifting_data["Attributes"][
+    capacity = cont.load_shifting_data["Attributes"][
         "LoadShiftingPortfolio"
     ]["PowerInMW"]
-    return cont.npv / installed_capacity
+    return cont.npv / capacity
 
 
 def calculate_load_shifting_annuity(cont: Container) -> float:
