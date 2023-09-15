@@ -85,7 +85,7 @@ def run_model(inputs: Inputs):
         activate_annual_limits=inputs.activate_annual_limits,
         solver=inputs.solver,
         max_activations=inputs.max_activations,
-        initial_energy_level=inputs.initial_energy_level,
+        initial_energy_level=0,  # inputs.initial_energy_level,
     )
     extract_results(lsm, rounding_precision=4)
 
