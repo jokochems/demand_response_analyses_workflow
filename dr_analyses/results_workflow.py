@@ -1,3 +1,4 @@
+import warnings
 from typing import Dict, List
 
 import numpy as np
@@ -33,6 +34,7 @@ def calc_load_shifting_results(cont: Container, key: str) -> None:
     results["VariableShiftingCostsFromOptimiser"] = results[
         "VariableShiftingCostsFromOptimiser"
     ].shift(periods=1)
+    check_for_rescheduling(results["VariableShiftingCostsFromOptimiser"], cont)
     results.set_index(["AgentId", "TimeStep"], inplace=True)
     results = (
         results[[col for col in results.columns if "Offered" not in col]]
@@ -49,6 +51,18 @@ def calc_load_shifting_results(cont: Container, key: str) -> None:
     )
 
     cont.set_results(results)
+
+
+def check_for_rescheduling(variable_costs: pd.Series, cont: Container):
+    """Raise a warning in case rescheduling occured"""
+    n_years = derive_lifetime_from_simulation_horizon(cont)
+    scheduling_events = variable_costs.count()
+    if scheduling_events != n_years:
+        warnings.warn(
+            "WARNING: RESCHEDULING OCCURRED!"
+            f"Simulated years: {n_years}; "
+            f"Scheduling events: {scheduling_events}"
+        )
 
 
 def calculate_net_present_values(
@@ -146,15 +160,7 @@ def calculate_load_shifting_annuity(cont: Container) -> float:
     :return float: annuity for the respective case
     """
     mode = cont.config_workflow["annuity_mode"]
-    if mode == "multiple_years":
-        n_years = derive_lifetime_from_simulation_horizon(cont)
-    elif mode == "single_year":
-        n_years = cont.config_workflow["lifetime"]
-    else:
-        raise ValueError(
-            f"`annuity_mode` must be one of ['multiple_years', 'single_year']"
-            f"You passed an invalid value: {mode}."
-        )
+    n_years = return_number_of_simulated_years(cont, mode)
     annuity_factor = calculate_annuity_factor(
         n_years, cont.config_workflow["interest_rate"]
     )
@@ -170,6 +176,21 @@ def calculate_load_shifting_annuity(cont: Container) -> float:
         annuity = invest_annuity + simulation_year_discounted_cashflow
 
     return annuity
+
+
+def return_number_of_simulated_years(cont: Container, mode: str):
+    """Return the number of simulated years"""
+    if mode == "multiple_years":
+        n_years = derive_lifetime_from_simulation_horizon(cont)
+    elif mode == "single_year":
+        n_years = cont.config_workflow["lifetime"]
+    else:
+        raise ValueError(
+            f"`annuity_mode` must be one of ['multiple_years', 'single_year']"
+            f"You passed an invalid value: {mode}."
+        )
+
+    return n_years
 
 
 def add_discounted_payments_to_results(
