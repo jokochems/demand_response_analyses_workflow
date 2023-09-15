@@ -1,3 +1,4 @@
+import warnings
 from typing import Dict, List
 
 import numpy as np
@@ -39,6 +40,7 @@ def calc_load_shifting_results(cont: Container, key: str) -> None:
         .dropna(how="all")
         .reset_index(drop=False)
     )
+    check_for_rescheduling(results)
     add_abs_values(results, ["NetAwardedPower", "StoredMWh"])
     results["ShiftCycleEnd"] = np.where(
         results["CurrentShiftTime"].diff() < 0, 1, 0
@@ -49,6 +51,18 @@ def calc_load_shifting_results(cont: Container, key: str) -> None:
     )
 
     cont.set_results(results)
+
+
+def check_for_rescheduling(results: pd.DataFrame):
+    """Raise a warning in case rescheduling occured"""
+    n_years = derive_lifetime_from_simulation_horizon(results)
+    scheduling_events = results["VariableShiftingCostsFromOptimiser"].count()
+    if scheduling_events != n_years:
+        warnings.warn(
+            "WARNING: RESCHEDULING OCCURRED!"
+            f"Simulated years: {n_years}; "
+            f"Scheduling events: {scheduling_events}"
+        )
 
 
 def calculate_net_present_values(
@@ -90,7 +104,7 @@ def extract_load_shifting_cashflows(
     payment_columns = ["TotalPayments", "CapacityPayment"]
     year_index_shift = int(cont.config_workflow["investment_year"]) - 2020
 
-    for i in range(derive_lifetime_from_simulation_horizon(cont)):
+    for i in range(derive_lifetime_from_simulation_horizon(cont.results)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
             stop = len(cont.results) - 1
         else:
@@ -146,15 +160,7 @@ def calculate_load_shifting_annuity(cont: Container) -> float:
     :return float: annuity for the respective case
     """
     mode = cont.config_workflow["annuity_mode"]
-    if mode == "multiple_years":
-        n_years = derive_lifetime_from_simulation_horizon(cont)
-    elif mode == "single_year":
-        n_years = cont.config_workflow["lifetime"]
-    else:
-        raise ValueError(
-            f"`annuity_mode` must be one of ['multiple_years', 'single_year']"
-            f"You passed an invalid value: {mode}."
-        )
+    n_years = return_number_of_simulated_years(cont, mode)
     annuity_factor = calculate_annuity_factor(
         n_years, cont.config_workflow["interest_rate"]
     )
@@ -168,8 +174,28 @@ def calculate_load_shifting_annuity(cont: Container) -> float:
             * (1 + cont.config_workflow["interest_rate"]) ** -simulated_year
         )
         annuity = invest_annuity + simulation_year_discounted_cashflow
+    else:
+        raise ValueError(
+            f"`annuity_mode` must be one of ['multiple_years', 'single_year']"
+            f"You passed an invalid value: {mode}."
+        )
 
     return annuity
+
+
+def return_number_of_simulated_years(cont: Container, mode: str):
+    """Return the number of simulated years"""
+    if mode == "multiple_years":
+        n_years = derive_lifetime_from_simulation_horizon(cont.results)
+    elif mode == "single_year":
+        n_years = cont.config_workflow["lifetime"]
+    else:
+        raise ValueError(
+            f"`annuity_mode` must be one of ['multiple_years', 'single_year']"
+            f"You passed an invalid value: {mode}."
+        )
+
+    return n_years
 
 
 def add_discounted_payments_to_results(
@@ -184,7 +210,7 @@ def add_discounted_payments_to_results(
     year_index_shift = int(cont.config_workflow["investment_year"]) - 2020
     for col in cols:
         cont.results[f"Discounted{col}"] = 0
-    for i in range(derive_lifetime_from_simulation_horizon(cont)):
+    for i in range(derive_lifetime_from_simulation_horizon(cont.results)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
             stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
         else:
@@ -286,7 +312,7 @@ def calculate_capacity_payments_from_file(
     cont: Container, capacity_charge: float
 ):
     """Calculate capacity payment obligations"""
-    for i in range(derive_lifetime_from_simulation_horizon(cont)):
+    for i in range(derive_lifetime_from_simulation_horizon(cont.results)):
         if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
             stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
         else:

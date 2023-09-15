@@ -222,9 +222,9 @@ def extract_static_price(
     return pd.concat(to_concat)
 
 
-def derive_lifetime_from_simulation_horizon(cont: Container) -> int:
+def derive_lifetime_from_simulation_horizon(results: pd.DataFrame) -> int:
     """Return the simulation horizon in years"""
-    return math.ceil(len(cont.results) / AMIRIS_TIMESTEPS_PER_YEAR)
+    return math.ceil(len(results) / AMIRIS_TIMESTEPS_PER_YEAR)
 
 
 def calculate_annuity_factor(n, interest) -> float:
