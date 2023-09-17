@@ -60,7 +60,21 @@ def plot_bar_charts(
         )
         if config_plotting["y_limits"]:
             if original_param in config_plotting["y_limits"]:
-                _ = plt.ylim(config_plotting["y_limits"][original_param])
+                if "log_y" in config_plotting["y_limits"][original_param]:
+                    if config_plotting["y_limits"][original_param]["log_y"]:
+                        _ = plt.yscale("symlog")
+                _ = plt.ylim(
+                    float(
+                        config_plotting["y_limits"][original_param]["limits"][
+                            0
+                        ]
+                    ),
+                    float(
+                        config_plotting["y_limits"][original_param]["limits"][
+                            1
+                        ]
+                    ),
+                )
         _ = ax.set_ylabel(param)
         _ = plt.tight_layout()
 
@@ -227,9 +241,9 @@ def plot_heat_maps(
     )
     make_directory_if_missing(plots_output_folder)
 
-    for param, param_results in all_parameter_results.items():
+    for original_param, param_results in all_parameter_results.items():
         param, param_results = prepare_param_data_for_plotting(
-            config_plotting, param, param_results
+            config_plotting, original_param, param_results
         )
         fig, ax = plt.subplots(figsize=config_plotting["figsize"])
 
@@ -237,15 +251,7 @@ def plot_heat_maps(
         row_labels = param_results.index.values
         col_labels = param_results.columns.values
 
-        cbar_bounds = (
-            np.nanmax(
-                [
-                    np.abs(np.nanquantile(data, 0.1)),
-                    np.abs(np.nanquantile(data, 0.9)),
-                ]
-            )
-            * 1.05
-        )
+        cbar_bounds = derive_cbar_bounds(data, config_plotting, original_param)
         im, cbar = heatmap(
             data,
             row_labels,
@@ -271,6 +277,36 @@ def plot_heat_maps(
         plt.close(fig)
         if config_plotting["show_plot"]:
             plt.show()
+
+
+def derive_cbar_bounds(
+    data: np.array, config_plotting: Dict, original_param: str
+) -> np.array:
+    """Derive the color bar bounds from data or configuration"""
+    lower_value = np.nanquantile(data, 0.1)
+    upper_value = np.nanquantile(data, 0.9)
+
+    if config_plotting["y_limits"]:
+        if original_param in config_plotting["y_limits"]:
+            lower_value = (
+                float(config_plotting["y_limits"][original_param]["limits"][0])
+                * 0.8
+            )
+            upper_value = (
+                float(config_plotting["y_limits"][original_param]["limits"][1])
+                * 0.8
+            )
+
+    cbar_bounds = (
+        np.nanmax(
+            [
+                np.abs(lower_value),
+                np.abs(upper_value),
+            ]
+        )
+        * 1.05
+    )
+    return cbar_bounds
 
 
 def heatmap(
@@ -350,6 +386,8 @@ def annotate_heatmap(
     ----------
     im: plt.AxesImage
         The AxesImage to be labeled.
+    config_plotting: Dict
+        Configuration settings for plotting
     data: np.ndarray
         Data used to annotate.  If None, the image's data is used.  Optional.
     textcolors: tuple
