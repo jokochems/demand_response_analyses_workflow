@@ -57,23 +57,79 @@ config_plotting:
   width: 10
   height: 7
   drop_list: []
+  language: "English"  # "German", "English"
   division:
     "Annuity": 1e6
+    "CapacityPaymentAfterShifting": 1e6
+    "CapacityPaymentBeforeShifting": 1e6
+    "CapacityPaymentChange": 1e6
+    "EnergyPaymentAfterShifting": 1e6
+    "EnergyPaymentBeforeShifting": 1e6
+    "EnergyPaymentChange": 1e6
+    "InvestmentExpenses": 1e6
+    "NetPresentValue": 1e6
+    "NetPresentValuePerCapacity": 1e6
+    "Net Savings": 1e6
+    "TotalPaymentAfterShifting": 1e6
+    "TotalPaymentBeforeShifting": 1e6
+    "TotalPaymentLoadChange": 1e6
+    "TotalShiftingCosts": 1e6
   y_limits:
     "NetPresentValuePerCapacity":
-      "limits": [-1e7, 1e7]
+      "limits": [-10, 10]
       "log_y": False
       "cbar_limit": 0.2
   rename_dict:
     columns: {}
     rows: {}
     derive_column_names: True
-    index_name: "capacity tariff share"
-    columns_name: "dynamic tariff share"
+    index_name:
+      "English": "capacity tariff share in %"
+      "German": "Leistungspreisanteil in %"
+    columns_name:
+      "English": "dynamic tariff share in %"
+      "German": "dynamischer Anteil des Arbeitspreises in %"
     parameters:
-      "NoOfFullShiftCycles": "Number of full shift cycles in 1"
-      "Annuity": "Annuity in Mio. EUR"
-      "NetPresentValuePerCapacity": "Net Present Value per Capacity in EUR per MW"
+      "English":
+        "Annuity": "Annuity in Mio. EUR"
+        "CapacityPaymentAfterShifting": "Capacity Payment After Shifting in Mio. EUR"
+        "CapacityPaymentBeforeShifting": "Capacity Payment Before Shifting in Mio. EUR"
+        "CapacityPaymentChange": "Change in Capacity Payment in Mio. EUR"
+        "EnergyPaymentAfterShifting": "Energy Payment After Shifting in Mio. EUR"
+        "EnergyPaymentBeforeShifting": "Energy Payment Before Shifting in Mio. EUR"
+        "EnergyPaymentChange": "Change in Energy Payment in Mio. EUR"
+        "InvestmentExpenses": "Investment Expenses in Mio. EUR"
+        "NetPresentValue": "Net Present Value in Mio. EUR"
+        "NetPresentValuePerCapacity": "Net Present Value per Capacity in Mio. EUR per MW"
+        "NetSavings": "Net Savings in Mio. EUR"
+        "NoOfFullShiftCycles": "Number of full shift cycles in 1"
+        "PeakLoadAfterShifting": "Peak Load After Shifting in MW"
+        "PeakLoadBeforeShifting": "Peak Load Before Shifting in MW"
+        "PeakLoadChange": "Change in Peak Load in MW"
+        "TotalPaymentAfterShifting": "Total Payment After Shifting in Mio. EUR"
+        "TotalPaymentBeforeShifting": "Total Payment Before Shifting in Mio. EUR"
+        "TotalPaymentChange": "Change in Total Payment in Mio. EUR"
+        "TotalShiftingCosts": "Total Variable Shifting Costs in Mio. EUR"
+      "German":
+        "Annuity": "Annuität in Mio. EUR"
+        "CapacityPaymentAfterShifting": "Leistungspreiszahlungen nach Lastverschiebung in Mio. EUR"
+        "CapacityPaymentBeforeShifting": "Leistungspreiszahlungen vor Lastverschiebung in Mio. EUR"
+        "CapacityPaymentChange": "Änderung der Leistungspreiszahlungen in Mio. EUR"
+        "EnergyPaymentAfterShifting": "Arbeitspreiszahlungen nach Lastverschiebung in Mio. EUR"
+        "EnergyPaymentBeforeShifting": "Arbeitspreiszahlungen vor Lastverschiebung in Mio. EUR"
+        "EnergyPaymentChange": "Änderung der Arbeitspreiszahlungen in Mio. EUR"
+        "InvestmentExpenses": "Investitionsausgaben in Mio. EUR"
+        "NetPresentValue": "Kapitalwert in Mio. EUR"
+        "NetPresentValuePerCapacity": "Kapitalwert pro flexibler Leistung in Mio. EUR pro MW"
+        "NetSavings": "Nettoeinsparungen in Mio. EUR"
+        "NoOfFullShiftCycles": "Anzahl der Vollverschiebezyklen in 1"
+        "PeakLoadAfterShifting": "Spitzenlast nach Lastverschiebung in MW"
+        "PeakLoadBeforeShifting": "Spitzenlast vor Lastverschiebung in MW"
+        "PeakLoadChange": "Änderung der Spitzenlast in MW"
+        "TotalPaymentAfterShifting": "Gesamte Zahlungen nach Lastverschiebung in Mio. EUR"
+        "TotalPaymentBeforeShifting": "Gesamte Zahlungen vor Lastverschiebung in Mio. EUR"
+        "TotalPaymentChange": "Änderung der gesamten Zahlungen in Mio. EUR"
+        "TotalShiftingCosts": "Gesamte variable Lastverschiebekosten in Mio. EUR"
   x_label: None
   annotate: True
   save_plot: True
