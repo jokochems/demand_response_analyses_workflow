@@ -86,7 +86,10 @@ def plot_bar_charts(
 
 
 def prepare_param_data_for_plotting(
-    config_plotting: Dict, param: str, param_results: pd.DataFrame
+    config_plotting: Dict,
+    param: str,
+    param_results: pd.DataFrame,
+    columns_renaming: bool = True,
 ):
     """Prepare param data for plotting (renaming etc.)"""
     if len(config_plotting["drop_list"]) > 0:
@@ -103,32 +106,41 @@ def prepare_param_data_for_plotting(
             index=config_plotting["rename_dict"]["rows"],
             columns=config_plotting["rename_dict"]["columns"],
         )
-        if config_plotting["rename_dict"]["derive_column_names"]:
-            if config_plotting["rename_dict"]["columns"]:
-                raise UserWarning(
-                    "If columns are to be renamed, "
-                    "configuration parameter 'derive_column_names' "
-                    "has no effect."
-                )
-            else:
-                param_results = param_results.rename(
-                    columns={
-                        col: f"{col}% dyn." for col in param_results.columns
-                    },
-                )
+        if columns_renaming:
+            if config_plotting["rename_dict"]["derive_column_names"]:
+                if config_plotting["rename_dict"]["columns"]:
+                    raise UserWarning(
+                        "If columns are to be renamed, "
+                        "configuration parameter 'derive_column_names' "
+                        "has no effect."
+                    )
+                else:
+                    param_results = param_results.rename(
+                        columns={
+                            col: f"{col}% dyn."
+                            for col in param_results.columns
+                        },
+                    )
 
         if "index_name" in config_plotting["rename_dict"].keys():
             param_results.index.name = config_plotting["rename_dict"][
                 "index_name"
-            ]
+            ][config_plotting["language"]]
         if "columns_name" in config_plotting["rename_dict"].keys():
             param_results.columns.name = config_plotting["rename_dict"][
                 "columns_name"
-            ]
+            ][config_plotting["language"]]
     if config_plotting["x_label"]:
         param_results.index.name = config_plotting["x_label"]
-    if param in config_plotting["rename_dict"]["parameters"]:
-        param = config_plotting["rename_dict"]["parameters"][param]
+    if (
+        param
+        in config_plotting["rename_dict"]["parameters"][
+            config_plotting["language"]
+        ]
+    ):
+        param = config_plotting["rename_dict"]["parameters"][
+            config_plotting["language"]
+        ][param]
 
     return param, param_results
 
@@ -243,7 +255,10 @@ def plot_heat_maps(
 
     for original_param, param_results in all_parameter_results.items():
         param, param_results = prepare_param_data_for_plotting(
-            config_plotting, original_param, param_results
+            config_plotting,
+            original_param,
+            param_results,
+            columns_renaming=False,
         )
         fig, ax = plt.subplots(figsize=config_plotting["figsize"])
 
@@ -262,6 +277,7 @@ def plot_heat_maps(
             cbar_kw={"shrink": 1.0},
             cmap=plt.cm.get_cmap("coolwarm").reversed(),
             cbarlabel=param,
+            config_plotting=config_plotting,
         )
         annotate = config_plotting["annotate"]
         if annotate:
@@ -316,7 +332,14 @@ def derive_cbar_bounds(
 
 
 def heatmap(
-    data, row_labels, col_labels, ax=None, cbar_kw={}, cbarlabel="", **kwargs
+    data,
+    row_labels,
+    col_labels,
+    ax=None,
+    cbar_kw={},
+    cbarlabel="",
+    config_plotting={},
+    **kwargs,
 ):
     """
     Create a heatmap from a numpy array and two lists of labels.
@@ -340,6 +363,8 @@ def heatmap(
         A dictionary with arguments to `matplotlib.Figure.colorbar`.  Optional.
     cbarlabel: str
         The label for the colorbar.  Optional.
+    config_plotting: Dict
+        Configuration settings for plotting
     **kwargs
         All other arguments are forwarded to `imshow`.
     """  # noqa: E501
@@ -357,8 +382,21 @@ def heatmap(
     ax.set_xticks(np.arange(data.shape[1]), labels=col_labels)
     ax.set_yticks(np.arange(data.shape[0]), labels=row_labels)
 
-    ax.set_xlabel("dynamic_share")
-    ax.set_ylabel("capacity_share")
+    if "index_name" in config_plotting["rename_dict"].keys():
+        x_label = config_plotting["rename_dict"]["columns_name"][
+            config_plotting["language"]
+        ]
+    else:
+        x_label = "dynamic_share"
+    if "columns_name" in config_plotting["rename_dict"].keys():
+        y_label = config_plotting["rename_dict"]["index_name"][
+            config_plotting["language"]
+        ]
+    else:
+        y_label = "capacity_share"
+
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
 
     # Let the horizontal axes labeling appear on top.
     ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
