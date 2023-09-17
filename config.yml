@@ -60,11 +60,10 @@ config_plotting:
   division:
     "Annuity": 1e6
   y_limits:
-    "Annuity":
-      "limits": [-50, 750]
     "NetPresentValuePerCapacity":
       "limits": [-1e7, 1e7]
-      "log_y": True
+      "log_y": False
+      "cbar_limit": 0.2
   rename_dict:
     columns: {}
     rows: {}

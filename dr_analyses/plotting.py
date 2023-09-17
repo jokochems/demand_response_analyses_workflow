@@ -288,13 +288,19 @@ def derive_cbar_bounds(
 
     if config_plotting["y_limits"]:
         if original_param in config_plotting["y_limits"]:
+            if "cbar_limit" in config_plotting["y_limits"][original_param]:
+                cbar_limit = config_plotting["y_limits"][original_param][
+                    "cbar_limit"
+                ]
+            else:
+                cbar_limit = 0.8
             lower_value = (
                 float(config_plotting["y_limits"][original_param]["limits"][0])
-                * 0.8
+                * cbar_limit
             )
             upper_value = (
                 float(config_plotting["y_limits"][original_param]["limits"][1])
-                * 0.8
+                * cbar_limit
             )
 
     cbar_bounds = (
