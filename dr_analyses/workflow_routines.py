@@ -1,4 +1,6 @@
+import logging as log
 import os
+import pathlib as pt
 import shutil
 from typing import List, Dict
 
@@ -7,11 +9,11 @@ import pandas as pd
 import yaml
 from fameio.scripts.convert_results import run as convert_results
 from fameio.scripts.make_config import run as make_config
+from fameio.source import PathResolver
 from fameio.source.cli import Options
-from fameio.source.loader import load_yaml
+from fameio.source.loader import load_yaml, make_yaml_loader_builder
 
 from dr_analyses.container import Container, replace_value
-
 
 FLH_ASSERTIONS = {
     "hoho_cluster_shift_only": "smaller",
@@ -52,6 +54,18 @@ def get_all_yaml_files_in_folder_except(
         if file.endswith(".yaml")
         if file not in file_list
     ]
+
+
+def load_yaml_file(yaml_file_path: str, path_resolver=PathResolver()):
+    """Load a yaml file
+
+    Duplicate of from fameio.source.loader.load_yaml
+    except for making encoding explicit
+    """
+    log.info("Loading yaml from {}".format(yaml_file_path))
+    with open(pt.Path(yaml_file_path), "r", encoding="utf-8") as configfile:
+        data = yaml.load(configfile, make_yaml_loader_builder(path_resolver))
+    return data
 
 
 def prepare_tariff_configs(config: Dict, dr_scen: str) -> None:

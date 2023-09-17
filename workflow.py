@@ -1,5 +1,3 @@
-from fameio.source.loader import load_yaml
-
 from dr_analyses.container import Container
 from dr_analyses.cross_scenario_evaluation import (
     concat_results,
@@ -44,12 +42,13 @@ from dr_analyses.workflow_routines import (
     store_price_forecast_from_baseline,
     read_investment_results_template,
     prepare_tariffs_from_workflow,
+    load_yaml_file,
 )
 from load_shifting_api.main import LoadShiftingApiThread
 
 if __name__ == "__main__":
     args = add_args()
-    config_file = load_yaml(args.file)
+    config_file = load_yaml_file(args.file)
     config_workflow = extract_simple_config(config_file, "config_workflow")
     config_plotting = extract_config_plotting(config_file)
     config_make = extract_fame_config(config_file, "config_make")
