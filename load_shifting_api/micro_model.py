@@ -26,6 +26,7 @@ class Inputs(BaseModel):
     solver: str
     max_activations: int
     initial_energy_level: float
+    price_sensitivity: float
 
     # Time series from file
     normalized_baseline_load: List[float]
@@ -86,6 +87,7 @@ def run_model(inputs: Inputs):
         solver=inputs.solver,
         max_activations=inputs.max_activations,
         initial_energy_level=0,  # inputs.initial_energy_level,
+        price_sensitivity=inputs.price_sensitivity,
     )
     extract_results(lsm, rounding_precision=4)
 

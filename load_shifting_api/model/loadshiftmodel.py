@@ -87,6 +87,7 @@ class LoadShiftOptimizationModel:
         activate_annual_limits=False,
         max_activations=None,
         initial_energy_level=0,
+        price_sensitivity=0,
         time_increment=None,
         solver="gurobi",
     ):
@@ -142,6 +143,7 @@ class LoadShiftOptimizationModel:
                 )
             self.max_activations = max_activations
         self.initial_energy_level = initial_energy_level
+        self.price_sensitivity = price_sensitivity
         self.model = None
         self.solver = solver
         self._setup_model()
