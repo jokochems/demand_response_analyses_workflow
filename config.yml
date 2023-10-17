@@ -68,7 +68,7 @@ config_plotting:
     "EnergyPaymentChange": 1e6
     "InvestmentExpenses": 1e6
     "NetPresentValue": 1e6
-    "NetPresentValuePerCapacity": 1e6
+    "NetPresentValuePerCapacity": 1e3
     "Net Savings": 1e6
     "TotalPaymentAfterShifting": 1e6
     "TotalPaymentBeforeShifting": 1e6
@@ -100,7 +100,7 @@ config_plotting:
         "EnergyPaymentChange": "Change in Energy Payment in Mio. EUR"
         "InvestmentExpenses": "Investment Expenses in Mio. EUR"
         "NetPresentValue": "Net Present Value in Mio. EUR"
-        "NetPresentValuePerCapacity": "Net Present Value per Capacity in Mio. EUR per MW"
+        "NetPresentValuePerCapacity": "Net Present Value per Capacity in thousand EUR per MW"
         "NetSavings": "Net Savings in Mio. EUR"
         "NoOfFullShiftCycles": "Number of full shift cycles in 1"
         "PeakLoadAfterShifting": "Peak Load After Shifting in MW"
@@ -120,7 +120,7 @@ config_plotting:
         "EnergyPaymentChange": "Änderung der Arbeitspreiszahlungen in Mio. EUR"
         "InvestmentExpenses": "Investitionsausgaben in Mio. EUR"
         "NetPresentValue": "Kapitalwert in Mio. EUR"
-        "NetPresentValuePerCapacity": "Kapitalwert pro flexibler Leistung in Mio. EUR pro MW"
+        "NetPresentValuePerCapacity": "Kapitalwert pro flexibler Leistung in TEUR pro MW"
         "NetSavings": "Nettoeinsparungen in Mio. EUR"
         "NoOfFullShiftCycles": "Anzahl der Vollverschiebezyklen in 1"
         "PeakLoadAfterShifting": "Spitzenlast nach Lastverschiebung in MW"
