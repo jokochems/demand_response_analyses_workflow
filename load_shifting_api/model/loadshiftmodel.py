@@ -596,8 +596,11 @@ class LoadShiftOptimizationModel:
 
             overall_energy_costs += sum(
                 (
-                    model.demand_after[t] * self.energy_price[t]
-                    + model.demand_change[t] * self.price_sensitivity[t]
+                    model.demand_after[t]
+                    * (
+                        self.energy_price[t]
+                        + model.demand_change[t] * self.price_sensitivity[t]
+                    )
                 )
                 * self.time_increment
                 for t in model.T

@@ -377,6 +377,13 @@ class Container:
             group="LoadShiftingPortfolio",
         )
 
+    def replace_price_sensitivity_for_load_shifting(self):
+        """Replace given price sensitivity time series for load shifting"""
+        load_shifting_trader = self.get_agents_by_type("LoadShiftingTrader")[0]
+        load_shifting_trader["Attributes"]["Strategy"]["Api"][
+            "PriceSensitivityEstimate"
+        ] = "./calculations/price_sensitivity/price_sensitivity_estimate_hourly_values.csv"
+
     def read_parameter_info(
         self, key: str, file_name: str, sep: str = ",", header: int = 0
     ) -> pd.DataFrame:
@@ -502,11 +509,11 @@ class Container:
     def add_npv(self, npv: float):
         """Save net present value (NPV) results in container object"""
         self.npv = npv
-    
+
     def add_npv_per_capacity(self, npv_per_capacity: float):
         """Save NPV per capacity in container object"""
         self.npv_per_capacity = npv_per_capacity
-    
+
     def add_annuity(self, annuity: float):
         """Save annuity results in container object"""
         self.annuity = annuity

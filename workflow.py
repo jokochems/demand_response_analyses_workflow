@@ -103,8 +103,6 @@ if __name__ == "__main__":
             ] = service_url
 
         for dr_scen, scenario in scenario_files.items():
-            if dr_scen == "95_0_dynamic_100_LP":
-                pass  # TODO: Update param to account for price repercussion!
             dr_scen_short = dr_scen.split("_", 1)[0]
             cont = Container(
                 scenario,
@@ -130,6 +128,8 @@ if __name__ == "__main__":
                 if config_workflow["tariff_config"]["mode"] == "from_workflow":
                     prepare_tariffs_from_workflow(cont, templates)
                 cont.add_load_shifting_config(dr_scen, templates)
+                if dr_scen == "95_0_dynamic_100_LP":
+                    cont.replace_price_sensitivity_for_load_shifting()
                 cont.update_price_forecast(dr_scen)
                 cont.change_contract_location(
                     f"{cont.config_workflow['input_folder']}/contracts_w_dr"
