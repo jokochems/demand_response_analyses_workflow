@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from scipy import stats
 
+from dr_analyses.workflow_routines import make_directory_if_missing
+
 PATH_IN = r"Y:\koch_j0\amiris\demand_response\demand_response_analyses_workflow\results\ind_cluster_shift_only\95\scenario_w_dr_95_100_dynamic_0_LP"  # noqa: E501
 PATH_OUT = "./calculations/price_sensitivity/"
 FILE_NAME = r"EnergyExchangeMulti_ind_shift_only_95_100_dyn_0_LP_MO_price_sensitivity.xlsx"
@@ -22,7 +24,13 @@ def analyse_price_sensitivity(path: str, file_name: str):
     slope.to_csv(f"{PATH_OUT}price_sensitivity_estimate.csv", sep=";")
     slope = slope.astype("float64")
     slope_hourly = resample_to_hourly_frequency(slope)
-    slope_hourly.to_csv(f"{PATH_OUT}price_sensitivity_estimate_hourly.csv", sep=";", header=False)
+    slope_hourly.columns = ["hourly_values"]
+    convert_time_series_index_to_fame_time(
+        slope_hourly,
+        save=True,
+        path=PATH_OUT,
+        filename="price_sensitivity_estimate",
+    )
 
 
 def create_price_sensitivity_scatter_plot(filtered: pd.DataFrame, val: str):
@@ -158,6 +166,81 @@ def is_leap_year(year):
         leap_year = True
 
     return leap_year
+
+
+def convert_time_series_index_to_fame_time(
+    time_series: pd.DataFrame,
+    save: bool = False,
+    path: str = "./data_out/amiris/",
+    filename: str = "time_series",
+) -> pd.DataFrame:
+    """Convert index of given time series to FAME time format
+
+    Parameters
+    ----------
+    time_series: pd.DataFrame
+        DataFrame to be converted
+
+    save: boolean
+        If True, save converted data to disk
+
+    path: str
+        Path to store the data
+
+    filename: str
+        File name of the data
+
+    Returns
+    -------
+    time_series_reindexed: pd.DataFrame
+        manipulated DataFrame with FAME time stamps
+    """
+    time_series_reindexed = time_series.copy()
+    time_series_reindexed.index = time_series_reindexed.index.astype(str)
+    time_series_reindexed.index = time_series_reindexed.index.str.replace(
+        " ", "_"
+    )
+
+    if save:
+        save_given_data_set_for_fame(time_series_reindexed, path, filename)
+
+    return time_series_reindexed
+
+
+def save_given_data_set_for_fame(
+    data_set: pd.DataFrame or pd.Series, path: str, filename: str
+):
+    """Save a given data set using FAME time and formatting
+
+    Parameters
+    ----------
+    data_set: pd.DataFrame or pd.Series
+        Data set to be saved (column-wise)
+
+    path: str
+        Path to store the data
+
+    filename: str
+        File name for storing
+    """
+    make_directory_if_missing(path)
+    if isinstance(data_set, pd.DataFrame):
+        if not isinstance(data_set.columns, pd.MultiIndex):
+            for col in data_set.columns:
+                data_set[col].to_csv(
+                    f"{path}{filename}_{col}.csv", header=False, sep=";"
+                )
+        else:
+            for col in data_set.columns:
+                data_set[col].to_csv(
+                    f"{path}{filename}_{col[0]}_{col[1]}.csv",
+                    header=False,
+                    sep=";",
+                )
+    elif isinstance(data_set, pd.Series):
+        data_set.to_csv(f"{path}{filename}.csv", header=False, sep=";")
+    else:
+        raise ValueError("Data set must be of type pd.DataFrame or pd.Series.")
 
 
 if __name__ == "__main__":
