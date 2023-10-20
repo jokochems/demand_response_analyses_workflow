@@ -26,13 +26,13 @@ class Inputs(BaseModel):
     solver: str
     max_activations: int
     initial_energy_level: float
-    price_sensitivity: float
 
     # Time series from file
     normalized_baseline_load: List[float]
     energy_price: List[float]
     availability_up: List[float]
     availability_down: List[float]
+    price_sensitivity: List[float]
 
 
 class ModelResponse(BaseModel):
@@ -82,12 +82,12 @@ def run_model(inputs: Inputs):
         peak_demand_before=inputs.peak_demand_before,
         max_capacity_down=inputs.max_capacity_down,
         max_capacity_up=inputs.max_capacity_up,
+        price_sensitivity=inputs.price_sensitivity,
         efficiency=inputs.efficiency,
         activate_annual_limits=inputs.activate_annual_limits,
         solver=inputs.solver,
         max_activations=inputs.max_activations,
         initial_energy_level=0,  # inputs.initial_energy_level,
-        price_sensitivity=inputs.price_sensitivity,
     )
     extract_results(lsm, rounding_precision=4)
 

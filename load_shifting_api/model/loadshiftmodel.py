@@ -83,11 +83,11 @@ class LoadShiftOptimizationModel:
         peak_demand_before,
         max_capacity_down,
         max_capacity_up,
+        price_sensitivity,
         efficiency=1,
         activate_annual_limits=False,
         max_activations=None,
         initial_energy_level=0,
-        price_sensitivity=0,
         time_increment=None,
         solver="gurobi",
     ):
@@ -109,6 +109,7 @@ class LoadShiftOptimizationModel:
         self.energy_price = energy_price
         self.availability_up = availability_up
         self.availability_down = availability_down
+        self.price_sensitivity = price_sensitivity
 
         # Parameters
         self.peak_load_price = peak_load_price
@@ -143,7 +144,6 @@ class LoadShiftOptimizationModel:
                 )
             self.max_activations = max_activations
         self.initial_energy_level = initial_energy_level
-        self.price_sensitivity = price_sensitivity
         self.model = None
         self.solver = solver
         self._setup_model()
@@ -213,6 +213,13 @@ class LoadShiftOptimizationModel:
             doc="balancing of capacity shifted upwards",
         )
 
+        model.demand_change = pyo.Var(
+            model.T,
+            initialize=0,
+            within=pyo.NonNegativeReals,
+            doc="change in demand due to shifting",
+        )
+
         model.dsm_do_level = pyo.Var(
             model.T,
             initialize=0,
@@ -237,23 +244,46 @@ class LoadShiftOptimizationModel:
                 model.peak_load_definition.add(t, (lhs >= rhs))
 
         model.peak_load_definition = pyo.Constraint(model.T, noruleinit=True)
-        model.peak_load_definition_build = pyo.BuildAction(rule=_peak_load_definition_rule)
+        model.peak_load_definition_build = pyo.BuildAction(
+            rule=_peak_load_definition_rule
+        )
 
-        def _demand_after_definition_rule(model):
-            """Relation determining actual demand after demand response"""
+        def _demand_change_defition_rule(model):
+            """Demand change is the sum of upshifts minus downshifts"""
             for t in model.T:
-                lhs = model.demand_after[t]
-                rhs = self.normalized_baseline_load[t] * self.peak_demand_before + sum(
+                lhs = model.demand_change[t]
+                rhs = sum(
                     model.dsm_up[h, t]
                     + model.balance_dsm_do[h, t]
                     - model.dsm_do_shift[h, t]
                     - model.balance_dsm_up[h, t]
                     for h in self.shifting_times
                 )
+                model.demand_change_definition.add(t, (lhs == rhs))
+
+        model.demand_change_definition = pyo.Constraint(
+            model.T, noruleinit=True
+        )
+        model.demand_change_definition_build = pyo.BuildAction(
+            rule=_demand_change_defition_rule
+        )
+
+        def _demand_after_definition_rule(model):
+            """Relation determining actual demand after demand response"""
+            for t in model.T:
+                lhs = model.demand_after[t]
+                rhs = (
+                    self.normalized_baseline_load[t] * self.peak_demand_before
+                    + model.demand_change[t]
+                )
                 model.demand_after_definition.add(t, (lhs == rhs))
 
-        model.demand_after_definition = pyo.Constraint(model.T, noruleinit=True)
-        model.demand_after_definition_build = pyo.BuildAction(rule=_demand_after_definition_rule)
+        model.demand_after_definition = pyo.Constraint(
+            model.T, noruleinit=True
+        )
+        model.demand_after_definition_build = pyo.BuildAction(
+            rule=_demand_after_definition_rule
+        )
 
         def _capacity_balance_red_rule(model):
             """Load reduction must be balanced by load increase
@@ -272,8 +302,12 @@ class LoadShiftOptimizationModel:
                         rhs = 0
                         model.capacity_balance_red.add((h, t), (lhs == rhs))
 
-        model.capacity_balance_red = pyo.Constraint(model.H, model.T, noruleinit=True)
-        model.capacity_balance_red_build = pyo.BuildAction(rule=_capacity_balance_red_rule)
+        model.capacity_balance_red = pyo.Constraint(
+            model.H, model.T, noruleinit=True
+        )
+        model.capacity_balance_red_build = pyo.BuildAction(
+            rule=_capacity_balance_red_rule
+        )
 
         def _capacity_balance_inc_rule(model):
             """Load increase must be balanced by load reduction
@@ -292,8 +326,12 @@ class LoadShiftOptimizationModel:
                         rhs = 0
                         model.capacity_balance_inc.add((h, t), (lhs == rhs))
 
-        model.capacity_balance_inc = pyo.Constraint(model.H, model.T, noruleinit=True)
-        model.capacity_balance_inc_build = pyo.BuildAction(rule=_capacity_balance_inc_rule)
+        model.capacity_balance_inc = pyo.Constraint(
+            model.H, model.T, noruleinit=True
+        )
+        model.capacity_balance_inc_build = pyo.BuildAction(
+            rule=_capacity_balance_inc_rule
+        )
 
         def _no_compensation_red_rule(model):
             """Prevent downwards shifts that cannot be balanced anymore
@@ -307,8 +345,12 @@ class LoadShiftOptimizationModel:
                         rhs = 0
                         model.no_compensation_red.add((h, t), (lhs == rhs))
 
-        model.no_compensation_red = pyo.Constraint(model.H, model.T, noruleinit=True)
-        model.no_compensation_red_build = pyo.BuildAction(rule=_no_compensation_red_rule)
+        model.no_compensation_red = pyo.Constraint(
+            model.H, model.T, noruleinit=True
+        )
+        model.no_compensation_red_build = pyo.BuildAction(
+            rule=_no_compensation_red_rule
+        )
 
         def _no_compensation_inc_rule(model):
             """Prevent upwards shifts that cannot be balanced anymore
@@ -322,30 +364,44 @@ class LoadShiftOptimizationModel:
                         rhs = 0
                         model.no_compensation_inc.add((h, t), (lhs == rhs))
 
-        model.no_compensation_inc = pyo.Constraint(model.H, model.T, noruleinit=True)
-        model.no_compensation_inc_build = pyo.BuildAction(rule=_no_compensation_inc_rule)
+        model.no_compensation_inc = pyo.Constraint(
+            model.H, model.T, noruleinit=True
+        )
+        model.no_compensation_inc_build = pyo.BuildAction(
+            rule=_no_compensation_inc_rule
+        )
 
         def _availability_red_rule(model):
             """Load reduction must be smaller than or equal to the
             (time-dependent) capacity limit"""
             for t in model.T:
-                lhs = sum(model.dsm_do_shift[h, t] + model.balance_dsm_up[h, t] for h in self.shifting_times)
+                lhs = sum(
+                    model.dsm_do_shift[h, t] + model.balance_dsm_up[h, t]
+                    for h in self.shifting_times
+                )
                 rhs = self.availability_down[t] * self.max_capacity_down
                 model.availability_red.add(t, (lhs <= rhs))
 
         model.availability_red = pyo.Constraint(model.T, noruleinit=True)
-        model.availability_red_build = pyo.BuildAction(rule=_availability_red_rule)
+        model.availability_red_build = pyo.BuildAction(
+            rule=_availability_red_rule
+        )
 
         def _availability_inc_rule(model):
             """Load increase must be smaller than or equal to the
             (time-dependent) capacity limit"""
             for t in model.T:
-                lhs = sum(model.dsm_up[h, t] + model.balance_dsm_do[h, t] for h in self.shifting_times)
+                lhs = sum(
+                    model.dsm_up[h, t] + model.balance_dsm_do[h, t]
+                    for h in self.shifting_times
+                )
                 rhs = self.availability_up[t] * self.max_capacity_up
                 model.availability_inc.add(t, (lhs <= rhs))
 
         model.availability_inc = pyo.Constraint(model.T, noruleinit=True)
-        model.availability_inc_build = pyo.BuildAction(rule=_availability_inc_rule)
+        model.availability_inc_build = pyo.BuildAction(
+            rule=_availability_inc_rule
+        )
 
         def _dr_storage_red_rule(model):
             """Fictitious demand response storage level for load reductions
@@ -354,7 +410,10 @@ class LoadShiftOptimizationModel:
                 # avoid time steps prior to t = 0
                 if t > 0:
                     lhs = self.time_increment[t] * sum(
-                        (model.dsm_do_shift[h, t] - model.balance_dsm_do[h, t] * self.efficiency)
+                        (
+                            model.dsm_do_shift[h, t]
+                            - model.balance_dsm_do[h, t] * self.efficiency
+                        )
                         for h in self.shifting_times
                     )
                     rhs = model.dsm_do_level[t] - model.dsm_do_level[t - 1]
@@ -364,14 +423,20 @@ class LoadShiftOptimizationModel:
                     red_level_initial = -self.initial_energy_level
                     lhs = model.dsm_do_level[t]
                     rhs = (
-                        self.time_increment[t] * sum(model.dsm_do_shift[h, t] for h in self.shifting_times)
+                        self.time_increment[t]
+                        * sum(
+                            model.dsm_do_shift[h, t]
+                            for h in self.shifting_times
+                        )
                         + red_level_initial
                     )
                     model.dr_storage_red.add(t, (lhs == rhs))
 
                 else:
                     lhs = model.dsm_do_level[t]
-                    rhs = self.time_increment[t] * sum(model.dsm_do_shift[h, t] for h in self.shifting_times)
+                    rhs = self.time_increment[t] * sum(
+                        model.dsm_do_shift[h, t] for h in self.shifting_times
+                    )
                     model.dr_storage_red.add(t, (lhs == rhs))
 
         model.dr_storage_red = pyo.Constraint(model.T, noruleinit=True)
@@ -384,7 +449,11 @@ class LoadShiftOptimizationModel:
                 # avoid time steps prior to t = 0
                 if t > 0:
                     lhs = self.time_increment[t] * sum(
-                        (model.dsm_up[h, t] * self.efficiency - model.balance_dsm_up[h, t]) for h in self.shifting_times
+                        (
+                            model.dsm_up[h, t] * self.efficiency
+                            - model.balance_dsm_up[h, t]
+                        )
+                        for h in self.shifting_times
                     )
                     rhs = model.dsm_up_level[t] - model.dsm_up_level[t - 1]
                     model.dr_storage_inc.add(t, (lhs == rhs))
@@ -393,14 +462,20 @@ class LoadShiftOptimizationModel:
                     inc_level_initial = self.initial_energy_level
                     lhs = model.dsm_do_level[t]
                     rhs = (
-                        self.time_increment[t] * sum(model.dsm_do_shift[h, t] for h in self.shifting_times)
+                        self.time_increment[t]
+                        * sum(
+                            model.dsm_do_shift[h, t]
+                            for h in self.shifting_times
+                        )
                         + inc_level_initial
                     )
                     model.dr_storage_red.add(t, (lhs == rhs))
 
                 else:
                     lhs = model.dsm_up_level[t]
-                    rhs = self.time_increment[t] * sum(model.dsm_up[h, t] for h in self.shifting_times)
+                    rhs = self.time_increment[t] * sum(
+                        model.dsm_up[h, t] for h in self.shifting_times
+                    )
                     model.dr_storage_inc.add(t, (lhs == rhs))
 
         model.dr_storage_inc = pyo.Constraint(model.T, noruleinit=True)
@@ -410,21 +485,33 @@ class LoadShiftOptimizationModel:
             """Fictitious demand response storage level for reduction limit"""
             for t in model.T:
                 lhs = model.dsm_do_level[t]
-                rhs = self.availability_down_mean * self.max_capacity_down * self.interference_time
+                rhs = (
+                    self.availability_down_mean
+                    * self.max_capacity_down
+                    * self.interference_time
+                )
                 model.dr_storage_limit_red.add(t, (lhs <= rhs))
 
         model.dr_storage_limit_red = pyo.Constraint(model.T, noruleinit=True)
-        model.dr_storage_level_red_build = pyo.BuildAction(rule=_dr_storage_limit_red_rule)
+        model.dr_storage_level_red_build = pyo.BuildAction(
+            rule=_dr_storage_limit_red_rule
+        )
 
         def _dr_storage_limit_inc_rule(model):
             """Fictitious demand response storage level for increase limit"""
             for t in model.T:
                 lhs = model.dsm_up_level[t]
-                rhs = self.availability_up_mean * self.max_capacity_up * self.interference_time
+                rhs = (
+                    self.availability_up_mean
+                    * self.max_capacity_up
+                    * self.interference_time
+                )
                 model.dr_storage_limit_inc.add(t, (lhs <= rhs))
 
         model.dr_storage_limit_inc = pyo.Constraint(model.T, noruleinit=True)
-        model.dr_storage_level_inc_build = pyo.BuildAction(rule=_dr_storage_limit_inc_rule)
+        model.dr_storage_level_inc_build = pyo.BuildAction(
+            rule=_dr_storage_limit_inc_rule
+        )
 
         def _dr_logical_constraint_rule(model):
             """Similar to equation 10 from Zerrahn and Schill (2015):
@@ -447,7 +534,9 @@ class LoadShiftOptimizationModel:
                 model.dr_logical_constraint.add(t, (lhs <= rhs))
 
         model.dr_logical_constraint = pyo.Constraint(model.T, noruleinit=True)
-        model.dr_logical_constraint_build = pyo.BuildAction(rule=_dr_logical_constraint_rule)
+        model.dr_logical_constraint_build = pyo.BuildAction(
+            rule=_dr_logical_constraint_rule
+        )
 
         # ************* Optional Constraints *****************************
 
@@ -455,29 +544,47 @@ class LoadShiftOptimizationModel:
             """Introduce overall annual (energy) limit for load reductions
             resp. overall limit for optimization timeframe considered"""
             if self.activate_annual_limits:
-                lhs = sum(sum(model.dsm_do_shift[h, t] for h in self.shifting_times) for t in model.T)
+                lhs = sum(
+                    sum(model.dsm_do_shift[h, t] for h in self.shifting_times)
+                    for t in model.T
+                )
                 rhs = (
-                    self.availability_down_mean * self.max_capacity_down * self.interference_time * self.max_activations
+                    self.availability_down_mean
+                    * self.max_capacity_down
+                    * self.interference_time
+                    * self.max_activations
                 )
                 return lhs <= rhs
 
             else:
                 return pyo.Constraint.Skip
 
-        model.dr_yearly_limit_red = pyo.Constraint(rule=_dr_yearly_limit_red_rule)
+        model.dr_yearly_limit_red = pyo.Constraint(
+            rule=_dr_yearly_limit_red_rule
+        )
 
         def _dr_yearly_limit_inc_rule(model):
             """Introduce overall annual (energy) limit for load increases
             resp. overall limit for optimization timeframe considered"""
             if self.activate_annual_limits:
-                lhs = sum(sum(model.dsm_up[h, t] for h in self.shifting_times) for t in model.T)
-                rhs = self.availability_up_mean * self.max_capacity_up * self.interference_time * self.max_activations
+                lhs = sum(
+                    sum(model.dsm_up[h, t] for h in self.shifting_times)
+                    for t in model.T
+                )
+                rhs = (
+                    self.availability_up_mean
+                    * self.max_capacity_up
+                    * self.interference_time
+                    * self.max_activations
+                )
                 return lhs <= rhs
 
             else:
                 return pyo.Constraint.Skip
 
-        model.dr_yearly_limit_inc = pyo.Constraint(rule=_dr_yearly_limit_inc_rule)
+        model.dr_yearly_limit_inc = pyo.Constraint(
+            rule=_dr_yearly_limit_inc_rule
+        )
 
         #  ************* OBJECTIVE ****************************
 
@@ -488,34 +595,57 @@ class LoadShiftOptimizationModel:
             overall_variable_costs = 0
 
             overall_energy_costs += sum(
-                model.demand_after[t] * self.energy_price[t] * self.time_increment[t] for t in model.T
+                (
+                    model.demand_after[t] * self.energy_price[t]
+                    + model.demand_change[t] * self.price_sensitivity[t]
+                )
+                * self.time_increment
+                for t in model.T
             )
             overall_peak_load_costs += model.peak_load * self.peak_load_price
 
             overall_variable_costs += sum(
                 (
                     sum(model.dsm_do_shift[h, t] for h in self.shifting_times)
-                    + sum(model.balance_dsm_up[h, t] for h in self.shifting_times)
+                    + sum(
+                        model.balance_dsm_up[h, t] for h in self.shifting_times
+                    )
                 )
                 * self.variable_costs_down[t]
                 * self.time_increment[t]
                 + (
                     sum(model.dsm_up[h, t] for h in self.shifting_times)
-                    + sum(model.balance_dsm_do[h, t] for h in self.shifting_times)
+                    + sum(
+                        model.balance_dsm_do[h, t] for h in self.shifting_times
+                    )
                 )
                 * self.variable_costs_up[t]
                 * self.time_increment[t]
                 for t in model.T
             )
 
-            model.overall_energy_costs = pyo.Expression(expr=overall_energy_costs)
-            model.overall_peak_load_costs = pyo.Expression(expr=overall_peak_load_costs)
-            model.overall_variable_costs = pyo.Expression(expr=overall_variable_costs)
-            model.costs = pyo.Expression(expr=(overall_energy_costs + overall_peak_load_costs + overall_variable_costs))
+            model.overall_energy_costs = pyo.Expression(
+                expr=overall_energy_costs
+            )
+            model.overall_peak_load_costs = pyo.Expression(
+                expr=overall_peak_load_costs
+            )
+            model.overall_variable_costs = pyo.Expression(
+                expr=overall_variable_costs
+            )
+            model.costs = pyo.Expression(
+                expr=(
+                    overall_energy_costs
+                    + overall_peak_load_costs
+                    + overall_variable_costs
+                )
+            )
 
             return model.costs
 
-        model.objective = pyo.Objective(rule=_objective_rule, sense=pyo.minimize)
+        model.objective = pyo.Objective(
+            rule=_objective_rule, sense=pyo.minimize
+        )
 
         self.model = model
 
