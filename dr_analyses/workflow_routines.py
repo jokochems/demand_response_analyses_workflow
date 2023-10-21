@@ -382,6 +382,14 @@ def preprocess_tariff_information(
             "Applicable Value in EUR/MWh (incl. possible reductions)",
         ]
     )
+    volumetric_network_charges = tariff_component_details.at[
+        "VolumetricNetworkChargeInEuroPerMWh",
+        "Applicable Value in EUR/MWh (incl. possible reductions)",
+    ]
+    original_tariff_excl_wholesale_network_and_capacity_price = (
+        original_tariff_excl_wholesale_and_capacity_price
+        - volumetric_network_charges
+    )
     peak_load = extract_annual_peak_load(baseline_prices_and_load)
     annual_consumption = extract_annual_consumption(baseline_prices_and_load)
     if cont.config_workflow["activate_flh_check"]:
@@ -390,14 +398,27 @@ def preprocess_tariff_information(
         )
 
     if tariff_component_details["to be calculated?"].sum() >= 1:
-        original_tariff_excl_wholesale_and_capacity_price += (
+        original_tariff_excl_wholesale_network_and_capacity_price += (
             calc_tariff_exemptions(
                 tariff_component_details, annual_consumption
             )
         )
 
+    volumetric_network_charges = pd.Series(
+        index=annual_consumption.index, data=volumetric_network_charges
+    )
     specific_capacity_payment = calculate_specific_capacity_payment(
         tariff_component_details, peak_load, annual_consumption
+    )
+    volumetric_network_charges = apply_growth_rate(
+        volumetric_network_charges,
+        cont.config_workflow,
+        "network_tariff_growth_rate",
+    )
+    specific_capacity_payment = apply_growth_rate(
+        specific_capacity_payment,
+        cont.config_workflow,
+        "network_tariff_growth_rate",
     )
 
     dr_scen_short = cont.trimmed_scenario.split("_")[3]
@@ -407,8 +428,13 @@ def preprocess_tariff_information(
     )
     tariff_info["unit"] = "EUR/MWh"
 
-    tariff_info["value"] = original_tariff_excl_wholesale_and_capacity_price
-    tariff_info["value"] += specific_capacity_payment
+    tariff_info[
+        "value"
+    ] = original_tariff_excl_wholesale_network_and_capacity_price
+    tariff_info["value"] += (
+        volumetric_network_charges + specific_capacity_payment
+    )
+    tariff_info = inflationate_tariffs(cont.config_workflow, tariff_info)
     volume_weighted_average_price = calculate_average_power_price(
         baseline_prices_and_load
     )
@@ -510,6 +536,23 @@ def calculate_specific_capacity_payment(
     )  # Price is given in €/kW * a
     overall_capacity_payment = original_capacity_charge * peak_load
     return overall_capacity_payment / annual_consumption
+
+
+def apply_growth_rate(
+    data: pd.Series, config: Dict, growth_rate: str
+) -> pd.Series:
+    """Apply a growth rate onto given Series"""
+    return data * config[growth_rate] ** (data.index.astype(int) - 2020)
+
+
+def inflationate_tariffs(
+    config: Dict, tariff_info: pd.DataFrame
+) -> pd.DataFrame:
+    """Inflationate values as we work with values in nominal terms"""
+    tariff_info["value"] = tariff_info["value"] * config["inflation_rate"] ** (
+        tariff_info.index.astype(int) - 2020
+    )
+    return tariff_info
 
 
 def calculate_tariffs_for_dr_scen(
