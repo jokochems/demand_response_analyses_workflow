@@ -603,7 +603,7 @@ class LoadShiftOptimizationModel:
                     )
                     * (
                         self.energy_price[t]
-                        + model.demand_change[t] * self.price_sensitivity[t]
+                        + (model.demand_change[t] * self.price_sensitivity[t])
                     )
                 )
                 * self.time_increment[t]
