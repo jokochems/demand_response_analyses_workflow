@@ -128,7 +128,7 @@ if __name__ == "__main__":
                 if config_workflow["tariff_config"]["mode"] == "from_workflow":
                     prepare_tariffs_from_workflow(cont, templates)
                 cont.add_load_shifting_config(dr_scen, templates)
-                if dr_scen == "95_0_dynamic_100_LP":
+                if dr_scen == "95_100_dynamic_0_LP":
                     cont.replace_price_sensitivity_for_load_shifting()
                 cont.update_price_forecast(dr_scen)
                 cont.change_contract_location(
