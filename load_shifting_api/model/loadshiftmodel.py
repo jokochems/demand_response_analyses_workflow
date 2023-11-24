@@ -216,7 +216,7 @@ class LoadShiftOptimizationModel:
         model.demand_change = pyo.Var(
             model.T,
             initialize=0,
-            within=pyo.NonNegativeReals,
+            within=pyo.Reals,
             doc="change in demand due to shifting",
         )
 
