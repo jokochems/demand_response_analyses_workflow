@@ -17,8 +17,27 @@ FILE_NAMES = {
 }
 
 
-def create_price_sensitivity_scatter_plot_new():
+def analyse_price_sensitivity(paths: dict, file_names: dict):
+    """Analyze price sensitivity on a yearly basis"""
+    residual_load = calculate_residual_load(paths["Results"], file_names)
+    consumer_energy_price = calculate_consumer_energy_price(paths, file_names)
+    create_price_sensitivity_scatter_plot(residual_load, consumer_energy_price)
+
+
+def create_price_sensitivity_scatter_plot(residual_load: pd.Series, consumer_energy_price: pd.Series):
     """Create a scatter plot for prices over residual load"""
+    for iter_year in residual_load.index.year.unique():
+        fig, ax = plt.subplots(figsize=(15, 5))
+        _ = ax.scatter(
+            x=residual_load.loc[iter_year].values,
+            y=consumer_energy_price.loc[iter_year].values,
+        )
+        _ = plt.title(f"Price sensitivity analysis for {iter_year}")
+        _ = plt.xlabel("Residual load in MWh")
+        _ = plt.ylabel("Electricity Price in €/MWh")
+        _ = plt.tight_layout()
+        _ = plt.savefig(f"{PATH_OUT}price_sensitivity_for_{iter_year}.png", dpi=300)
+        plt.close()
 
 
 def calculate_residual_load(path: str, file_names: dict):
@@ -65,40 +84,40 @@ def prepare_electricity_price(path: str, file_name: str) -> pd.Series:
     return electricity_price["ElectricityPriceInEURperMWH"]
 
 
-def analyse_price_sensitivity(path: str, file_name: str):
-    """Analyse the per year price sensitivity"""
-    data = pd.read_excel(f"{path}/{file_name}", index_col=0)
-    slope = pd.DataFrame(columns=["price_sensitivity_estimate"])
-    for val in data.index.str[:4].unique():
-        filtered = data.loc[data.index.str[:4] == val]
-        create_price_sensitivity_scatter_plot(filtered, val)
-        filtered.to_csv(f"{PATH_OUT}price_sensitivity_for_{val}.csv", sep=";")
-        slope.loc[
-            val, "price_sensitivity_estimate"
-        ] = create_price_duration_curve_plot(filtered, val)
-    slope.to_csv(f"{PATH_OUT}price_sensitivity_estimate.csv", sep=";")
-    slope = slope.astype("float64")
-    slope_hourly = resample_to_hourly_frequency(slope)
-    slope_hourly.columns = ["hourly_values"]
-    convert_time_series_index_to_fame_time(
-        slope_hourly,
-        save=True,
-        path=PATH_OUT,
-        filename="price_sensitivity_estimate",
-    )
+# def analyse_price_sensitivity(path: str, file_name: str):
+#     """Analyse the per year price sensitivity"""
+#     data = pd.read_excel(f"{path}/{file_name}", index_col=0)
+#     slope = pd.DataFrame(columns=["price_sensitivity_estimate"])
+#     for val in data.index.str[:4].unique():
+#         filtered = data.loc[data.index.str[:4] == val]
+#         create_price_sensitivity_scatter_plot(filtered, val)
+#         filtered.to_csv(f"{PATH_OUT}price_sensitivity_for_{val}.csv", sep=";")
+#         slope.loc[
+#             val, "price_sensitivity_estimate"
+#         ] = create_price_duration_curve_plot(filtered, val)
+#     slope.to_csv(f"{PATH_OUT}price_sensitivity_estimate.csv", sep=";")
+#     slope = slope.astype("float64")
+#     slope_hourly = resample_to_hourly_frequency(slope)
+#     slope_hourly.columns = ["hourly_values"]
+#     convert_time_series_index_to_fame_time(
+#         slope_hourly,
+#         save=True,
+#         path=PATH_OUT,
+#         filename="price_sensitivity_estimate",
+#     )
 
 
-def create_price_sensitivity_scatter_plot(filtered: pd.DataFrame, val: str):
-    """Create a price sensitivity scatter plot"""
-    _ = plt.scatter(
-        x=filtered["PLANNED_ElectricityPriceInEURperMWH"].values,
-        y=filtered["Price_Difference/Flex_Load"].values,
-    )
-    _ = plt.title(f"Price sensitivity for {val}")
-    _ = plt.xlabel("Electricity Price in €/MWh")
-    _ = plt.ylabel("Price sensitivity in €/MWh/MWh")
-    _ = plt.savefig(f"{PATH_OUT}price_sensitivity_for_{val}.png", dpi=300)
-    plt.close()
+# def create_price_sensitivity_scatter_plot(filtered: pd.DataFrame, val: str):
+#     """Create a price sensitivity scatter plot"""
+#     _ = plt.scatter(
+#         x=filtered["PLANNED_ElectricityPriceInEURperMWH"].values,
+#         y=filtered["Price_Difference/Flex_Load"].values,
+#     )
+#     _ = plt.title(f"Price sensitivity for {val}")
+#     _ = plt.xlabel("Electricity Price in €/MWh")
+#     _ = plt.ylabel("Price sensitivity in €/MWh/MWh")
+#     _ = plt.savefig(f"{PATH_OUT}price_sensitivity_for_{val}.png", dpi=300)
+#     plt.close()
 
 
 def create_price_duration_curve_plot(
@@ -299,7 +318,6 @@ def save_given_data_set_for_fame(
 
 
 if __name__ == "__main__":
-    residual_load = calculate_residual_load(PATHS["Results"], FILE_NAMES)
-    consumer_energy_price = calculate_consumer_energy_price(PATHS, FILE_NAMES)
+    analyse_price_sensitivity(PATHS, FILE_NAMES)
     # analyse_price_sensitivity(PATH_IN, FILE_NAME)
     pass
