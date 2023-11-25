@@ -26,6 +26,7 @@ def analyse_price_sensitivity(config: Dict, dr_scen: str):
             residual_load_iter_year,
             consumer_energy_price_iter_year,
             config,
+            dr_scen,
             iter_year,
         )
         determine_price_sensitivity_proxy(
@@ -49,7 +50,7 @@ def analyse_price_sensitivity(config: Dict, dr_scen: str):
         f"{config['input_folder']}/"
         f"{config['data_sub_folder']}/"
         f"{config['load_shifting_focus_cluster']}/"
-        f"{dr_scen.split('_', 1)[0]}"
+        f"{dr_scen.split('_', 1)[0]}/"
     )
     convert_time_series_index_to_fame_time(
         price_sensitivity,
@@ -305,9 +306,9 @@ def is_leap_year(year):
 
 def convert_time_series_index_to_fame_time(
     time_series: pd.DataFrame,
-    save: bool = False,
-    path: str = "./data_out/amiris/",
-    filename: str = "time_series",
+    save: bool,
+    path: str,
+    filename: str,
 ) -> pd.DataFrame:
     """Convert index of given time series to FAME time format
 
