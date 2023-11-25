@@ -5,9 +5,64 @@ from scipy import stats
 
 from dr_analyses.workflow_routines import make_directory_if_missing
 
-PATH_IN = r"Y:\koch_j0\amiris\demand_response\demand_response_analyses_workflow\results\ind_cluster_shift_only\95\scenario_w_dr_95_100_dynamic_0_LP"  # noqa: E501
+PATHS = {
+    "Results": r"D:\AMIRIS\demand_response_analyses_workflow\results\ind_cluster_shift_only\95\scenario_wo_dr_95",  # noqa: E501
+    "Inputs": r"D:\AMIRIS\demand_response_analyses_workflow\inputs\data\ind_cluster_shift_only\95",  # noqa: E501
+}
 PATH_OUT = "./calculations/price_sensitivity/"
-FILE_NAME = r"EnergyExchangeMulti_ind_shift_only_95_100_dyn_0_LP_MO_price_sensitivity.xlsx"
+FILE_NAMES = {
+    "EnergyExchange": "EnergyExchangeMulti.csv",
+    "DemandTrader": "DemandTrader.csv",
+    "Renewables": "VariableRenewableOperator.csv",
+}
+
+
+def create_price_sensitivity_scatter_plot_new():
+    """Create a scatter plot for prices over residual load"""
+
+
+def calculate_residual_load(path: str, file_names: dict):
+    """Calculate residual load from demand and vRES infeed"""
+    demand = pd.read_csv(f"{path}/{file_names['DemandTrader']}", sep=";")
+    demand = demand["AwardedEnergyInMWH"].dropna().reset_index(drop=True)
+    vres_infeed = pd.read_csv(f"{path}/{file_names['Renewables']}", sep=";")
+    vres_infeed = (
+        vres_infeed.loc[vres_infeed["OfferedPowerInMW"].notna()]
+        .groupby("TimeStep")
+        .sum()["OfferedPowerInMW"]
+        .reset_index(drop=True)
+    )
+    residual_load = demand - vres_infeed
+    residual_load.index = pd.date_range(start="2027-01-01 00:00", end="2027-12-31 23:00", freq="H")
+    return cut_leap_days(residual_load)
+
+
+def calculate_consumer_energy_price(paths: dict, file_names: dict):
+    """Calculate energy price considering static components and dynamic ones"""
+    static_price = prepare_tariff_series(paths['Inputs'], "static_payments_100_dynamic_0_LP_annual.csv")
+    dynamic_multiplier = prepare_tariff_series(paths['Inputs'], "dynamic_multiplier_100_dynamic_0_LP_annual.csv")
+    electricity_price = prepare_electricity_price(paths['Results'], file_names['EnergyExchange'])
+    consumer_energy_price = static_price + electricity_price * dynamic_multiplier
+    return consumer_energy_price
+
+
+def prepare_tariff_series(path: str, file_name: str) -> pd.Series:
+    """Read, reindex, resample and return tariff series"""
+    tariff_series = pd.read_csv(
+        f"{path}/{file_name}", sep=";", index_col=0, header=None
+    )
+    tariff_series.index = pd.to_datetime(tariff_series.index.str.replace("_", " "))
+    return resample_to_hourly_frequency(tariff_series[1])
+
+
+def prepare_electricity_price(path: str, file_name: str) -> pd.Series:
+    """Read and preprocess electricity price time series"""
+    electricity_price = pd.read_csv(f"{path}/{file_name}", sep=";")
+    electricity_price_index = pd.date_range(start="2027-01-01 00:00", end="2027-12-31 23:00", freq="H")
+    dummy_df = pd.DataFrame(index=electricity_price_index)
+    dummy_df = cut_leap_days(dummy_df)
+    electricity_price.index = dummy_df.index
+    return electricity_price["ElectricityPriceInEURperMWH"]
 
 
 def analyse_price_sensitivity(path: str, file_name: str):
@@ -244,4 +299,7 @@ def save_given_data_set_for_fame(
 
 
 if __name__ == "__main__":
-    analyse_price_sensitivity(PATH_IN, FILE_NAME)
+    residual_load = calculate_residual_load(PATHS["Results"], FILE_NAMES)
+    consumer_energy_price = calculate_consumer_energy_price(PATHS, FILE_NAMES)
+    # analyse_price_sensitivity(PATH_IN, FILE_NAME)
+    pass
