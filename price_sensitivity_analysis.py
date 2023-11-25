@@ -7,8 +7,6 @@ import pandas as pd
 from dr_analyses.time import create_time_index
 from dr_analyses.workflow_routines import make_directory_if_missing
 
-PATH_OUT = "./calculations/price_sensitivity/"
-
 
 def analyse_price_sensitivity(config: Dict, dr_scen: str):
     """Analyze price sensitivity for given cluster and tariff scenario"""
@@ -25,7 +23,10 @@ def analyse_price_sensitivity(config: Dict, dr_scen: str):
             str(iter_year)
         ]
         create_price_sensitivity_scatter_plot(
-            residual_load_iter_year, consumer_energy_price_iter_year, iter_year
+            residual_load_iter_year,
+            consumer_energy_price_iter_year,
+            config,
+            iter_year,
         )
         determine_price_sensitivity_proxy(
             residual_load_iter_year,
@@ -44,11 +45,17 @@ def analyse_price_sensitivity(config: Dict, dr_scen: str):
             conditions, choices, sensitivity[iter_year]["slope"]
         )
     price_sensitivity = price_sensitivity["sensitivity"]
+    path_inputs = (
+        f"{config['input_folder']}/"
+        f"{config['data_sub_folder']}/"
+        f"{config['load_shifting_focus_cluster']}/"
+        f"{dr_scen.split('_', 1)[0]}"
+    )
     convert_time_series_index_to_fame_time(
         price_sensitivity,
         save=True,
-        path=PATH_OUT,
-        filename="price_sensitivity_estimate",
+        path=path_inputs,
+        filename=f"price_sensitivity_estimate_{dr_scen}",
     )
 
 
@@ -85,13 +92,12 @@ def calculate_residual_load(config: Dict, dr_scen: str):
 
 def calculate_consumer_energy_price(config: Dict, dr_scen: str):
     """Calculate energy price considering static components and dynamic ones"""
-    dr_scen_short = dr_scen.split("_", 1)[0]
     tariff_case = dr_scen.split("_", 1)[-1]
     path_inputs = (
         f"{config['input_folder']}/"
         f"{config['data_sub_folder']}/"
         f"{config['load_shifting_focus_cluster']}/"
-        f"{dr_scen_short}"
+        f"{dr_scen.split('_', 1)[0]}"
     )
     static_price = prepare_tariff_series(
         path_inputs, f"static_payments_{tariff_case}_annual.csv"
@@ -178,9 +184,21 @@ def determine_price_sensitivity_proxy(
 
 
 def create_price_sensitivity_scatter_plot(
-    residual_load: pd.Series, consumer_energy_price: pd.Series, year: int
+    residual_load: pd.Series,
+    consumer_energy_price: pd.Series,
+    config: Dict,
+    dr_scen: str,
+    year: int,
 ):
     """Create a scatter plot for prices over residual load for given year"""
+    path_plots = (
+        f"{config['input_folder']}/"
+        f"{config['data_sub_folder']}/"
+        f"{config['load_shifting_focus_cluster']}/"
+        f"{dr_scen.split('_', 1)[0]}/"
+        f"price_sensitivity/"
+    )
+    make_directory_if_missing(path_plots)
     fig, ax = plt.subplots(figsize=(15, 5))
     _ = ax.scatter(
         x=residual_load.values,
@@ -190,7 +208,9 @@ def create_price_sensitivity_scatter_plot(
     _ = plt.xlabel("Residual load in MWh")
     _ = plt.ylabel("Electricity Price in €/MWh")
     _ = plt.tight_layout()
-    _ = plt.savefig(f"{PATH_OUT}price_sensitivity_for_{year}.png", dpi=300)
+    _ = plt.savefig(
+        f"{path_plots}price_sensitivity_for_{year}_{dr_scen}.png", dpi=300
+    )
     plt.close()
 
 
