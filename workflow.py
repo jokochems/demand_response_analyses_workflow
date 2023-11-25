@@ -131,7 +131,7 @@ if __name__ == "__main__":
                 cont.add_load_shifting_config(dr_scen, templates)
                 if dr_scen == "95_100_dynamic_0_LP":
                     analyse_price_sensitivity(cont.config_workflow, dr_scen)
-                    cont.replace_price_sensitivity_for_load_shifting()
+                    cont.replace_price_sensitivity_for_load_shifting(dr_scen)
                 cont.update_price_forecast(dr_scen)
                 cont.change_contract_location(
                     f"{cont.config_workflow['input_folder']}/contracts_w_dr"

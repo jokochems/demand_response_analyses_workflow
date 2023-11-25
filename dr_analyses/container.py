@@ -377,12 +377,18 @@ class Container:
             group="LoadShiftingPortfolio",
         )
 
-    def replace_price_sensitivity_for_load_shifting(self):
+    def replace_price_sensitivity_for_load_shifting(self, dr_scen):
         """Replace given price sensitivity time series for load shifting"""
         load_shifting_trader = self.get_agents_by_type("LoadShiftingTrader")[0]
         load_shifting_trader["Attributes"]["Strategy"]["Api"][
             "PriceSensitivityEstimate"
-        ] = "./calculations/price_sensitivity/price_sensitivity_estimate_hourly_values.csv"
+        ] = (
+            f"{self.config_workflow['input_folder']}/"
+            f"{self.config_workflow['data_sub_folder']}/"
+            f"{self.config_workflow['load_shifting_focus_cluster']}/"
+            f"{dr_scen.split('_', 1)[0]}/"
+            f"price_sensitivity_estimate_{dr_scen}.csv"
+        )
 
     def read_parameter_info(
         self, key: str, file_name: str, sep: str = ",", header: int = 0
