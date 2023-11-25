@@ -15,4 +15,3 @@ dependencies:
       - numpy-financial
       - pandas
       - openpyxl
-      - scipy
