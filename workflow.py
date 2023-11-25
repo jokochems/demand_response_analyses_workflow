@@ -45,6 +45,7 @@ from dr_analyses.workflow_routines import (
     load_yaml_file,
 )
 from load_shifting_api.main import LoadShiftingApiThread
+from price_sensitivity_analysis import analyse_price_sensitivity
 
 if __name__ == "__main__":
     args = add_args()
@@ -129,6 +130,7 @@ if __name__ == "__main__":
                     prepare_tariffs_from_workflow(cont, templates)
                 cont.add_load_shifting_config(dr_scen, templates)
                 if dr_scen == "95_100_dynamic_0_LP":
+                    analyse_price_sensitivity(cont.config_workflow, dr_scen)
                     cont.replace_price_sensitivity_for_load_shifting()
                 cont.update_price_forecast(dr_scen)
                 cont.change_contract_location(

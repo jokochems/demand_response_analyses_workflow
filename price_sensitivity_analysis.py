@@ -1,8 +1,11 @@
+from typing import Dict
+
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy import stats
 
+from dr_analyses.time import create_time_index
 from dr_analyses.workflow_routines import make_directory_if_missing
 
 PATHS = {
@@ -17,34 +20,25 @@ FILE_NAMES = {
 }
 
 
-def analyse_price_sensitivity(paths: dict, file_names: dict):
-    """Analyze price sensitivity on a yearly basis"""
-    residual_load = calculate_residual_load(paths["Results"], file_names)
-    consumer_energy_price = calculate_consumer_energy_price(paths, file_names)
+def analyse_price_sensitivity(config: Dict, dr_scen: str):
+    """Analyze price sensitivity for given cluster and tariff scenario"""
+    residual_load = calculate_residual_load(config, dr_scen)
+    consumer_energy_price = calculate_consumer_energy_price(config, dr_scen)
     create_price_sensitivity_scatter_plot(residual_load, consumer_energy_price)
 
 
-def create_price_sensitivity_scatter_plot(residual_load: pd.Series, consumer_energy_price: pd.Series):
-    """Create a scatter plot for prices over residual load"""
-    for iter_year in residual_load.index.year.unique():
-        fig, ax = plt.subplots(figsize=(15, 5))
-        _ = ax.scatter(
-            x=residual_load.loc[iter_year].values,
-            y=consumer_energy_price.loc[iter_year].values,
-        )
-        _ = plt.title(f"Price sensitivity analysis for {iter_year}")
-        _ = plt.xlabel("Residual load in MWh")
-        _ = plt.ylabel("Electricity Price in €/MWh")
-        _ = plt.tight_layout()
-        _ = plt.savefig(f"{PATH_OUT}price_sensitivity_for_{iter_year}.png", dpi=300)
-        plt.close()
-
-
-def calculate_residual_load(path: str, file_names: dict):
+def calculate_residual_load(config: Dict, dr_scen: str):
     """Calculate residual load from demand and vRES infeed"""
-    demand = pd.read_csv(f"{path}/{file_names['DemandTrader']}", sep=";")
+    dr_scen_short = dr_scen.split('_', 1)[0]
+    path_results = (
+        f"{config['output_folder']}/"
+        f"{config['load_shifting_focus_cluster']}/"
+        f"{dr_scen_short}/"
+        f"scenario_wo_dr_{dr_scen_short}"
+    )
+    demand = pd.read_csv(f"{path_results}/DemandTrader.csv", sep=";")
     demand = demand["AwardedEnergyInMWH"].dropna().reset_index(drop=True)
-    vres_infeed = pd.read_csv(f"{path}/{file_names['Renewables']}", sep=";")
+    vres_infeed = pd.read_csv(f"{path_results}/VariableRenewableOperator.csv", sep=";")
     vres_infeed = (
         vres_infeed.loc[vres_infeed["OfferedPowerInMW"].notna()]
         .groupby("TimeStep")
@@ -52,16 +46,44 @@ def calculate_residual_load(path: str, file_names: dict):
         .reset_index(drop=True)
     )
     residual_load = demand - vres_infeed
-    residual_load.index = pd.date_range(start="2027-01-01 00:00", end="2027-12-31 23:00", freq="H")
+    residual_load.index = create_time_index(
+        start_time=config["simulation"]["StartTime"],
+        end_time=config["simulation"]["StopTime"],
+    )
+    # pd.date_range(
+    #     start="2027-01-01 00:00", end="2027-12-31 23:00", freq="H"
+    # )
     return cut_leap_days(residual_load)
 
 
-def calculate_consumer_energy_price(paths: dict, file_names: dict):
+def calculate_consumer_energy_price(config: Dict, dr_scen: str):
     """Calculate energy price considering static components and dynamic ones"""
-    static_price = prepare_tariff_series(paths['Inputs'], "static_payments_100_dynamic_0_LP_annual.csv")
-    dynamic_multiplier = prepare_tariff_series(paths['Inputs'], "dynamic_multiplier_100_dynamic_0_LP_annual.csv")
-    electricity_price = prepare_electricity_price(paths['Results'], file_names['EnergyExchange'])
-    consumer_energy_price = static_price + electricity_price * dynamic_multiplier
+    dr_scen_short = dr_scen.split("_", 1)[0]
+    tariff_case = dr_scen.split("_", 1)[-1]
+    path_inputs = (
+        f"{config['input_folder']}/"
+        f"{config['data_sub_folder']}/"
+        f"{config['load_shifting_focus_cluster']}/"
+        f"{dr_scen_short}"
+    )
+    path_outputs = (
+        f"{config['output_folder']}/"
+        f"{config['load_shifting_focus_cluster']}/"
+        f"{dr_scen_short}/"
+        f"scenario_wo_dr_{dr_scen_short}"
+    )
+    static_price = prepare_tariff_series(
+        path_inputs, f"static_payments_{tariff_case}_annual.csv"
+    )
+    dynamic_multiplier = prepare_tariff_series(
+        path_inputs, f"dynamic_multiplier_{tariff_case}_annual.csv"
+    )
+    electricity_price = prepare_electricity_price(
+        path_outputs, "EnergyExchangeMulti.csv"
+    )
+    consumer_energy_price = (
+        static_price + electricity_price * dynamic_multiplier
+    )
     return consumer_energy_price
 
 
@@ -70,18 +92,42 @@ def prepare_tariff_series(path: str, file_name: str) -> pd.Series:
     tariff_series = pd.read_csv(
         f"{path}/{file_name}", sep=";", index_col=0, header=None
     )
-    tariff_series.index = pd.to_datetime(tariff_series.index.str.replace("_", " "))
+    tariff_series.index = pd.to_datetime(
+        tariff_series.index.str.replace("_", " ")
+    )
     return resample_to_hourly_frequency(tariff_series[1])
 
 
 def prepare_electricity_price(path: str, file_name: str) -> pd.Series:
     """Read and preprocess electricity price time series"""
     electricity_price = pd.read_csv(f"{path}/{file_name}", sep=";")
-    electricity_price_index = pd.date_range(start="2027-01-01 00:00", end="2027-12-31 23:00", freq="H")
+    electricity_price_index = pd.date_range(
+        start="2027-01-01 00:00", end="2027-12-31 23:00", freq="H"
+    )
     dummy_df = pd.DataFrame(index=electricity_price_index)
     dummy_df = cut_leap_days(dummy_df)
     electricity_price.index = dummy_df.index
     return electricity_price["ElectricityPriceInEURperMWH"]
+
+
+def create_price_sensitivity_scatter_plot(
+    residual_load: pd.Series, consumer_energy_price: pd.Series
+):
+    """Create a scatter plot for prices over residual load"""
+    for iter_year in residual_load.index.year.unique():
+        fig, ax = plt.subplots(figsize=(15, 5))
+        _ = ax.scatter(
+            x=residual_load.loc[str(iter_year)].values,
+            y=consumer_energy_price.loc[str(iter_year)].values,
+        )
+        _ = plt.title(f"Price sensitivity analysis for {iter_year}")
+        _ = plt.xlabel("Residual load in MWh")
+        _ = plt.ylabel("Electricity Price in €/MWh")
+        _ = plt.tight_layout()
+        _ = plt.savefig(
+            f"{PATH_OUT}price_sensitivity_for_{iter_year}.png", dpi=300
+        )
+        plt.close()
 
 
 # def analyse_price_sensitivity(path: str, file_name: str):
@@ -318,6 +364,6 @@ def save_given_data_set_for_fame(
 
 
 if __name__ == "__main__":
-    analyse_price_sensitivity(PATHS, FILE_NAMES)
+    # analyse_price_sensitivity(PATHS, FILE_NAMES)
     # analyse_price_sensitivity(PATH_IN, FILE_NAME)
     pass
