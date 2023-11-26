@@ -152,7 +152,7 @@ run_properties:
 config_convert:
   Options.LOG_LEVEL: "warn"
   Options.LOG_FILE: None
-  Options.AGENT_LIST: ["DemandTrader", "EnergyExchangeMulti", "LoadShiftingTrader"]  # None
+  Options.AGENT_LIST: ["DemandTrader", "EnergyExchangeMulti", "LoadShiftingTrader", "VariableRenewableOperator"]  # None
   Options.OUTPUT: None  # set in workflow
   Options.SINGLE_AGENT_EXPORT: False
   Options.MEMORY_SAVING: False
