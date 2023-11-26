@@ -377,7 +377,7 @@ class Container:
             group="LoadShiftingPortfolio",
         )
 
-    def replace_price_sensitivity_for_load_shifting(self, dr_scen):
+    def replace_price_sensitivity_for_load_shifting(self, dr_scen: str):
         """Replace given price sensitivity time series for load shifting"""
         load_shifting_trader = self.get_agents_by_type("LoadShiftingTrader")[0]
         load_shifting_trader["Attributes"]["Strategy"]["Api"][
@@ -389,6 +389,35 @@ class Container:
             f"{dr_scen.split('_', 1)[0]}/"
             f"price_sensitivity_estimate_{dr_scen}.csv"
         )
+
+    def evaluate_shifting_power_margins(self) -> Dict[str, float]:
+        """Determine the max upwards and downwards shifting power"""
+        load_shifting_trader = self.get_agents_by_type("LoadShiftingTrader")[0]
+        power_up_availability = pd.read_csv(
+            load_shifting_trader["Attributes"]["LoadShiftingPortfolio"][
+                "PowerUpAvailability"
+            ],
+            header=None,
+            sep=";",
+            index_col=0,
+        )
+        power_down_availability = pd.read_csv(
+            load_shifting_trader["Attributes"]["LoadShiftingPortfolio"][
+                "PowerDownAvailability"
+            ],
+            header=None,
+            sep=";",
+            index_col=0,
+        )
+        max_power_up_availability = power_up_availability.max().item()
+        max_power_down_availability = power_down_availability.max().item()
+        power = load_shifting_trader["Attributes"]["LoadShiftingPortfolio"][
+            "PowerInMW"
+        ]
+        power_margins = dict()
+        power_margins["up"] = power * max_power_up_availability
+        power_margins["down"] = power * max_power_down_availability
+        return power_margins
 
     def read_parameter_info(
         self, key: str, file_name: str, sep: str = ",", header: int = 0

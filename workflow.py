@@ -129,9 +129,6 @@ if __name__ == "__main__":
                 if config_workflow["tariff_config"]["mode"] == "from_workflow":
                     prepare_tariffs_from_workflow(cont, templates)
                 cont.add_load_shifting_config(dr_scen, templates)
-                if dr_scen == "95_100_dynamic_0_LP":
-                    analyse_price_sensitivity(cont.config_workflow, dr_scen)
-                    cont.replace_price_sensitivity_for_load_shifting(dr_scen)
                 cont.update_price_forecast(dr_scen)
                 cont.change_contract_location(
                     f"{cont.config_workflow['input_folder']}/contracts_w_dr"
@@ -148,6 +145,12 @@ if __name__ == "__main__":
             )
             cont.update_opex_for_scenario(dr_scen)
             cont.update_all_paths_with_focus_cluster()
+            if scenario != baseline_scenarios[dr_scen_short]:
+                power_margins = cont.evaluate_shifting_power_margins()
+                analyse_price_sensitivity(
+                    cont.config_workflow, dr_scen, power_margins
+                )
+                cont.replace_price_sensitivity_for_load_shifting(dr_scen)
             cont.save_scenario_yaml()
 
             if config_workflow["amiris_analyses"]["make_scenario"]:

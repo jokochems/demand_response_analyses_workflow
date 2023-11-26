@@ -8,7 +8,7 @@ from dr_analyses.time import create_time_index
 from dr_analyses.workflow_routines import make_directory_if_missing
 
 
-def analyse_price_sensitivity(config: Dict, dr_scen: str):
+def analyse_price_sensitivity(config: Dict, dr_scen: str, power_margins: Dict):
     """Analyze price sensitivity for given cluster and tariff scenario"""
     residual_load = calculate_residual_load(config, dr_scen)
     consumer_energy_price = calculate_consumer_energy_price(config, dr_scen)
@@ -34,6 +34,7 @@ def analyse_price_sensitivity(config: Dict, dr_scen: str):
             consumer_energy_price_iter_year,
             sensitivity,
             iter_year,
+            power_margins,
         )
         conditions = [
             residual_load_iter_year
@@ -153,6 +154,7 @@ def determine_price_sensitivity_proxy(
     consumer_energy_price: pd.Series,
     sensitivity: Dict,
     iter_year: int,
+    power_margins: Dict[str, float],
 ):
     """Determine a proxy for price sensitivity for a given year"""
     common_df = pd.DataFrame(
@@ -179,8 +181,8 @@ def determine_price_sensitivity_proxy(
     )
     sensitivity[iter_year] = {
         "slope": slope,
-        "residual_load_lower": residual_load_lower,
-        "residual_load_upper": residual_load_upper,
+        "residual_load_lower": residual_load_lower - power_margins["up"],
+        "residual_load_upper": residual_load_upper + power_margins["down"],
     }
 
 
