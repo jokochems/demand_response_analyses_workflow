@@ -25,25 +25,25 @@ async def call_micro_model(inputs: Inputs) -> ModelResponse:
     return micro_model_api(inputs)
 
 
-def start_server(port: int):
-    """Start web server"""
-    uvicorn.run(app, host=HOST, port=port, log_level="info")
-
-
-def find_free_port() -> int:
-    """Check for a free port and return it"""
-    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        s.bind(("", 0))
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return s.getsockname()[1]
-
-
 class LoadShiftingApiThread(threading.Thread):
+    @staticmethod
+    def start_server(port: int):
+        """Start web server"""
+        uvicorn.run(app, host=HOST, port=port, log_level="info")
+
+    @staticmethod
+    def find_free_port() -> int:
+        """Check for a free port and return it"""
+        with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+            s.bind(("", 0))
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            return s.getsockname()[1]
+
     def __init__(self):
-        threading.Thread.__init__(self)
-        self.runnable = start_server
+        super().__init__()
+        self.runnable = self.start_server
         self.daemon = True
-        self.port = find_free_port()
+        self.port = self.find_free_port()
 
     def run(self) -> None:
         self.runnable(self.port)
@@ -53,4 +53,6 @@ class LoadShiftingApiThread(threading.Thread):
 
 
 if __name__ == "__main__":
-    start_server(port=find_free_port())
+    LoadShiftingApiThread.start_server(
+        port=LoadShiftingApiThread.find_free_port()
+    )
