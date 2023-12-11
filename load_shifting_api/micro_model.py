@@ -32,6 +32,7 @@ class Inputs(BaseModel):
     energy_price: List[float]
     availability_up: List[float]
     availability_down: List[float]
+    price_sensitivity: List[float]
 
 
 class ModelResponse(BaseModel):
@@ -81,6 +82,7 @@ def run_model(inputs: Inputs):
         peak_demand_before=inputs.peak_demand_before,
         max_capacity_down=inputs.max_capacity_down,
         max_capacity_up=inputs.max_capacity_up,
+        price_sensitivity=inputs.price_sensitivity,
         efficiency=inputs.efficiency,
         activate_annual_limits=inputs.activate_annual_limits,
         solver=inputs.solver,

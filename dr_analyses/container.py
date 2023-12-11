@@ -377,6 +377,48 @@ class Container:
             group="LoadShiftingPortfolio",
         )
 
+    def replace_price_sensitivity_for_load_shifting(self, dr_scen: str):
+        """Replace given price sensitivity time series for load shifting"""
+        load_shifting_trader = self.get_agents_by_type("LoadShiftingTrader")[0]
+        load_shifting_trader["Attributes"]["Strategy"]["Api"][
+            "PriceSensitivityEstimate"
+        ] = (
+            f"{self.config_workflow['input_folder']}/"
+            f"{self.config_workflow['data_sub_folder']}/"
+            f"{self.config_workflow['load_shifting_focus_cluster']}/"
+            f"{dr_scen.split('_', 1)[0]}/"
+            f"price_sensitivity_estimate_{dr_scen}.csv"
+        )
+
+    def evaluate_shifting_power_margins(self) -> Dict[str, float]:
+        """Determine the max upwards and downwards shifting power"""
+        load_shifting_trader = self.get_agents_by_type("LoadShiftingTrader")[0]
+        power_up_availability = pd.read_csv(
+            load_shifting_trader["Attributes"]["LoadShiftingPortfolio"][
+                "PowerUpAvailability"
+            ],
+            header=None,
+            sep=";",
+            index_col=0,
+        )
+        power_down_availability = pd.read_csv(
+            load_shifting_trader["Attributes"]["LoadShiftingPortfolio"][
+                "PowerDownAvailability"
+            ],
+            header=None,
+            sep=";",
+            index_col=0,
+        )
+        max_power_up_availability = power_up_availability.max().item()
+        max_power_down_availability = power_down_availability.max().item()
+        power = load_shifting_trader["Attributes"]["LoadShiftingPortfolio"][
+            "PowerInMW"
+        ]
+        power_margins = dict()
+        power_margins["up"] = power * max_power_up_availability
+        power_margins["down"] = power * max_power_down_availability
+        return power_margins
+
     def read_parameter_info(
         self, key: str, file_name: str, sep: str = ",", header: int = 0
     ) -> pd.DataFrame:
@@ -502,11 +544,11 @@ class Container:
     def add_npv(self, npv: float):
         """Save net present value (NPV) results in container object"""
         self.npv = npv
-    
+
     def add_npv_per_capacity(self, npv_per_capacity: float):
         """Save NPV per capacity in container object"""
         self.npv_per_capacity = npv_per_capacity
-    
+
     def add_annuity(self, annuity: float):
         """Save annuity results in container object"""
         self.annuity = annuity

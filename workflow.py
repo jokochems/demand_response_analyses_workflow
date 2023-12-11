@@ -45,6 +45,7 @@ from dr_analyses.workflow_routines import (
     load_yaml_file,
 )
 from load_shifting_api.main import LoadShiftingApiThread
+from price_sensitivity_analysis import analyse_price_sensitivity
 
 if __name__ == "__main__":
     args = add_args()
@@ -144,6 +145,12 @@ if __name__ == "__main__":
             )
             cont.update_opex_for_scenario(dr_scen)
             cont.update_all_paths_with_focus_cluster()
+            if scenario != baseline_scenarios[dr_scen_short]:
+                power_margins = cont.evaluate_shifting_power_margins()
+                analyse_price_sensitivity(
+                    cont.config_workflow, dr_scen, power_margins
+                )
+                cont.replace_price_sensitivity_for_load_shifting(dr_scen)
             cont.save_scenario_yaml()
 
             if config_workflow["amiris_analyses"]["make_scenario"]:

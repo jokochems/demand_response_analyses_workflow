@@ -145,7 +145,7 @@ config_make:
 
 # AMIRIS run properties
 run_properties:
-  exe: "amiris/amiris-core_1.2.14-jar-with-dependencies.jar -Xmx16000M"
+  exe: "amiris/amiris-core_1.2.16-jar-with-dependencies.jar -Xmx16000M"
   logging: "-Dlog4j.configuration=file:amiris/log4j.properties"
   main: "de.dlr.gitlab.fame.setup.FameRunner"
   setup: "amiris/fameSetup.yaml"
@@ -154,7 +154,7 @@ run_properties:
 config_convert:
   Options.LOG_LEVEL: "warn"
   Options.LOG_FILE: None
-  Options.AGENT_LIST: ["DemandTrader", "EnergyExchangeMulti", "LoadShiftingTrader"]  # None
+  Options.AGENT_LIST: ["DemandTrader", "EnergyExchangeMulti", "LoadShiftingTrader", "VariableRenewableOperator"]  # None
   Options.OUTPUT: None  # set in workflow
   Options.SINGLE_AGENT_EXPORT: False
   Options.MEMORY_SAVING: False
