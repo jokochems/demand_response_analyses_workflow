@@ -26,7 +26,7 @@ config_workflow:
   investment_year: 2020
   interest_rate: 0.1
   inflation_rate: 1.02
-  network_tariff_growth_rate: 1.02
+  network_tariff_growth_rate: 1.07  # analytical estimate
   prepare_tariff_config: True
   simulation:
     StartTime: 2019-12-31_23:58:00  # 2026-12-31_23:58:00
