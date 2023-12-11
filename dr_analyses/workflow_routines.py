@@ -541,8 +541,15 @@ def calculate_specific_capacity_payment(
 def apply_growth_rate(
     data: pd.Series, config: Dict, growth_rate: str
 ) -> pd.Series:
-    """Apply a growth rate onto given Series"""
-    return data * config[growth_rate] ** (data.index.astype(int) - 2020)
+    """Apply a compound growth rate onto Series deriving linear development"""
+    horizon = (
+        int(config["simulation"]["StopTime"][:4])
+        + 1
+        - int(config["simulation"]["StartTime"][:4])
+    )
+    final_value = data.iloc[0].item() * config[growth_rate] ** horizon
+    slope = (final_value - data.iloc[0].item()) / (horizon - 1)
+    return data + slope * (data.index.astype(int) - 2020)
 
 
 def inflationate_tariffs(
