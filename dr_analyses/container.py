@@ -345,17 +345,20 @@ class Container:
                 float(potential_parameters["interference_duration_pos"]),
             )
         )
-        power = float(
-            self.read_parameter_info(
-                key,
-                (
-                    f"installed_capacity_ts_"
-                    f"{self.config_workflow['load_shifting_focus_cluster']}_"
-                    f"{self.config_workflow['load_shifting_focus_cluster']}.csv"
-                ),
-                sep=";",
-                header=None,
-            ).at[f"{investment_year}-01-01_00:00:00", 1]
+        power = max(
+            0.01,
+            float(
+                self.read_parameter_info(
+                    key,
+                    (
+                        f"installed_capacity_ts_"
+                        f"{self.config_workflow['load_shifting_focus_cluster']}_"
+                        f"{self.config_workflow['load_shifting_focus_cluster']}.csv"
+                    ),
+                    sep=";",
+                    header=None,
+                ).at[f"{investment_year}-01-01_00:00:00", 1]
+            ),
         )
         parameters = {
             "PowerInMW": power,
