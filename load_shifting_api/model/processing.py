@@ -3,7 +3,7 @@ from typing import List
 import pyomo.environ as pyo
 
 
-def extract_results(lsm, rounding_precision=4, tolerance=1E-4):
+def extract_results(lsm, rounding_precision=4, tolerance=1e-4):
     """Extract and add results for a solved load shift optimization model
 
     Parameters
