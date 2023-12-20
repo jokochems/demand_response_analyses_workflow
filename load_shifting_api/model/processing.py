@@ -1,7 +1,9 @@
+from typing import List
+
 import pyomo.environ as pyo
 
 
-def extract_results(lsm, rounding_precision=4):
+def extract_results(lsm, rounding_precision=4, tolerance=1e-4):
     """Extract and add results for a solved load shift optimization model
 
     Parameters
@@ -12,6 +14,9 @@ def extract_results(lsm, rounding_precision=4):
     rounding_precision: int
         Round float values to given number of digits to avoid numerical
         artifacts
+
+    tolerance : float
+        Define value to be interpreted as zero
     """
     demand_after = [
         round(pyo.value(lsm.model.demand_after[t]), rounding_precision)
@@ -49,6 +54,10 @@ def extract_results(lsm, rounding_precision=4):
         for i in zip(dsm_do_shift, balance_dsm_up)
     ]
 
+    demand_after = handle_numerical_precision(demand_after, tolerance)
+    upshift = handle_numerical_precision(upshift, tolerance)
+    downshift = handle_numerical_precision(downshift, tolerance)
+
     results = {
         "demand_after": demand_after,
         "upshift": upshift,
@@ -56,3 +65,8 @@ def extract_results(lsm, rounding_precision=4):
     }
 
     lsm.add_results(results)
+
+
+def handle_numerical_precision(data: List, numerical_tolerance: float):
+    """Force values with absolute value smaller than given tolerance to 0"""
+    return [el if abs(el) > numerical_tolerance else 0 for el in data]
