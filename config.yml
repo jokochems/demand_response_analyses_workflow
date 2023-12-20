@@ -78,7 +78,7 @@ config_plotting:
     "TotalShiftingCosts": 1e6
   y_limits:
     "NetPresentValuePerCapacity":
-      "limits": [-10000, 10000]
+      "limits": [-20000, 20000]
       "log_y": False
       "cbar_limit": 0.2
   rename_dict:
