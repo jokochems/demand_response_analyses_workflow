@@ -49,6 +49,10 @@ def calc_load_shifting_results(cont: Container, key: str) -> None:
     results["LoadAfterShifting"] = (
         results["BaselineLoadProfile"] + results["NetAwardedPower"]
     )
+    results.drop(
+        columns=["Revenues", "Costs", "VariableShiftingCosts", "Profit"],
+        inplace=True,
+    )
 
     cont.set_results(results)
 
@@ -150,9 +154,9 @@ def calculate_net_present_value_per_capacity(
     cont: Container,
 ) -> float:
     """Calculate net present value per flexible load shifting capacity"""
-    capacity = cont.load_shifting_data["Attributes"][
-        "LoadShiftingPortfolio"
-    ]["PowerInMW"]
+    capacity = cont.load_shifting_data["Attributes"]["LoadShiftingPortfolio"][
+        "PowerInMW"
+    ]
     return cont.npv / capacity
 
 
