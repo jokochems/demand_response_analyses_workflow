@@ -78,18 +78,18 @@ def plot_bar_charts(
                 )
         if config_plotting["format_axis"]:
             if param_results.max().max() >= 10:
-                _ = (
-                    ax
-                    .get_yaxis()
-                    .set_major_formatter(
-                        FuncFormatter(lambda x, p: format(int(x), ","))
-                    )
+                _ = ax.get_yaxis().set_major_formatter(
+                    FuncFormatter(lambda x, p: format(int(x), ","))
                 )
         _ = ax.set_ylabel(param)
         _ = plt.tight_layout()
 
         if config_plotting["save_plot"]:
-            _ = fig.savefig(f"{plots_output_folder}{param}_bar.png", dpi=300)
+            _ = fig.savefig(
+                f"{plots_output_folder}{param}_bar.png",
+                dpi=300,
+                bbox_inches="tight",
+            )
         plt.close(fig)
         if config_plotting["show_plot"]:
             plt.show()
@@ -291,12 +291,8 @@ def plot_heat_maps(
         )
         if config_plotting["format_axis"]:
             if data.max().max() >= 10:
-                _ = (
-                    ax
-                    .get_yaxis()
-                    .set_major_formatter(
-                        FuncFormatter(lambda x, p: format(int(x), ","))
-                    )
+                _ = ax.get_yaxis().set_major_formatter(
+                    FuncFormatter(lambda x, p: format(int(x), ","))
                 )
         annotate = config_plotting["annotate"]
         if annotate:
@@ -308,7 +304,7 @@ def plot_heat_maps(
             file_name = f"{plots_output_folder}{param}_heatmap"
             if not annotate:
                 file_name += "_no_annotations"
-            _ = fig.savefig(f"{file_name}.png", dpi=300)
+            _ = fig.savefig(f"{file_name}.png", dpi=300, bbox_inches="tight")
         plt.close(fig)
         if config_plotting["show_plot"]:
             plt.show()
