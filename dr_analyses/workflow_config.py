@@ -31,10 +31,14 @@ def extract_config_plotting(config: Dict):
     config_plotting = config["config_plotting"]
     if config_plotting["x_label"] == "None":
         config_plotting["x_label"] = None
-    config_plotting["figsize"] = (
-        config_plotting.pop("width"),
-        config_plotting.pop("height"),
-    )
+    config_plotting["figsize"] = {"bar": {}, "heatmap": {}}
+    for key in config_plotting["figsize"]:
+        config_plotting["figsize"][key] = (
+            config_plotting["width"].pop(key),
+            config_plotting["height"].pop(key),
+        )
+    _ = config_plotting.pop("width")
+    _ = config_plotting.pop("height")
 
     return config_plotting
 

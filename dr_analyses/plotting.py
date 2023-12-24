@@ -39,7 +39,7 @@ def plot_bar_charts(
         param, param_results = prepare_param_data_for_plotting(
             config_plotting, original_param, param_results
         )
-        fig, ax = plt.subplots(figsize=config_plotting["figsize"])
+        fig, ax = plt.subplots(figsize=config_plotting["figsize"]["bar"])
         _ = param_results.plot(
             kind="bar",
             align="center",
@@ -269,7 +269,7 @@ def plot_heat_maps(
             param_results,
             columns_renaming=False,
         )
-        fig, ax = plt.subplots(figsize=config_plotting["figsize"])
+        fig, ax = plt.subplots(figsize=config_plotting["figsize"]["heatmap"])
 
         data = param_results.astype(float).values
         row_labels = param_results.index.values
