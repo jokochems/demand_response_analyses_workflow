@@ -77,13 +77,14 @@ def plot_bar_charts(
                     ),
                 )
         if config_plotting["format_axis"]:
-            _ = (
-                ax
-                .get_yaxis()
-                .set_major_formatter(
-                    FuncFormatter(lambda x, p: format(int(x), ","))
+            if param_results.max().max() >= 10:
+                _ = (
+                    ax
+                    .get_yaxis()
+                    .set_major_formatter(
+                        FuncFormatter(lambda x, p: format(int(x), ","))
+                    )
                 )
-            )
         _ = ax.set_ylabel(param)
         _ = plt.tight_layout()
 
@@ -289,13 +290,14 @@ def plot_heat_maps(
             config_plotting=config_plotting,
         )
         if config_plotting["format_axis"]:
-            _ = (
-                ax
-                .get_yaxis()
-                .set_major_formatter(
-                    FuncFormatter(lambda x, p: format(int(x), ","))
+            if data.max().max() >= 10:
+                _ = (
+                    ax
+                    .get_yaxis()
+                    .set_major_formatter(
+                        FuncFormatter(lambda x, p: format(int(x), ","))
+                    )
                 )
-            )
         annotate = config_plotting["annotate"]
         if annotate:
             _ = annotate_heatmap(im, config_plotting)
