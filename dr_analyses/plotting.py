@@ -76,7 +76,7 @@ def plot_bar_charts(
                         ]
                     ),
                 )
-        if config_workflow["format_axis"]:
+        if config_plotting["format_axis"]:
             _ = (
                 ax
                 .get_yaxis()
@@ -288,7 +288,7 @@ def plot_heat_maps(
             cbarlabel=param,
             config_plotting=config_plotting,
         )
-        if config_workflow["format_axis"]:
+        if config_plotting["format_axis"]:
             _ = (
                 ax
                 .get_yaxis()
