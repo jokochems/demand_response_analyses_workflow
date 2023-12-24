@@ -56,10 +56,15 @@ config_plotting:
   small_size: 12
   medium_size: 14
   bigger_size: 15
-  width: 10
-  height: 7
+  width:
+    bar: 10
+    heatmap: 8
+  height:
+    bar: 6
+    heatmap: 6
   drop_list: []
   language: "English"  # "German", "English"
+  format_axis: True
   division:
     "Annuity": 1e6
     "CapacityPaymentAfterShifting": 1e6

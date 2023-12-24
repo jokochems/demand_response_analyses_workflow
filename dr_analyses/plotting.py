@@ -3,6 +3,7 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from matplotlib.ticker import FuncFormatter
 
 from dr_analyses.workflow_routines import make_directory_if_missing
 
@@ -38,7 +39,7 @@ def plot_bar_charts(
         param, param_results = prepare_param_data_for_plotting(
             config_plotting, original_param, param_results
         )
-        fig, ax = plt.subplots(figsize=config_plotting["figsize"])
+        fig, ax = plt.subplots(figsize=config_plotting["figsize"]["bar"])
         _ = param_results.plot(
             kind="bar",
             align="center",
@@ -75,11 +76,20 @@ def plot_bar_charts(
                         ]
                     ),
                 )
+        if config_plotting["format_axis"]:
+            if param_results.max().max() >= 10:
+                _ = ax.get_yaxis().set_major_formatter(
+                    FuncFormatter(lambda x, p: format(int(x), ","))
+                )
         _ = ax.set_ylabel(param)
         _ = plt.tight_layout()
 
         if config_plotting["save_plot"]:
-            _ = fig.savefig(f"{plots_output_folder}{param}_bar.png", dpi=300)
+            _ = fig.savefig(
+                f"{plots_output_folder}{param}_bar.png",
+                dpi=300,
+                bbox_inches="tight",
+            )
         plt.close(fig)
         if config_plotting["show_plot"]:
             plt.show()
@@ -260,7 +270,7 @@ def plot_heat_maps(
             param_results,
             columns_renaming=False,
         )
-        fig, ax = plt.subplots(figsize=config_plotting["figsize"])
+        fig, ax = plt.subplots(figsize=config_plotting["figsize"]["heatmap"])
 
         data = param_results.astype(float).values
         row_labels = param_results.index.values
@@ -279,6 +289,11 @@ def plot_heat_maps(
             cbarlabel=param,
             config_plotting=config_plotting,
         )
+        if config_plotting["format_axis"]:
+            if data.max().max() >= 10:
+                _ = ax.get_yaxis().set_major_formatter(
+                    FuncFormatter(lambda x, p: format(int(x), ","))
+                )
         annotate = config_plotting["annotate"]
         if annotate:
             _ = annotate_heatmap(im, config_plotting)
@@ -289,7 +304,7 @@ def plot_heat_maps(
             file_name = f"{plots_output_folder}{param}_heatmap"
             if not annotate:
                 file_name += "_no_annotations"
-            _ = fig.savefig(f"{file_name}.png", dpi=300)
+            _ = fig.savefig(f"{file_name}.png", dpi=300, bbox_inches="tight")
         plt.close(fig)
         if config_plotting["show_plot"]:
             plt.show()
