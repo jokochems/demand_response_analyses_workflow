@@ -57,9 +57,10 @@ config_plotting:
   medium_size: 14
   bigger_size: 15
   width: 10
-  height: 7
+  height: 6
   drop_list: []
   language: "English"  # "German", "English"
+  format_axis: True
   division:
     "Annuity": 1e6
     "CapacityPaymentAfterShifting": 1e6

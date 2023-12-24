@@ -3,6 +3,7 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from matplotlib.ticker import FuncFormatter
 
 from dr_analyses.workflow_routines import make_directory_if_missing
 
@@ -75,6 +76,14 @@ def plot_bar_charts(
                         ]
                     ),
                 )
+        if config_workflow["format_axis"]:
+            _ = (
+                ax
+                .get_yaxis()
+                .set_major_formatter(
+                    FuncFormatter(lambda x, p: format(int(x), ","))
+                )
+            )
         _ = ax.set_ylabel(param)
         _ = plt.tight_layout()
 
@@ -279,6 +288,14 @@ def plot_heat_maps(
             cbarlabel=param,
             config_plotting=config_plotting,
         )
+        if config_workflow["format_axis"]:
+            _ = (
+                ax
+                .get_yaxis()
+                .set_major_formatter(
+                    FuncFormatter(lambda x, p: format(int(x), ","))
+                )
+            )
         annotate = config_plotting["annotate"]
         if annotate:
             _ = annotate_heatmap(im, config_plotting)
