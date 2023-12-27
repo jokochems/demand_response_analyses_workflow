@@ -1,0 +1,62 @@
+config_comparison:
+  tariff_config:
+    energy:
+      step_size: 20
+      min_share: 0
+      max_share: 100
+    capacity:
+      step_size: 20
+      min_share: 0
+      max_share: 100
+  check_tariff_config: True
+  output_folder: "./results/"
+  data_output: "data_out/"
+  demand_response_scenarios:
+    "5": "scenario_w_dr_5"
+    "50": "scenario_w_dr_50"
+    "95": "scenario_w_dr_95"
+  load_shifting_focus_clusters:
+#    - "hoho_cluster_shift_only"
+#    - "hoho_cluster_shift_shed"
+    - "ind_cluster_shift_only"
+
+config_plotting:
+  very_small_size: 10
+  small_size: 12
+  medium_size: 14
+  bigger_size: 15
+  width:
+    bar: 10
+    heatmap: 8
+  height:
+    bar: 6
+    heatmap: 6
+  drop_list: [ ]
+  language: "English"  # "German", "English"
+  format_axis: True
+  division:
+    "NetPresentValuePerCapacity": 1e3
+  y_limits:
+    "NetPresentValuePerCapacity":
+      "limits": [ -20000, 20000 ]
+      "log_y": False
+      "cbar_limit": 0.2
+  rename_dict:
+    columns: { }
+    rows: { }
+    derive_column_names: True
+    index_name:
+      "English": "capacity tariff share in %"
+      "German": "Leistungspreisanteil in %"
+    columns_name:
+      "English": "dynamic tariff share in %"
+      "German": "dynamischer Anteil des Arbeitspreises in %"
+    parameters:
+      "English":
+        "NetPresentValuePerCapacity": "Net Present Value per Capacity in thousand EUR per MW"
+      "German":
+        "NetPresentValuePerCapacity": "Kapitalwert pro flexibler Leistung in TEUR pro MW"
+  x_label: None
+  annotate: True
+  save_plot: True
+  show_plot: False

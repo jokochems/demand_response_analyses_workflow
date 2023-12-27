@@ -219,20 +219,8 @@ def prepare_tariffs_skeleton_from_workflow(
 
     Introduce paths to files containing actual parameterization
     """
-    shares_energy = list(
-        range(
-            config["tariff_config"]["energy"]["min_share"],
-            config["tariff_config"]["energy"]["max_share"] + 1,
-            config["tariff_config"]["energy"]["step_size"],
-        )
-    )
-    shares_capacity = list(
-        range(
-            config["tariff_config"]["capacity"]["min_share"],
-            config["tariff_config"]["capacity"]["max_share"] + 1,
-            config["tariff_config"]["capacity"]["step_size"],
-        )
-    )
+    shares_energy = prepare_tariffs_list(config, kind="energy")
+    shares_capacity = prepare_tariffs_list(config, kind="capacity")
 
     parameterization = pd.DataFrame(
         index=pd.MultiIndex.from_product([shares_energy, shares_capacity]),
@@ -282,6 +270,17 @@ def prepare_tariffs_skeleton_from_workflow(
             file,
             sort_keys=False,
         )
+
+
+def prepare_tariffs_list(config: Dict, kind: str):
+    """Prepare and return a list of tariff models"""
+    return list(
+        range(
+            config["tariff_config"][kind]["min_share"],
+            config["tariff_config"][kind]["max_share"] + 1,
+            config["tariff_config"][kind]["step_size"],
+        )
+    )
 
 
 def drop_duplicate_scenarios(overview: pd.DataFrame) -> pd.DataFrame:
