@@ -1,3 +1,4 @@
+import math
 from typing import Dict
 
 import numpy as np
@@ -156,25 +157,37 @@ def prepare_param_data_for_plotting(
 
 
 def plot_cross_run_comparison(
-    config_workflow: Dict,
-    param_results: Dict[str, Dict[str, pd.DataFrame]],
+    config_comparison: Dict,
+    all_results: Dict[
+        str, Dict[str, Dict[str, Dict[str, pd.DataFrame]]]
+    ],
+    config_plotting: Dict,
     sharex=True,
 ) -> None:
-    """Compare the results of different runs among each other"""
-    runs = config_workflow["runs_to_evaluate"]
-    params = config_workflow["params_to_evaluate"]
+    """Compare results of different scenarios / clusters among each other"""
+    dr_scenarios = config_comparison["demand_response_scenarios"]
+    clusters = config_comparison["load_shifting_focus_clusters"]
+    params = config_comparison["params_to_evaluate"]
 
     fig, axs = plt.subplots(
-        len(runs),
-        len(params),
-        figsize=(10 * len(runs), 6 * len(params)),
+        len(clusters),
+        len(dr_scenarios),
+        figsize=(
+            config_plotting["figsize"]["bar"][0] * len(dr_scenarios),
+            config_plotting["figsize"]["bar"][1] * len(clusters),
+        ),
         sharey="row",
     )
 
+    for original_param, param_results in all_parameter_results.items():
+        param, param_results = prepare_param_data_for_plotting(
+            config_plotting, original_param, param_results
+        )
+
     col = 0
-    for run, run_name in runs.items():
+    for run, run_name in clusters.items():
         for row, param in enumerate(params):
-            _ = param_results[run][param].plot(
+            _ = all_results[run][param].plot(
                 kind="bar",
                 align="center",
                 width=0.2,
@@ -204,7 +217,8 @@ def plot_cross_run_comparison(
     _ = plt.tight_layout()
 
     _ = fig.savefig(
-        config_workflow["output_folder"] + "param_comparison" + ".png", dpi=300
+        config_comparison["output_folder"] + "param_comparison" + ".png",
+        dpi=300,
     )
     plt.close(fig)
     # plt.show()

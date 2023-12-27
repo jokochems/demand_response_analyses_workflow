@@ -2,6 +2,7 @@ import warnings
 
 import pandas as pd
 
+from dr_analyses.plotting import plot_cross_run_comparison
 from dr_analyses.workflow_config import (
     add_args,
     extract_simple_config,
@@ -19,22 +20,32 @@ if __name__ == "__main__":
     shares_capacity = prepare_tariffs_list(config_comparison, kind="capacity")
 
     results = dict()
-    for cluster in config_comparison["load_shifting_focus_clusters"]:
-        results[cluster] = dict()
-        for dr_scen in config_comparison["demand_response_scenarios"]:
-            file_name = (
-                f"{config_comparison['output_folder']}data_out/"
-                f"{cluster}/{dr_scen}/NetPresentValuePerCapacity.csv"
-            )
-            specific_npvs = pd.read_csv(file_name, sep=";", index_col=0)
-            if (specific_npvs.index.to_list() != shares_capacity) or (
-                specific_npvs.columns.to_list() != shares_energy
-            ):
-                warnings.warn(
-                    "Expected capacity shares and/or dynamic tariff shares "
-                    "do not match the results read in! Rerun simulations "
-                    "using correct shares!"
+
+    for param in config_comparison["params_to_evaluate"]:
+        results[param] = dict()
+        for cluster in config_comparison["load_shifting_focus_clusters"]:
+            results[param][cluster] = dict()
+            for dr_scen in config_comparison["demand_response_scenarios"]:
+                file_name = (
+                    f"{config_comparison['output_folder']}data_out/"
+                    f"{cluster}/{dr_scen}/{param}.csv"
                 )
-            results[cluster][dr_scen] = specific_npvs
+                param_results = pd.read_csv(file_name, sep=";", index_col=0)
+                if (param_results.index.to_list() != shares_capacity) or (
+                    param_results.columns.to_list() != shares_energy
+                ):
+                    warnings.warn(
+                        "Expected capacity shares and/or dynamic tariff shares "
+                        "do not match the results read in! Rerun simulations "
+                        "using correct shares!"
+                    )
+
+                results[param][cluster][dr_scen] = param_results
+
+    plot_cross_run_comparison(
+        config_comparison,
+        results,
+        config_plotting,
+    )
 
     print("Stop here.")
