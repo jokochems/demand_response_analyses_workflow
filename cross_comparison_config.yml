@@ -1,0 +1,149 @@
+config_comparison:
+  tariff_config:
+    energy:
+      step_size: 20
+      min_share: 0
+      max_share: 100
+    capacity:
+      step_size: 20
+      min_share: 0
+      max_share: 100
+  check_tariff_config: True
+  output_folder: "./results/"
+  data_output: "data_out/"
+  plots_output: "plots_out/"
+  demand_response_scenarios:
+    "5": "scenario_w_dr_5"
+    "50": "scenario_w_dr_50"
+    "95": "scenario_w_dr_95"
+  load_shifting_focus_clusters:
+#    - "hoho_cluster_shift_only"
+#    - "hoho_cluster_shift_shed"
+    - "ind_cluster_shift_only"
+  params_to_evaluate:
+#    - "Annuity"
+#    - "CapacityPaymentAfterShifting"
+#    - "CapacityPaymentBeforeShifting"
+#    - "CapacityPaymentChange"
+#    - "EnergyPaymentAfterShifting"
+#    - "EnergyPaymentBeforeShifting"
+#    - "EnergyPaymentChange"
+#    - "InvestmentExpenses"
+#    - "NetPresentValue"
+    - "NetPresentValuePerCapacity"
+#    - "NetSavings"
+#    - "NoOfFullShiftCycles"
+#    - "PeakLoadAfterShifting"
+#    - "PeakLoadBeforeShifting"
+#    - "PeakLoadChange"
+#    - "TotalPaymentAfterShifting"
+#    - "TotalPaymentBeforeShifting"
+#    - "TotalPaymentChange"
+#    - "TotalShiftingCosts"
+
+config_plotting:
+  very_small_size: 10
+  small_size: 12
+  medium_size: 14
+  bigger_size: 15
+  width:
+    bar: 10
+    heatmap: 8
+  height:
+    bar: 6
+    heatmap: 6
+  drop_list: []
+  language: "English"  # "German", "English"
+  format_axis: True
+  show_title: True
+  division:
+    "Annuity": 1e6
+    "CapacityPaymentAfterShifting": 1e6
+    "CapacityPaymentBeforeShifting": 1e6
+    "CapacityPaymentChange": 1e6
+    "EnergyPaymentAfterShifting": 1e6
+    "EnergyPaymentBeforeShifting": 1e6
+    "EnergyPaymentChange": 1e6
+    "InvestmentExpenses": 1e6
+    "NetPresentValue": 1e6
+    "NetPresentValuePerCapacity": 1e3
+    "Net Savings": 1e6
+    "TotalPaymentAfterShifting": 1e6
+    "TotalPaymentBeforeShifting": 1e6
+    "TotalPaymentLoadChange": 1e6
+    "TotalShiftingCosts": 1e6
+  y_limits:
+    "NetPresentValuePerCapacity":
+      "limits": [-20000, 20000]
+      "log_y": False
+      "cbar_limit": 0.2
+  rename_dict:
+    columns: {}
+    rows: {}
+    derive_column_names: True
+    index_name:
+      "English": "capacity tariff share in %"
+      "German": "Leistungspreisanteil in %"
+    columns_name:
+      "English": "dynamic tariff share in %"
+      "German": "dynamischer Anteil des Arbeitspreises in %"
+    parameters:
+      "English":
+        "Annuity": "Annuity in Mio. EUR"
+        "CapacityPaymentAfterShifting": "Capacity Payment After Shifting in Mio. EUR"
+        "CapacityPaymentBeforeShifting": "Capacity Payment Before Shifting in Mio. EUR"
+        "CapacityPaymentChange": "Change in Capacity Payment in Mio. EUR"
+        "EnergyPaymentAfterShifting": "Energy Payment After Shifting in Mio. EUR"
+        "EnergyPaymentBeforeShifting": "Energy Payment Before Shifting in Mio. EUR"
+        "EnergyPaymentChange": "Change in Energy Payment in Mio. EUR"
+        "InvestmentExpenses": "Investment Expenses in Mio. EUR"
+        "NetPresentValue": "Net Present Value in Mio. EUR"
+        "NetPresentValuePerCapacity": "Net Present Value per Capacity in thousand EUR per MW"
+        "NetSavings": "Net Savings in Mio. EUR"
+        "NoOfFullShiftCycles": "Number of full shift cycles in 1"
+        "PeakLoadAfterShifting": "Peak Load After Shifting in MW"
+        "PeakLoadBeforeShifting": "Peak Load Before Shifting in MW"
+        "PeakLoadChange": "Change in Peak Load in MW"
+        "TotalPaymentAfterShifting": "Total Payment After Shifting in Mio. EUR"
+        "TotalPaymentBeforeShifting": "Total Payment Before Shifting in Mio. EUR"
+        "TotalPaymentChange": "Change in Total Payment in Mio. EUR"
+        "TotalShiftingCosts": "Total Variable Shifting Costs in Mio. EUR"
+      "German":
+        "Annuity": "Annuität in Mio. EUR"
+        "CapacityPaymentAfterShifting": "Leistungspreiszahlungen nach Lastverschiebung in Mio. EUR"
+        "CapacityPaymentBeforeShifting": "Leistungspreiszahlungen vor Lastverschiebung in Mio. EUR"
+        "CapacityPaymentChange": "Änderung der Leistungspreiszahlungen in Mio. EUR"
+        "EnergyPaymentAfterShifting": "Arbeitspreiszahlungen nach Lastverschiebung in Mio. EUR"
+        "EnergyPaymentBeforeShifting": "Arbeitspreiszahlungen vor Lastverschiebung in Mio. EUR"
+        "EnergyPaymentChange": "Änderung der Arbeitspreiszahlungen in Mio. EUR"
+        "InvestmentExpenses": "Investitionsausgaben in Mio. EUR"
+        "NetPresentValue": "Kapitalwert in Mio. EUR"
+        "NetPresentValuePerCapacity": "Kapitalwert pro flexibler Leistung in TEUR pro MW"
+        "NetSavings": "Nettoeinsparungen in Mio. EUR"
+        "NoOfFullShiftCycles": "Anzahl der Vollverschiebezyklen in 1"
+        "PeakLoadAfterShifting": "Spitzenlast nach Lastverschiebung in MW"
+        "PeakLoadBeforeShifting": "Spitzenlast vor Lastverschiebung in MW"
+        "PeakLoadChange": "Änderung der Spitzenlast in MW"
+        "TotalPaymentAfterShifting": "Gesamte Zahlungen nach Lastverschiebung in Mio. EUR"
+        "TotalPaymentBeforeShifting": "Gesamte Zahlungen vor Lastverschiebung in Mio. EUR"
+        "TotalPaymentChange": "Änderung der gesamten Zahlungen in Mio. EUR"
+        "TotalShiftingCosts": "Gesamte variable Lastverschiebekosten in Mio. EUR"
+    clusters:
+      "German":
+        "hoho_cluster_shift_only": "Haushalte - Verschiebung"
+        "hoho_cluster_shift_shed": "Haushalte - Verschiebung & Verzicht"
+        "ind_cluster_shift_only": "Industrie - Verschiebung"
+        "ind_cluster_shift_shed": "Industrie - Verschiebung & Verzicht"
+        "tcs_cluster_shift_only": "GHD - Verschiebung"
+        "tcs_hoho_cluster_shift_only": "GHD & Haushalte - Verschiebung"
+      "English":
+        "hoho_cluster_shift_only": "households - shifting"
+        "hoho_cluster_shift_shed": "households - shifting & shedding"
+        "ind_cluster_shift_only": "industry - shifting"
+        "ind_cluster_shift_shed": "industry - shifting & shedding"
+        "tcs_cluster_shift_only": "tcs - shifting"
+        "tcs_hoho_cluster_shift_only": "tcs & households - shifting"
+  x_label: None
+  annotate: True
+  save_plot: True
+  show_plot: False
