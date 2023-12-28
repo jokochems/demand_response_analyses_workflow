@@ -2,7 +2,7 @@ import warnings
 
 import pandas as pd
 
-from dr_analyses.plotting import plot_cross_run_comparison
+from dr_analyses.plotting import plot_cross_run_bar_charts
 from dr_analyses.workflow_config import (
     add_args,
     extract_simple_config,
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
                 results[param][cluster][dr_scen] = param_results
 
-    plot_cross_run_comparison(
+    plot_cross_run_bar_charts(
         config_comparison,
         results,
         config_plotting,

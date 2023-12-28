@@ -1,6 +1,7 @@
 import math
 from typing import Dict
 
+import matplotlib.axes
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -41,48 +42,13 @@ def plot_bar_charts(
             config_plotting, original_param, param_results
         )
         fig, ax = plt.subplots(figsize=config_plotting["figsize"]["bar"])
-        _ = param_results.plot(
-            kind="bar",
-            align="center",
-            width=0.2,
-            ax=ax,
-            colormap="Blues",
-            edgecolor="darkblue",
+        create_bar_chart(
+            original_param,
+            param,
+            param_results,
+            config_plotting,
+            ax,
         )
-        # _ = ax.set_yticks(determine_yaxis_spacing(param_results))
-        _ = ax.set_axisbelow(True)
-        _ = ax.grid(axis="y", color="lightgrey")
-
-        _ = plt.legend(
-            bbox_to_anchor=(0.01, 0.98),
-            loc="upper left",
-            fancybox=False,
-            shadow=False,
-            ncol=3,
-        )
-        if config_plotting["y_limits"]:
-            if original_param in config_plotting["y_limits"]:
-                if "log_y" in config_plotting["y_limits"][original_param]:
-                    if config_plotting["y_limits"][original_param]["log_y"]:
-                        _ = plt.yscale("symlog")
-                _ = plt.ylim(
-                    float(
-                        config_plotting["y_limits"][original_param]["limits"][
-                            0
-                        ]
-                    ),
-                    float(
-                        config_plotting["y_limits"][original_param]["limits"][
-                            1
-                        ]
-                    ),
-                )
-        if config_plotting["format_axis"]:
-            if param_results.max().max() >= 10:
-                _ = ax.get_yaxis().set_major_formatter(
-                    FuncFormatter(lambda x, p: format(int(x), ","))
-                )
-        _ = ax.set_ylabel(param)
         _ = plt.tight_layout()
 
         if config_plotting["save_plot"]:
@@ -156,72 +122,121 @@ def prepare_param_data_for_plotting(
     return param, param_results
 
 
-def plot_cross_run_comparison(
-    config_comparison: Dict,
-    all_results: Dict[
-        str, Dict[str, Dict[str, Dict[str, pd.DataFrame]]]
-    ],
+def create_bar_chart(
+    original_param: str,
+    param: str,
+    param_results: pd.DataFrame,
     config_plotting: Dict,
-    sharex=True,
+    ax: matplotlib.axes.Axes,
+    title: None or str = None,
+):
+    """Create a single bar chart"""
+    _ = param_results.plot(
+        kind="bar",
+        align="center",
+        width=0.2,
+        ax=ax,
+        colormap="Blues",
+        edgecolor="darkblue",
+    )
+    _ = ax.set_axisbelow(True)
+    _ = ax.grid(axis="y", color="lightgrey")
+
+    _ = ax.legend(
+        bbox_to_anchor=(0.01, 0.98),
+        loc="upper left",
+        fancybox=False,
+        shadow=False,
+        ncol=3,
+    )
+    if title:
+        ax.set_title(title)
+    if config_plotting["y_limits"]:
+        if original_param in config_plotting["y_limits"]:
+            if "log_y" in config_plotting["y_limits"][original_param]:
+                if config_plotting["y_limits"][original_param]["log_y"]:
+                    _ = plt.yscale("symlog")
+            _ = ax.set_ylim(
+                float(
+                    config_plotting["y_limits"][original_param]["limits"][0]
+                ),
+                float(
+                    config_plotting["y_limits"][original_param]["limits"][1]
+                ),
+            )
+    if config_plotting["format_axis"]:
+        if param_results.max().max() >= 10:
+            _ = ax.get_yaxis().set_major_formatter(
+                FuncFormatter(lambda x, p: format(int(x), ","))
+            )
+    _ = ax.set_ylabel(param)
+
+
+def plot_cross_run_bar_charts(
+    config_comparison: Dict,
+    all_results: Dict[str, Dict[str, Dict[str, pd.DataFrame]]],
+    config_plotting: Dict,
 ) -> None:
     """Compare results of different scenarios / clusters among each other"""
     dr_scenarios = config_comparison["demand_response_scenarios"]
-    clusters = config_comparison["load_shifting_focus_clusters"]
-    params = config_comparison["params_to_evaluate"]
+    dr_clusters = config_comparison["load_shifting_focus_clusters"]
 
-    fig, axs = plt.subplots(
-        len(clusters),
-        len(dr_scenarios),
-        figsize=(
-            config_plotting["figsize"]["bar"][0] * len(dr_scenarios),
-            config_plotting["figsize"]["bar"][1] * len(clusters),
-        ),
-        sharey="row",
-    )
+    param_results_dict = dict()
+    for original_param, cluster_results in all_results.items():
+        param_results_dict[original_param] = dict()
+        for cluster, scenario_results in cluster_results.items():
+            param_results_dict[original_param][cluster] = dict()
+            for scenario, par_results in scenario_results.items():
+                param, param_results = prepare_param_data_for_plotting(
+                    config_plotting, original_param, par_results
+                )
+                param_results_dict[original_param][cluster][scenario] = (
+                    param,
+                    param_results,
+                )
 
-    for original_param, param_results in all_parameter_results.items():
-        param, param_results = prepare_param_data_for_plotting(
-            config_plotting, original_param, param_results
+    for original_param, cluster_results in param_results_dict.items():
+        fig, axs = plt.subplots(
+            len(dr_clusters),
+            len(dr_scenarios),
+            figsize=(
+                config_plotting["figsize"]["bar"][0] * 2,
+                config_plotting["figsize"]["bar"][1] * len(dr_clusters),
+            ),
+            sharey="row",
         )
+        for cluster_number, (cluster, scenario_results) in enumerate(
+            cluster_results.items()
+        ):
+            for scenario_number, (scenario, param_results) in enumerate(
+                scenario_results.items()
+            ):
+                title = (
+                    f"{config_plotting['rename_dict']['clusters'][config_plotting['language']][cluster]}"
+                    f" - DR {scenario}"
+                )  # noqa: E501
+                if len(dr_clusters) == 1:
+                    axes_argument = axs[scenario_number]
+                else:
+                    axes_argument = axs[cluster_number, scenario_number]
+                create_bar_chart(
+                    original_param,
+                    param_results[0],
+                    param_results[1],
+                    config_plotting,
+                    axes_argument,
+                    title=title
+                )
 
-    col = 0
-    for run, run_name in clusters.items():
-        for row, param in enumerate(params):
-            _ = all_results[run][param].plot(
-                kind="bar",
-                align="center",
-                width=0.2,
-                ax=axs[row, col],
-                colormap="Blues",
-                edgecolor="darkblue",
-                legend=False,
-            )
-            _ = axs[row, col].set_axisbelow(True)
-            _ = axs[row, col].grid(axis="y", color="lightgrey")
-            _ = axs[row, col].set_ylabel(param)
-            _ = axs[row, col].set_title(
-                f"Parameter {param} for run {run_name}"
-            )
-            handles, labels = axs[row, col].get_legend_handles_labels()
-
-        col += 1
-
-    _ = plt.legend(
-        handles,
-        labels,
-        loc="upper right",
-        borderaxespad=0.0,
-        ncol=1,
-    )
-
-    _ = plt.tight_layout()
-
-    _ = fig.savefig(
-        config_comparison["output_folder"] + "param_comparison" + ".png",
-        dpi=300,
-    )
-    plt.close(fig)
-    # plt.show()
+        _ = plt.tight_layout()
+        _ = fig.savefig(
+            config_comparison["output_folder"] + "param_comparison" + ".png",
+            dpi=300,
+            bbox_inches="tight",
+        )
+        plt.close(fig)
+        if config_plotting["show_plot"]:
+            plt.show()
 
 
 def initialize_empty_plot_config() -> Dict:
@@ -234,31 +249,6 @@ def initialize_empty_plot_config() -> Dict:
         "save_plot": True,
         "show_plot": False,
     }
-
-
-def determine_yaxis_spacing(param_results):
-    """Determine the yaxis space"""
-    max_val = param_results.max().max()
-    min_val = param_results.min().min()
-
-    # Determine rounding
-    to_subtract_max = 1
-    to_subtract_min = to_subtract_max + 1
-    if max_val < 0:
-        to_subtract_max += 1
-    if min_val < 0:
-        to_subtract_min += 1
-
-    digits_upper = len(str(max_val * 1.1).split(".")[0]) - to_subtract_max
-    digits_lower = len(str(min_val * 1.1).split(".")[0]) - to_subtract_min
-    plot_max = np.round(max_val * 1.1, -digits_upper)
-    plot_min = np.round(min_val * 1.1, -digits_lower)
-
-    return range(
-        min(int(plot_min), 0),
-        int(plot_max) + 1,
-        max(int((plot_min + plot_max) / 10), 1),
-    )
 
 
 def plot_heat_maps(

@@ -16,7 +16,7 @@ config_comparison:
     "50": "scenario_w_dr_50"
     "95": "scenario_w_dr_95"
   load_shifting_focus_clusters:
-#    - "hoho_cluster_shift_only"
+    - "hoho_cluster_shift_only"
 #    - "hoho_cluster_shift_shed"
     - "ind_cluster_shift_only"
   params_to_evaluate:
@@ -126,6 +126,21 @@ config_plotting:
         "TotalPaymentBeforeShifting": "Gesamte Zahlungen vor Lastverschiebung in Mio. EUR"
         "TotalPaymentChange": "Änderung der gesamten Zahlungen in Mio. EUR"
         "TotalShiftingCosts": "Gesamte variable Lastverschiebekosten in Mio. EUR"
+    clusters:
+      "German":
+        "hoho_cluster_shift_only": "Haushalte - Verschiebung"
+        "hoho_cluster_shift_shed": "Haushalte - Verschiebung & Verzicht"
+        "ind_cluster_shift_only": "Industrie - Verschiebung"
+        "ind_cluster_shift_shed": "Industrie - Verschiebung & Verzicht"
+        "tcs_cluster_shift_only": "GHD - Verschiebung"
+        "tcs_hoho_cluster_shift_only": "GHD & Haushalte - Verschiebung"
+      "English":
+        "hoho_cluster_shift_only": "households - shifting"
+        "hoho_cluster_shift_shed": "households - shifting & shedding"
+        "ind_cluster_shift_only": "industry - shifting"
+        "ind_cluster_shift_shed": "industry - shifting & shedding"
+        "tcs_cluster_shift_only": "tcs - shifting"
+        "tcs_hoho_cluster_shift_only": "tcs & households - shifting"
   x_label: None
   annotate: True
   save_plot: True
