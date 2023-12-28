@@ -4,7 +4,7 @@ from typing import Dict
 import matplotlib.axes
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, gridspec
 from matplotlib.ticker import FuncFormatter
 
 from dr_analyses.workflow_routines import make_directory_if_missing
@@ -216,7 +216,6 @@ def plot_cross_run_bar_charts(
                     config_plotting["figsize"]["bar"][0],
                     config_plotting["figsize"]["bar"][1] * len(dr_scenarios),
                 ),
-                sharey="row",
             )
         for cluster_number, (cluster, scenario_results) in enumerate(
             cluster_results.items()
@@ -248,7 +247,7 @@ def plot_cross_run_bar_charts(
         _ = fig.savefig(
             f"{config_comparison['output_folder']}"
             f"{config_comparison['plots_output']}"
-            f"comparison_{param_results[0]}_"
+            f"comparison_bar_{param_results[0]}_"
             f"{len(dr_scenarios)}_scenarios_{len(dr_clusters)}_clusters.png",
             dpi=300,
             bbox_inches="tight",
@@ -377,6 +376,8 @@ def heatmap(
     cbar_kw={},
     cbarlabel="",
     config_plotting={},
+    title=None,
+    hide_cbar=False,
     **kwargs,
 ):
     """
@@ -403,6 +404,10 @@ def heatmap(
         The label for the colorbar.  Optional.
     config_plotting: Dict
         Configuration settings for plotting
+    title : str or None
+        Title to display for subplot if not None
+    hide_cbar : boolean
+        Don't display cbar if True
     **kwargs
         All other arguments are forwarded to `imshow`.
     """  # noqa: E501
@@ -413,8 +418,11 @@ def heatmap(
     im = ax.imshow(data, **kwargs)
 
     # Create colorbar
-    cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
-    cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")
+    if not hide_cbar:
+        cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
+        cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")
+    else:
+        cbar = None
 
     # Show all ticks and label them with the respective list entries.
     ax.set_xticks(np.arange(data.shape[1]), labels=col_labels)
@@ -445,6 +453,9 @@ def heatmap(
     ax.set_yticks(np.arange(data.shape[0] + 1) - 0.5, minor=True)
     ax.grid(which="minor", color="k", linestyle="-", linewidth=1)
     ax.tick_params(which="minor", bottom=False, left=False)
+
+    if title:
+        ax.set_title(title)
 
     return im, cbar
 
@@ -570,15 +581,32 @@ def plot_cross_run_heatmaps(
                 )
 
     for original_param, cluster_results in param_results_dict.items():
-        fig, axs = plt.subplots(
-            len(dr_clusters),
-            len(dr_scenarios),
-            figsize=(
-                config_plotting["figsize"]["bar"][0] * 2,
-                config_plotting["figsize"]["bar"][1] * len(dr_clusters),
-            ),
-            sharey="row",
-        )
+        if len(dr_clusters) != 1:
+            width_ratios = [1] * len(dr_scenarios) + [0.1]
+            height_ratios = [1] * len(dr_clusters)
+            gs = gridspec.GridSpec(
+                len(dr_clusters),
+                len(dr_scenarios) + 1,
+                width_ratios=width_ratios,
+                height_ratios=height_ratios,
+            )
+            fig = plt.figure(
+                figsize=(
+                    config_plotting["figsize"]["heatmap"][0] * 2,
+                    config_plotting["figsize"]["heatmap"][1]
+                    * len(dr_clusters),
+                ),
+            )
+        else:
+            fig, axs = plt.subplots(
+                len(dr_scenarios),
+                1,
+                figsize=(
+                    config_plotting["figsize"]["heatmap"][0],
+                    config_plotting["figsize"]["heatmap"][1]
+                    * len(dr_scenarios),
+                ),
+            )
         for cluster_number, (cluster, scenario_results) in enumerate(
             cluster_results.items()
         ):
@@ -592,40 +620,65 @@ def plot_cross_run_heatmaps(
                 if len(dr_clusters) == 1:
                     axes_argument = axs[scenario_number]
                 else:
-                    axes_argument = axs[cluster_number, scenario_number]
+                    axes_argument = plt.subplot(
+                        gs[cluster_number, scenario_number]
+                    )
 
-                data = param_results.astype(float).values
-                row_labels = param_results.index.values
-                col_labels = param_results.columns.values
+                data = param_results[1].astype(float).values
+                row_labels = param_results[1].index.values
+                col_labels = param_results[1].columns.values
 
                 cbar_bounds = derive_cbar_bounds(
                     data, config_plotting, original_param
                 )
+                if len(dr_clusters) != 1:
+                    hide_cbar = True
+                else:
+                    hide_cbar = False
                 im, cbar = heatmap(
                     data,
                     row_labels,
                     col_labels,
-                    ax=ax,
+                    ax=axes_argument,
                     vmin=-cbar_bounds,
                     vmax=cbar_bounds,
                     cbar_kw={"shrink": 1.0},
                     cmap=plt.cm.get_cmap("coolwarm").reversed(),
-                    cbarlabel=param,
+                    cbarlabel=param_results[0],
                     config_plotting=config_plotting,
+                    title=title,
+                    hide_cbar=hide_cbar,
                 )
                 if config_plotting["format_axis"]:
                     if data.max().max() >= 10:
-                        _ = ax.get_yaxis().set_major_formatter(
+                        _ = axes_argument.get_yaxis().set_major_formatter(
                             FuncFormatter(lambda x, p: format(int(x), ","))
                         )
                 annotate = config_plotting["annotate"]
                 if annotate:
                     _ = annotate_heatmap(im, config_plotting)
 
-                _ = fig.tight_layout()
+                if (
+                    len(dr_clusters) > 1
+                    and scenario_number == len(dr_scenarios) - 1
+                ):
+                    cbar_ax = plt.subplot(
+                        gs[cluster_number, len(dr_scenarios)]
+                    )
+                    cbar = plt.colorbar(im, cax=cbar_ax)
+                    cbar.ax.set_ylabel(
+                        param_results[0], rotation=-90, va="bottom"
+                    )
+
+        _ = plt.tight_layout(rect=[0] * (len(dr_scenarios) - 1) + [0.9, 0.8])
 
         if config_plotting["save_plot"]:
-            file_name = f"{plots_output_folder}{param}_heatmap"
+            file_name = (
+                f"{config_comparison['output_folder']}"
+                f"{config_comparison['plots_output']}"
+                f"comparison_heatmap_{param_results[0]}_{len(dr_scenarios)}_"
+                f"scenarios_{len(dr_clusters)}_clusters"
+            )
             if not annotate:
                 file_name += "_no_annotations"
             _ = fig.savefig(f"{file_name}.png", dpi=300, bbox_inches="tight")
