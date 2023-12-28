@@ -177,7 +177,9 @@ def plot_cross_run_bar_charts(
     all_results: Dict[str, Dict[str, Dict[str, pd.DataFrame]]],
     config_plotting: Dict,
 ) -> None:
-    """Compare results of different scenarios / clusters among each other"""
+    """Compare results of different scenarios / clusters among each other
+
+    Create bar charts and choose subplot config dependent on input"""
     dr_scenarios = config_comparison["demand_response_scenarios"]
     dr_clusters = config_comparison["load_shifting_focus_clusters"]
 
@@ -196,25 +198,39 @@ def plot_cross_run_bar_charts(
                 )
 
     for original_param, cluster_results in param_results_dict.items():
-        fig, axs = plt.subplots(
-            len(dr_clusters),
-            len(dr_scenarios),
-            figsize=(
-                config_plotting["figsize"]["bar"][0] * 2,
-                config_plotting["figsize"]["bar"][1] * len(dr_clusters),
-            ),
-            sharey="row",
-        )
+        if len(dr_clusters) != 1:
+            fig, axs = plt.subplots(
+                len(dr_clusters),
+                len(dr_scenarios),
+                figsize=(
+                    config_plotting["figsize"]["bar"][0] * 2,
+                    config_plotting["figsize"]["bar"][1] * len(dr_clusters),
+                ),
+                sharey="row",
+            )
+        else:
+            fig, axs = plt.subplots(
+                len(dr_scenarios),
+                1,
+                figsize=(
+                    config_plotting["figsize"]["bar"][0],
+                    config_plotting["figsize"]["bar"][1] * len(dr_scenarios),
+                ),
+                sharey="row",
+            )
         for cluster_number, (cluster, scenario_results) in enumerate(
             cluster_results.items()
         ):
             for scenario_number, (scenario, param_results) in enumerate(
                 scenario_results.items()
             ):
-                title = (
-                    f"{config_plotting['rename_dict']['clusters'][config_plotting['language']][cluster]}"
-                    f" - DR {scenario}"
-                )  # noqa: E501
+                if config_plotting["show_title"]:
+                    title = (
+                        f"{config_plotting['rename_dict']['clusters'][config_plotting['language']][cluster]}"
+                        f" - DR {scenario}"
+                    )  # noqa: E501
+                else:
+                    title = None
                 if len(dr_clusters) == 1:
                     axes_argument = axs[scenario_number]
                 else:
@@ -225,12 +241,15 @@ def plot_cross_run_bar_charts(
                     param_results[1],
                     config_plotting,
                     axes_argument,
-                    title=title
+                    title=title,
                 )
 
         _ = plt.tight_layout()
         _ = fig.savefig(
-            config_comparison["output_folder"] + "param_comparison" + ".png",
+            f"{config_comparison['output_folder']}"
+            f"{config_comparison['plots_output']}"
+            f"comparison_{param_results[0]}_"
+            f"{len(dr_scenarios)}_scenarios_{len(dr_clusters)}_clusters.png",
             dpi=300,
             bbox_inches="tight",
         )
@@ -523,3 +542,93 @@ def abbreviate(x: float or None) -> str:
     thing = round(x / b, 2)
 
     return f"${thing}{abbreviations[a]}$"
+
+
+def plot_cross_run_heatmaps(
+    config_comparison: Dict,
+    all_results: Dict[str, Dict[str, Dict[str, pd.DataFrame]]],
+    config_plotting: Dict,
+) -> None:
+    """Compare results of different scenarios / clusters among each other
+
+    Create heatmaps and choose subplot config dependent on input"""
+    dr_scenarios = config_comparison["demand_response_scenarios"]
+    dr_clusters = config_comparison["load_shifting_focus_clusters"]
+
+    param_results_dict = dict()
+    for original_param, cluster_results in all_results.items():
+        param_results_dict[original_param] = dict()
+        for cluster, scenario_results in cluster_results.items():
+            param_results_dict[original_param][cluster] = dict()
+            for scenario, par_results in scenario_results.items():
+                param, param_results = prepare_param_data_for_plotting(
+                    config_plotting, original_param, par_results
+                )
+                param_results_dict[original_param][cluster][scenario] = (
+                    param,
+                    param_results,
+                )
+
+    for original_param, cluster_results in param_results_dict.items():
+        fig, axs = plt.subplots(
+            len(dr_clusters),
+            len(dr_scenarios),
+            figsize=(
+                config_plotting["figsize"]["bar"][0] * 2,
+                config_plotting["figsize"]["bar"][1] * len(dr_clusters),
+            ),
+            sharey="row",
+        )
+        for cluster_number, (cluster, scenario_results) in enumerate(
+            cluster_results.items()
+        ):
+            for scenario_number, (scenario, param_results) in enumerate(
+                scenario_results.items()
+            ):
+                title = (
+                    f"{config_plotting['rename_dict']['clusters'][config_plotting['language']][cluster]}"
+                    f" - DR {scenario}"
+                )  # noqa: E501
+                if len(dr_clusters) == 1:
+                    axes_argument = axs[scenario_number]
+                else:
+                    axes_argument = axs[cluster_number, scenario_number]
+
+                data = param_results.astype(float).values
+                row_labels = param_results.index.values
+                col_labels = param_results.columns.values
+
+                cbar_bounds = derive_cbar_bounds(
+                    data, config_plotting, original_param
+                )
+                im, cbar = heatmap(
+                    data,
+                    row_labels,
+                    col_labels,
+                    ax=ax,
+                    vmin=-cbar_bounds,
+                    vmax=cbar_bounds,
+                    cbar_kw={"shrink": 1.0},
+                    cmap=plt.cm.get_cmap("coolwarm").reversed(),
+                    cbarlabel=param,
+                    config_plotting=config_plotting,
+                )
+                if config_plotting["format_axis"]:
+                    if data.max().max() >= 10:
+                        _ = ax.get_yaxis().set_major_formatter(
+                            FuncFormatter(lambda x, p: format(int(x), ","))
+                        )
+                annotate = config_plotting["annotate"]
+                if annotate:
+                    _ = annotate_heatmap(im, config_plotting)
+
+                _ = fig.tight_layout()
+
+        if config_plotting["save_plot"]:
+            file_name = f"{plots_output_folder}{param}_heatmap"
+            if not annotate:
+                file_name += "_no_annotations"
+            _ = fig.savefig(f"{file_name}.png", dpi=300, bbox_inches="tight")
+        plt.close(fig)
+        if config_plotting["show_plot"]:
+            plt.show()

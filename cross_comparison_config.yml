@@ -11,12 +11,13 @@ config_comparison:
   check_tariff_config: True
   output_folder: "./results/"
   data_output: "data_out/"
+  plots_output: "plots_out/"
   demand_response_scenarios:
     "5": "scenario_w_dr_5"
     "50": "scenario_w_dr_50"
     "95": "scenario_w_dr_95"
   load_shifting_focus_clusters:
-    - "hoho_cluster_shift_only"
+#    - "hoho_cluster_shift_only"
 #    - "hoho_cluster_shift_shed"
     - "ind_cluster_shift_only"
   params_to_evaluate:
@@ -54,6 +55,7 @@ config_plotting:
   drop_list: []
   language: "English"  # "German", "English"
   format_axis: True
+  show_title: True
   division:
     "Annuity": 1e6
     "CapacityPaymentAfterShifting": 1e6

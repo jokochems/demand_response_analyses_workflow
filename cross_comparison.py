@@ -2,7 +2,10 @@ import warnings
 
 import pandas as pd
 
-from dr_analyses.plotting import plot_cross_run_bar_charts
+from dr_analyses.plotting import (
+    plot_cross_run_bar_charts,
+    plot_cross_run_heatmaps,
+)
 from dr_analyses.workflow_config import (
     add_args,
     extract_simple_config,
@@ -48,4 +51,8 @@ if __name__ == "__main__":
         config_plotting,
     )
 
-    print("Stop here.")
+    plot_cross_run_heatmaps(
+        config_comparison,
+        results,
+        config_plotting,
+    )
