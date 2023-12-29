@@ -46,6 +46,7 @@ config_plotting:
   small_size: 12
   medium_size: 14
   bigger_size: 15
+  scaling_factor: 2
   width:
     bar: 10
     heatmap: 8

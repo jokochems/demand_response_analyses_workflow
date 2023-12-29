@@ -203,7 +203,7 @@ def plot_cross_run_bar_charts(
                 len(dr_clusters),
                 len(dr_scenarios),
                 figsize=(
-                    config_plotting["figsize"]["bar"][0] * 2,
+                    config_plotting["figsize"]["bar"][0] * config_plotting["scaling_factor"],
                     config_plotting["figsize"]["bar"][1] * len(dr_clusters),
                 ),
                 sharey="row",
@@ -592,7 +592,7 @@ def plot_cross_run_heatmaps(
             )
             fig = plt.figure(
                 figsize=(
-                    config_plotting["figsize"]["heatmap"][0] * 2,
+                    config_plotting["figsize"]["heatmap"][0] * config_plotting["scaling_factor"],
                     config_plotting["figsize"]["heatmap"][1]
                     * len(dr_clusters),
                 ),
@@ -670,7 +670,7 @@ def plot_cross_run_heatmaps(
                         param_results[0], rotation=-90, va="bottom"
                     )
 
-        _ = plt.tight_layout(rect=[0] * (len(dr_scenarios) - 1) + [0.9, 0.8])
+        _ = plt.tight_layout(rect=[0, 0, 0.9, 0.8])
 
         if config_plotting["save_plot"]:
             file_name = (
