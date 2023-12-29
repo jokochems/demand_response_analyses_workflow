@@ -203,7 +203,8 @@ def plot_cross_run_bar_charts(
                 len(dr_clusters),
                 len(dr_scenarios),
                 figsize=(
-                    config_plotting["figsize"]["bar"][0] * config_plotting["scaling_factor"],
+                    config_plotting["figsize"]["bar"][0]
+                    * config_plotting["scaling_factor"],
                     config_plotting["figsize"]["bar"][1] * len(dr_clusters),
                 ),
                 sharey="row",
@@ -247,8 +248,9 @@ def plot_cross_run_bar_charts(
         _ = fig.savefig(
             f"{config_comparison['output_folder']}"
             f"{config_comparison['plots_output']}"
-            f"comparison_bar_{param_results[0]}_"
-            f"{len(dr_scenarios)}_scenarios_{len(dr_clusters)}_clusters.png",
+            f"comparison_bar_{original_param}_"
+            f"scenarios_{'_'.join(dr_scenarios.values())}_"
+            f"clusters_{'_'.join(dr_clusters.values())}.png",
             dpi=300,
             bbox_inches="tight",
         )
@@ -592,7 +594,8 @@ def plot_cross_run_heatmaps(
             )
             fig = plt.figure(
                 figsize=(
-                    config_plotting["figsize"]["heatmap"][0] * config_plotting["scaling_factor"],
+                    config_plotting["figsize"]["heatmap"][0]
+                    * config_plotting["scaling_factor"],
                     config_plotting["figsize"]["heatmap"][1]
                     * len(dr_clusters),
                 ),
@@ -676,8 +679,9 @@ def plot_cross_run_heatmaps(
             file_name = (
                 f"{config_comparison['output_folder']}"
                 f"{config_comparison['plots_output']}"
-                f"comparison_heatmap_{param_results[0]}_{len(dr_scenarios)}_"
-                f"scenarios_{len(dr_clusters)}_clusters"
+                f"comparison_heatmap_{original_param}_"
+                f"scenarios_{'_'.join(dr_scenarios.values())}_"
+                f"clusters_{'_'.join(dr_clusters.values())}"
             )
             if not annotate:
                 file_name += "_no_annotations"
