@@ -198,7 +198,7 @@ def plot_cross_run_bar_charts(
                 )
 
     for original_param, cluster_results in param_results_dict.items():
-        if len(dr_clusters) != 1:
+        if len(dr_clusters) != 1 or config_plotting["subplots_in_columns"]:
             fig, axs = plt.subplots(
                 len(dr_clusters),
                 len(dr_scenarios),
@@ -583,7 +583,7 @@ def plot_cross_run_heatmaps(
                 )
 
     for original_param, cluster_results in param_results_dict.items():
-        if len(dr_clusters) != 1:
+        if len(dr_clusters) != 1 or config_plotting["subplots_in_columns"]:
             width_ratios = [1] * len(dr_scenarios) + [0.1]
             height_ratios = [1] * len(dr_clusters)
             gs = gridspec.GridSpec(
@@ -620,7 +620,10 @@ def plot_cross_run_heatmaps(
                     f"{config_plotting['rename_dict']['clusters'][config_plotting['language']][cluster]}"
                     f" - DR {scenario}"
                 )  # noqa: E501
-                if len(dr_clusters) == 1:
+                if (
+                    len(dr_clusters) == 1
+                    and not config_plotting["subplots_in_columns"]
+                ):
                     axes_argument = axs[scenario_number]
                 else:
                     axes_argument = plt.subplot(
@@ -634,7 +637,10 @@ def plot_cross_run_heatmaps(
                 cbar_bounds = derive_cbar_bounds(
                     data, config_plotting, original_param
                 )
-                if len(dr_clusters) != 1:
+                if (
+                    len(dr_clusters) != 1
+                    or config_plotting["subplots_in_columns"]
+                ):
                     hide_cbar = True
                 else:
                     hide_cbar = False
@@ -664,7 +670,7 @@ def plot_cross_run_heatmaps(
                 if (
                     len(dr_clusters) > 1
                     and scenario_number == len(dr_scenarios) - 1
-                ):
+                ) or config_plotting["subplots_in_columns"]:
                     cbar_ax = plt.subplot(
                         gs[cluster_number, len(dr_scenarios)]
                     )
