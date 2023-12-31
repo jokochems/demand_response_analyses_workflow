@@ -1,14 +1,131 @@
 config_comparison:
-  tariff_config:
-    energy:
-      step_size: 20
-      min_share: 0
-      max_share: 100
-    capacity:
-      step_size: 20
-      min_share: 0
-      max_share: 100
-  check_tariff_config: True
+  all_tariff_configs:
+    hoho_cluster_shift_only:
+      "50":
+        tariff_config:
+          energy:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+          capacity:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+      "95":
+        tariff_config:
+          energy:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+          capacity:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+    hoho_cluster_shift_shed:
+      "50":
+        tariff_config:
+          energy:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+          capacity:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+      "95":
+        tariff_config:
+          energy:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+          capacity:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+    ind_cluster_shift_only:
+      "50":
+        tariff_config:
+          energy:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+          capacity:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+      "95":
+        tariff_config:
+          energy:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+          capacity:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+    ind_cluster_shift_shed:
+      "50":
+        tariff_config:
+          energy:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+          capacity:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+      "95":
+        tariff_config:
+          energy:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+          capacity:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+    tcs_cluster_shift_only:
+      "50":
+        tariff_config:
+          energy:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+          capacity:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+      "95":
+        tariff_config:
+          energy:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+          capacity:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+    tcs+hoho_cluster_shift_only:
+      "50":
+        tariff_config:
+          energy:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+          capacity:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+      "95":
+        tariff_config:
+          energy:
+            step_size: 20
+            min_share: 0
+            max_share: 100
+          capacity:
+            step_size: 20
+            min_share: 0
+            max_share: 100
   output_folder: "./results/"
   data_output: "data_out/"
   plots_output: "plots_out/"
