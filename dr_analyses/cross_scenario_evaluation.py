@@ -84,8 +84,17 @@ def evaluate_parameter_results(
             f"{config_workflow['load_shifting_focus_cluster']}/"
             f"{dr_scen}/"
         )
+        file_name = (
+            f"{data_output_folder}{param}_"
+            f"{config_workflow['tariff_config']['energy']['min_share']}-"
+            f"{config_workflow['tariff_config']['energy']['max_share']}"
+            f"_dynamic_"
+            f"{config_workflow['tariff_config']['capacity']['min_share']}-"
+            f"{config_workflow['tariff_config']['capacity']['max_share']}"
+            f"_LP.csv"
+        )
         make_directory_if_missing(data_output_folder)
-        param_results.to_csv(f"{data_output_folder}{param}.csv", sep=";")
+        param_results.to_csv(file_name, sep=";")
 
     return param_results
 
