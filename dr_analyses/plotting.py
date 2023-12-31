@@ -236,6 +236,8 @@ def plot_cross_run_bar_charts(
                     and not config_plotting["subplots_in_columns"]
                 ):
                     axes_argument = axs[scenario_number]
+                elif len(dr_scenarios) == 1:
+                    axes_argument = axs[cluster_number]
                 else:
                     axes_argument = axs[cluster_number, scenario_number]
                 create_bar_chart(
