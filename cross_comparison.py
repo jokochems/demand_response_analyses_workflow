@@ -31,7 +31,9 @@ if __name__ == "__main__":
             for dr_scen in config_comparison["demand_response_scenarios"]:
                 file_name = (
                     f"{config_comparison['output_folder']}data_out/"
-                    f"{cluster}/{dr_scen}/{param}.csv"
+                    f"{cluster}/{dr_scen}/{param}_"
+                    f"{shares_energy[0]}-{shares_energy[-1]}_dynamic_"
+                    f"{shares_capacity[0]}-{shares_capacity[-1]}_LP.csv"
                 )
                 param_results = pd.read_csv(file_name, sep=";", index_col=0)
                 if (param_results.index.to_list() != shares_capacity) or (

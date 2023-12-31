@@ -231,7 +231,10 @@ def plot_cross_run_bar_charts(
                     )  # noqa: E501
                 else:
                     title = None
-                if len(dr_clusters) == 1:
+                if (
+                    len(dr_clusters) == 1
+                    and not config_plotting["subplots_in_columns"]
+                ):
                     axes_argument = axs[scenario_number]
                 else:
                     axes_argument = axs[cluster_number, scenario_number]
