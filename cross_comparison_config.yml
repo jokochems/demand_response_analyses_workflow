@@ -50,7 +50,7 @@ config_plotting:
   medium_size: 14
   bigger_size: 15
   scaling_factor: 2
-  subplots_in_columns: True
+  subplots_in_columns: False
   width:
     bar: 10
     heatmap: 8
