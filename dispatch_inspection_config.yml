@@ -1,4 +1,6 @@
 config_dispatch:
+  input_folder: "./inputs/"
+  data_sub_folder: "data"
   output_folder: "./results/"
   demand_response_scenarios:
     "5": "scenario_w_dr_5"
