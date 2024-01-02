@@ -1,0 +1,24 @@
+config_dispatch:
+  output_folder: "./results/"
+  demand_response_scenarios:
+    "5": "scenario_w_dr_5"
+    "50": "scenario_w_dr_50"
+    "95": "scenario_w_dr_95"
+  cases:
+    hoho_cluster_shift_only:
+      - scenario: "50"
+        dynamic_share: 0
+        capacity_share: 0
+      - scenario: "50"
+        dynamic_share: 100
+        capacity_share: 0
+    ind_cluster_shift_only:
+      - scenario: "95"
+        dynamic_share: 0
+        capacity_share: 100
+
+config_plotting:
+  single_situation:
+    start_time: "2020-01-01 00:00"
+    timesteps: 24
+  evaluate_weekly: True
