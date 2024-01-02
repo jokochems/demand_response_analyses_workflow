@@ -1,7 +1,9 @@
+import math
 from typing import Dict
 
 import pandas as pd
 
+from dr_analyses.time import cut_leap_days
 from dr_analyses.workflow_config import (
     add_args,
     extract_simple_config,
@@ -29,6 +31,7 @@ def read_and_combine_results(
     combined = pd.concat(
         [energy_exchange_results, load_shifting_trader_results], axis=1
     )
+    set_time_index(combined)
     return combined.drop(
         columns=[
             col
@@ -42,6 +45,23 @@ def read_and_combine_results(
             ]
         ]
     )
+
+
+def set_time_index(combined: pd.DataFrame):
+    """Define and set a time index for DataFrame"""
+    years = math.floor(combined.shape[0] / 8760)
+    time_index = cut_leap_days(
+        pd.Series(
+            index=pd.date_range(
+                start="2020-01-01 00:00:00",
+                end=f"{2020 + years - 1}-12-31 23:00:00",
+                freq="H",
+            ),
+            data=0,
+        )
+    )
+    combined["new_index"] = time_index.index
+    combined.set_index("new_index", inplace=True)
 
 
 if __name__ == "__main__":
