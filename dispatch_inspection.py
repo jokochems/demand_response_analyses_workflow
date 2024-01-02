@@ -1,4 +1,5 @@
 import math
+import os
 from typing import Dict
 
 import numpy as np
@@ -12,15 +13,41 @@ from dr_analyses.workflow_config import (
 from dr_analyses.workflow_routines import load_yaml_file
 
 
+def derive_combined_results(
+    config_dispatch: Dict, scenario: str, cluster: str, tariff: str
+):
+    """Create combined results for case currently evaluated"""
+    combined_results = read_and_combine_results(
+        config_dispatch, scenario, cluster, tariff
+    )
+    combined_results = add_variable_shifting_costs(
+        config_dispatch,
+        cluster,
+        scenario,
+        combined_results,
+    )
+    combined_results = add_price_estimate(
+        config_dispatch,
+        cluster,
+        scenario,
+        tariff,
+        combined_results,
+    )
+    combined_results.to_csv(
+        f"{config_dispatch['output_folder']}{cluster}/"
+        f"{scenario}/scenario_w_dr_{scenario}_"
+        f"{tariff.split('_', 4)[-1]}/"
+        f"combined_results.csv",
+        sep=";",
+    )
+
+
 def read_and_combine_results(
-    config_dispatch: Dict, cluster: str, tariff: Dict
+    config_dispatch: Dict, scenario: str, cluster: str, tariff: str
 ):
     """Read and combine energy exchange and load shifting results"""
     file_path = (
-        f"{config_dispatch['output_folder']}{cluster}/"
-        f"{tariff['scenario']}/"
-        f"{config_dispatch['demand_response_scenarios'][tariff['scenario']]}_"
-        f"{tariff['dynamic_share']}_dynamic_{tariff['capacity_share']}_LP"
+        f"{config_dispatch['output_folder']}{cluster}/" f"{scenario}/{tariff}"
     )
     load_shifting_trader_results = pd.read_csv(
         f"{file_path}/LoadShiftingTraderExtended.csv",
@@ -65,13 +92,13 @@ def set_time_index(combined: pd.DataFrame):
     combined.set_index("new_index", inplace=True)
 
 
-def retreive_variable_shifting_costs(
+def add_variable_shifting_costs(
     config_dispatch: Dict,
     cluster: str,
     scenario: str,
     combined_results: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Retreive the variable shifting costs for given cluster and scenario"""
+    """Add the variable shifting costs for given cluster and scenario"""
     variable_costs = pd.read_csv(
         f"{config_dispatch['input_folder']}"
         f"{config_dispatch['data_sub_folder']}/"
@@ -95,20 +122,61 @@ def retreive_variable_shifting_costs(
     return combined_results[:-1]
 
 
+def add_price_estimate(
+    config_dispatch: Dict,
+    cluster: str,
+    scenario: str,
+    tariff: str,
+    combined_results: pd.DataFrame,
+) -> pd.DataFrame:
+    """Add the price estimate used for scheduling for cluster and scenario"""
+    price_sensitivity = pd.read_csv(
+        f"{config_dispatch['input_folder']}"
+        f"{config_dispatch['data_sub_folder']}/"
+        f"{cluster}/{scenario}/price_sensitivity_estimate_"
+        f"{scenario}_{tariff.split('_', 4)[-1]}.csv",
+        sep=";",
+        index_col=0,
+        header=None,
+    )
+    price_sensitivity.index = pd.to_datetime(
+        price_sensitivity.index.str.replace("_", " ")
+    )
+    combined_results["ElectricityPriceEstimateInEURperMWH"] = (
+        combined_results["ElectricityPriceInEURperMWH"]
+        + combined_results["NetAwardedPower"] * price_sensitivity[1]
+    )
+    return combined_results
+
+
 if __name__ == "__main__":
     args = add_args()
     config_file = load_yaml_file(args.file)
     config_dispatch = extract_simple_config(config_file, "config_dispatch")
 
-    for cluster, tariffs in config_dispatch["cases"].items():
-        for tariff in tariffs:
-            combined_results_raw = read_and_combine_results(
-                config_dispatch, cluster, tariff
-            )
-            combined_results = retreive_variable_shifting_costs(
-                config_dispatch,
-                cluster,
-                tariff["scenario"],
-                combined_results_raw,
-            )
-            print("stop")
+    # Add combined results for all simulations run so far
+    for cluster in next(os.walk(config_dispatch["output_folder"]))[1]:
+        if cluster not in config_dispatch["all_clusters"]:
+            continue
+        else:
+            for scenario in next(
+                os.walk(f"{config_dispatch['output_folder']}/{cluster}")
+            )[1]:
+                for tariff in os.listdir(
+                    f"{config_dispatch['output_folder']}/{cluster}/"
+                    f"{scenario}"
+                ):
+                    if "wo_dr" not in tariff:
+                        try:
+                            derive_combined_results(
+                                config_dispatch, scenario, cluster, tariff
+                            )
+                        except FileNotFoundError:
+                            print(
+                                f"Failed for cluster: {cluster}; "
+                                f"scenario: {scenario}; tariff: {tariff}."
+                            )
+                    else:
+                        continue
+
+    # TODO: Add plotting for dedicated cases

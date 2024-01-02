@@ -8,20 +8,20 @@ config_workflow:
     mode: "from_workflow"  # "from_file"
     config_file: "tariff_configuration_ALL"  # "tariff_configuration"
     energy:
-      step_size: 20
+      step_size: 100
       min_share: 0
       max_share: 100
     capacity:
-      step_size: 20
+      step_size: 100
       min_share: 0
       max_share: 100
   output_folder: "./results/"
   data_output: "data_out/"
   plots_output: "plots_out/"
   demand_response_scenarios:
-    "5": "scenario_w_dr_5"
+#    "5": "scenario_w_dr_5"
     "50": "scenario_w_dr_50"
-    "95": "scenario_w_dr_95"
+#    "95": "scenario_w_dr_95"
   load_shifting_focus_cluster: "ind_cluster_shift_only"
   investment_year: 2020
   interest_rate: 0.1
@@ -29,8 +29,8 @@ config_workflow:
   network_tariff_growth_rate: 1.07  # analytical estimate
   prepare_tariff_config: True
   simulation:
-    StartTime: 2019-12-31_23:58:00  # 2026-12-31_23:58:00
-    StopTime: 2034-12-31_23:58:00  # 2027-12-31_23:58:00
+    StartTime: 2026-12-31_23:58:00  # 2026-12-31_23:58:00
+    StopTime: 2027-12-31_23:58:00  # 2027-12-31_23:58:00
     artificial_shortage_capacity_in_MW: 100000
     minimum_value_of_lost_load: 300
   amiris_analyses:
@@ -44,7 +44,7 @@ config_workflow:
     aggregate_results: True
   annuity_mode: "single_year"  # "single_year", "multiple_years"
   lifetime: 15  # only for annuity_mode "single_year"
-  activate_flh_check: True
+  activate_flh_check: False
   write_results: True
   evaluate_cross_scenarios: True
   make_plots: True
