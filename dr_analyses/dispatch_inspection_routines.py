@@ -149,3 +149,18 @@ def retrieve_combined_result(
         sep=";",
         index_col=0,
     )
+
+
+def slice_combined_result(
+    combined_result: pd.DataFrame, config_plotting: Dict
+):
+    """Slice combined result for plotting purposes"""
+    start_iloc = combined_result.index.get_loc(
+        config_plotting["single_situation"]["start_time"]
+    )
+    return combined_result.iloc[
+        start_iloc : min(
+            len(combined_result) - 1,
+            start_iloc + config_plotting["single_situation"]["timesteps"],
+        )
+    ].drop(columns=["VariableShiftingCosts"])

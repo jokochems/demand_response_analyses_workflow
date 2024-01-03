@@ -3,10 +3,13 @@ import os
 from dr_analyses.dispatch_inspection_routines import (
     derive_combined_results,
     retrieve_combined_result,
+    slice_combined_result,
 )
+from dr_analyses.plotting import plot_dispatch_patterns, configure_plots
 from dr_analyses.workflow_config import (
     add_args,
     extract_simple_config,
+    extract_config_plotting,
 )
 from dr_analyses.workflow_routines import load_yaml_file
 
@@ -15,7 +18,7 @@ if __name__ == "__main__":
     config_file = load_yaml_file(args.file)
     config_workflow = extract_simple_config(config_file, "config_workflow")
     config_dispatch = extract_simple_config(config_file, "config_dispatch")
-    config_plotting = extract_simple_config(config_file, "config_plotting")
+    config_plotting = extract_config_plotting(config_file)
 
     if config_workflow["create_combined_results"]:
         # Add combined results for all simulations run so far
@@ -49,4 +52,14 @@ if __name__ == "__main__":
                 combined_result = retrieve_combined_result(
                     config_dispatch, cluster, tariff
                 )
-                print("stop")
+                combined_result_sliced = slice_combined_result(
+                    combined_result, config_plotting
+                )
+                configure_plots(config_plotting)
+                plot_dispatch_patterns(
+                    combined_result_sliced,
+                    cluster,
+                    tariff,
+                    config_plotting,
+                    config_dispatch,
+                )

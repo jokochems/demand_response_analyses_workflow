@@ -29,14 +29,18 @@ def extract_simple_config(config: Dict, key):
 def extract_config_plotting(config: Dict):
     """Extract config part to control the plotting"""
     config_plotting = config["config_plotting"]
-    if config_plotting["x_label"] == "None":
-        config_plotting["x_label"] = None
-    config_plotting["figsize"] = {"bar": {}, "heatmap": {}}
+    if "x_label" in config_plotting:
+        if config_plotting["x_label"] == "None":
+            config_plotting["x_label"] = None
+    config_plotting["figsize"] = {"bar": {}, "heatmap": {}, "line": {}}
     for key in config_plotting["figsize"]:
-        config_plotting["figsize"][key] = (
-            config_plotting["width"].pop(key),
-            config_plotting["height"].pop(key),
-        )
+        try:
+            config_plotting["figsize"][key] = (
+                config_plotting["width"].pop(key),
+                config_plotting["height"].pop(key),
+            )
+        except KeyError:
+            continue
     _ = config_plotting.pop("width")
     _ = config_plotting.pop("height")
 
