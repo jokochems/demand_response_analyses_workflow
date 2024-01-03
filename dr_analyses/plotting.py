@@ -788,6 +788,9 @@ def plot_dispatch_patterns(
             ]["NetAwardedPower"]
         ],
         alpha=0.7,
+        label=config_plotting["rename_dict"]["area"][
+            config_plotting["language"]
+        ],
     )
     _ = ax.set_ylim(
         [power_results.min().min() * 1.05, power_results.max().max() * 1.05]
