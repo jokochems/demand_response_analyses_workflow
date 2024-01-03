@@ -35,9 +35,7 @@ def derive_combined_results(
     )
     combined_results.to_csv(
         f"{config_dispatch['output_folder']}{cluster}/"
-        f"{scenario}/scenario_w_dr_{scenario}_"
-        f"{tariff.split('_', 4)[-1]}/"
-        f"combined_results.csv",
+        f"{scenario}/{tariff}/combined_results.csv",
         sep=";",
     )
 
@@ -47,7 +45,7 @@ def read_and_combine_results(
 ):
     """Read and combine energy exchange and load shifting results"""
     file_path = (
-        f"{config_dispatch['output_folder']}{cluster}/" f"{scenario}/{tariff}"
+        f"{config_dispatch['output_folder']}{cluster}/{scenario}/{tariff}"
     )
     load_shifting_trader_results = pd.read_csv(
         f"{file_path}/LoadShiftingTraderExtended.csv",
@@ -64,13 +62,7 @@ def read_and_combine_results(
         columns=[
             col
             for col in combined.columns
-            if col
-            not in [
-                "ElectricityPriceInEURperMWH",
-                "NetAwardedPower",
-                "BaselineLoadProfile",
-                "LoadAfterShifting",
-            ]
+            if col not in config_dispatch["columns_to_keep"]
         ]
     )
 
@@ -88,8 +80,8 @@ def set_time_index(combined: pd.DataFrame):
             data=0,
         )
     )
-    combined["new_index"] = time_index.index
-    combined.set_index("new_index", inplace=True)
+    combined["TimeIndex"] = time_index.index
+    combined.set_index("TimeIndex", inplace=True)
 
 
 def add_variable_shifting_costs(

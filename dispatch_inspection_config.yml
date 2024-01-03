@@ -13,6 +13,11 @@ config_dispatch:
     - "ind_cluster_shift_shed"
     - "tcs_cluster_shift_only"
     - "tcs+hoho_cluster_shift_only"
+  columns_to_keep:
+    - "ElectricityPriceInEURperMWH"
+    - "NetAwardedPower"
+    - "BaselineLoadProfile"
+    - "LoadAfterShifting"
 
 config_plotting:
   single_situation:
