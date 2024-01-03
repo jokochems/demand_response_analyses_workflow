@@ -702,15 +702,51 @@ def plot_cross_run_heatmaps(
             plt.show()
 
 
-def plot_dispatch_patterns(
+def plot_single_dispatch_pattern(
     combined_results: pd.DataFrame,
     cluster: str,
     tariff: Dict,
     config_plotting: Dict,
     config_dispatch: Dict,
+    xtick_frequency: int = 1,
 ):
     """Plot dispatch of load shifting against prices and planned load"""
     fig, ax = plt.subplots(figsize=config_plotting["figsize"]["line"])
+    create_dispatch_plot(
+        combined_results,
+        config_plotting,
+        ax=ax,
+        xtick_frequency=xtick_frequency,
+    )
+    _ = plt.tight_layout()
+    if config_plotting["save_plot"]:
+        path = (
+            f"{config_dispatch['output_folder']}"
+            f"{config_dispatch['plots_output']}"
+            f"{cluster}/{tariff['scenario']}/dispatch/"
+        )
+        file_name = (
+            f"{path}{tariff['scenario']}_"
+            f"{tariff['dynamic_share']}_dynamic_"
+            f"{tariff['capacity_share']}_LP_"
+            f"{combined_results.index[0]}-{combined_results.index[-1]}.png"
+        )
+        file_name = file_name.replace(":", "-").replace(" ", "_")
+        make_directory_if_missing(path)
+        _ = fig.savefig(file_name, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    if config_plotting["show_plot"]:
+        plt.show()
+
+
+def create_dispatch_plot(
+    combined_results: pd.DataFrame,
+    config_plotting: Dict,
+    ax: matplotlib.axes.Axes,
+    xtick_frequency: int,
+):
+    """Plot a given dispatch situation"""
+
     _ = ax.axhline(0, color="darkgray", linewidth=1)
     ax2 = ax.twinx()
     price_cols = [
@@ -793,7 +829,7 @@ def plot_dispatch_patterns(
         ],
     )
     _ = ax.set_ylim(
-        [power_results.min().min() * 1.05, power_results.max().max() * 1.05]
+        power_results.min().min() * 1.05, power_results.max().max() * 1.05
     )
     ax2.set_ylim(-50, 250)
     ax.set_ylabel(
@@ -808,16 +844,9 @@ def plot_dispatch_patterns(
         ],
         labelpad=10,
     )
-    _ = ax.set_xticks(
-        range(0, len(power_results.index), config_plotting["xtick_frequency"])
-    )
+    _ = ax.set_xticks(range(0, len(power_results.index), xtick_frequency))
     _ = ax.set_xticklabels(
-        [
-            label[:16]
-            for label in power_results.index[
-                :: config_plotting["xtick_frequency"]
-            ]
-        ],
+        [label[:16] for label in power_results.index[::xtick_frequency]],
         rotation=90,
         ha="center",
     )
@@ -847,25 +876,6 @@ def plot_dispatch_patterns(
     _ = ax.margins(0, 0.05)
     _ = ax2.margins(0, 0.05)
     align_zeros(ax, ax2)
-    _ = plt.tight_layout()
-    if config_plotting["save_plot"]:
-        path = (
-            f"{config_dispatch['output_folder']}"
-            f"{config_dispatch['plots_output']}"
-            f"{cluster}/{tariff['scenario']}/dispatch/"
-        )
-        file_name = (
-            f"{path}{tariff['scenario']}_"
-            f"{tariff['dynamic_share']}_dynamic_"
-            f"{tariff['capacity_share']}_LP_"
-            f"{combined_results.index[0]}-{combined_results.index[-1]}.png"
-        )
-        file_name = file_name.replace(":", "-").replace(" ", "_")
-        make_directory_if_missing(path)
-        _ = fig.savefig(file_name, dpi=300, bbox_inches="tight")
-    plt.close(fig)
-    if config_plotting["show_plot"]:
-        plt.show()
 
 
 def align_zeros(ax1, ax2):
@@ -885,3 +895,52 @@ def align_zeros(ax1, ax2):
         ax2.set_ylim(bottom=ax2_ylims[1] * ax1_yratio)
     else:
         ax1.set_ylim(bottom=ax1_ylims[1] * ax2_yratio)
+
+
+def plot_weekly_dispatch_situations(
+    combined_results: pd.DataFrame,
+    cluster: str,
+    tariff: Dict,
+    config_plotting: Dict,
+    config_dispatch: Dict,
+    week: int,
+    xtick_frequency: int = 12,
+):
+    """Plot dispatch of load shifting, prices and planned load for given week"""
+    fig, ax = plt.subplots(figsize=config_plotting["figsize"]["line"])
+    create_dispatch_plot(
+        combined_results,
+        config_plotting,
+        ax=ax,
+        xtick_frequency=xtick_frequency,
+    )
+    title = {
+        "German": (
+            f"Dispatch für Woche {week + 1} im Jahr "
+            f"{config_plotting['weekly_evaluation']['year_to_analyse']}"
+        ),
+        "English": (
+            f"Dispatch for week {week + 1} of year "
+            f"{config_plotting['weekly_evaluation']['year_to_analyse']}"
+        ),
+    }
+    plt.title(title[config_plotting["language"]])
+    _ = plt.tight_layout()
+    if config_plotting["save_plot"]:
+        path = (
+            f"{config_dispatch['output_folder']}"
+            f"{config_dispatch['plots_output']}"
+            f"{cluster}/{tariff['scenario']}/dispatch/"
+        )
+        file_name = (
+            f"{path}{tariff['scenario']}_"
+            f"{tariff['dynamic_share']}_dynamic_"
+            f"{tariff['capacity_share']}_LP_"
+            f"week_{week}_of_"
+            f"{config_plotting['weekly_evaluation']['year_to_analyse']}.png"
+        )
+        make_directory_if_missing(path)
+        _ = fig.savefig(file_name, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    if config_plotting["show_plot"]:
+        plt.show()

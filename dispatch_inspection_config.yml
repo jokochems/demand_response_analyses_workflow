@@ -40,9 +40,11 @@ config_plotting:
       - scenario: "95"
         dynamic_share: 0
         capacity_share: 100
-  evaluate_weekly: True
+  weekly_evaluation:
+    enable: True
+    year_to_analyse: 2020
   save_plot: True
-  show_plot: True
+  show_plot: False
   language: "German"  # "German", "English"
   small_size: 11
   medium_size: 14

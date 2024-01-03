@@ -5,7 +5,11 @@ from dr_analyses.dispatch_inspection_routines import (
     retrieve_combined_result,
     slice_combined_result,
 )
-from dr_analyses.plotting import plot_dispatch_patterns, configure_plots
+from dr_analyses.plotting import (
+    plot_single_dispatch_pattern,
+    configure_plots,
+    plot_weekly_dispatch_situations,
+)
 from dr_analyses.workflow_config import (
     add_args,
     extract_simple_config,
@@ -56,10 +60,27 @@ if __name__ == "__main__":
                     combined_result, config_plotting
                 )
                 configure_plots(config_plotting)
-                plot_dispatch_patterns(
+                plot_single_dispatch_pattern(
                     combined_result_sliced,
                     cluster,
                     tariff,
                     config_plotting,
                     config_dispatch,
+                    xtick_frequency=config_plotting["xtick_frequency"],
                 )
+                if config_plotting["weekly_evaluation"]["enable"]:
+                    for week in range(52):
+                        combined_result_sliced = slice_combined_result(
+                            combined_result,
+                            config_plotting,
+                            weekly=True,
+                            week_counter=week,
+                        )
+                        plot_weekly_dispatch_situations(
+                            combined_result_sliced,
+                            cluster,
+                            tariff,
+                            config_plotting,
+                            config_dispatch,
+                            week,
+                        )

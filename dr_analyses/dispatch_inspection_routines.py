@@ -152,15 +152,27 @@ def retrieve_combined_result(
 
 
 def slice_combined_result(
-    combined_result: pd.DataFrame, config_plotting: Dict
+    combined_result: pd.DataFrame,
+    config_plotting: Dict,
+    weekly: bool = False,
+    week_counter: int = 0,
 ):
     """Slice combined result for plotting purposes"""
-    start_iloc = combined_result.index.get_loc(
-        config_plotting["single_situation"]["start_time"]
-    )
+    if weekly:
+        start_iloc = (
+            week_counter * 168
+            + (config_plotting["weekly_evaluation"]["year_to_analyse"] - 2020)
+            * 8760
+        )
+        time_steps = 168
+    else:
+        time_steps = config_plotting["single_situation"]["timesteps"]
+        start_iloc = combined_result.index.get_loc(
+            config_plotting["single_situation"]["start_time"]
+        )
     return combined_result.iloc[
         start_iloc : min(
             len(combined_result) - 1,
-            start_iloc + config_plotting["single_situation"]["timesteps"],
+            start_iloc + time_steps,
         )
     ].drop(columns=["VariableShiftingCosts"])
