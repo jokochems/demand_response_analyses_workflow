@@ -1,6 +1,7 @@
 import math
 from typing import Dict
 
+import numpy as np
 import pandas as pd
 
 from dr_analyses.time import cut_leap_days
@@ -127,8 +128,15 @@ def add_price_estimate(
     price_sensitivity.index = pd.to_datetime(
         price_sensitivity.index.str.replace("_", " ")
     )
+    file_path = (
+        f"{config_dispatch['output_folder']}{cluster}/{scenario}/scenario_wo_dr_{scenario}"
+    )
+    price_before_shifting = pd.read_csv(
+        f"{file_path}/EnergyExchangeMulti.csv", sep=";"
+    )[["ElectricityPriceInEURperMWH"]]
+    price_before_shifting.index = combined_results.index
     combined_results["ElectricityPriceEstimateInEURperMWH"] = (
-        combined_results["ElectricityPriceInEURperMWH"]
+        price_before_shifting["ElectricityPriceInEURperMWH"]
         + combined_results["NetAwardedPower"] * price_sensitivity[1]
     )
     return combined_results
@@ -166,10 +174,10 @@ def slice_combined_result(
         )
         time_steps = 168
     else:
-        time_steps = config_plotting["single_situation"]["timesteps"]
         start_iloc = combined_result.index.get_loc(
             config_plotting["single_situation"]["start_time"]
         )
+        time_steps = config_plotting["single_situation"]["timesteps"]
     return combined_result.iloc[
         start_iloc : min(
             len(combined_result) - 1,
