@@ -58,7 +58,7 @@ config_plotting:
       linestyle: "solid"
       secondary_y: True
     "NetAwardedPower":
-      color: "#444444"
+      color: "#777777"
       linestyle: "solid"
       secondary_y: False
     "BaselineLoadProfile":

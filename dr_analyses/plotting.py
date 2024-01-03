@@ -774,6 +774,24 @@ def plot_dispatch_patterns(
             linestyle=price_linestyles[col],
             color=price_colors[col],
         )
+    net_awarded = power_results[
+        config_plotting["rename_dict"]["parameters"][
+            config_plotting["language"]
+        ]["NetAwardedPower"]
+    ]
+    _ = ax.fill_between(
+        power_results.index,
+        net_awarded,
+        facecolor=power_colors[
+            config_plotting["rename_dict"]["parameters"][
+                config_plotting["language"]
+            ]["NetAwardedPower"]
+        ],
+        alpha=0.7,
+    )
+    _ = ax.set_ylim(
+        [power_results.min().min() * 1.05, power_results.max().max() * 1.05]
+    )
     ax2.set_ylim(-50, 250)
     ax.set_ylabel(
         config_plotting["axes_labels"][config_plotting["language"]][
