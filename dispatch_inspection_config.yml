@@ -1,5 +1,5 @@
 config_workflow:
-  create_combined_results: False
+  create_combined_results: True
   plot_dispatch_situations: True
 
 config_dispatch:
