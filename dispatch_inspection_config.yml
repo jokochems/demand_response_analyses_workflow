@@ -1,3 +1,7 @@
+config_workflow:
+  create_combined_results: False
+  plot_dispatch_situations: True
+
 config_dispatch:
   input_folder: "./inputs/"
   data_sub_folder: "data"
