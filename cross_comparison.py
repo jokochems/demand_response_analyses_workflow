@@ -42,8 +42,8 @@ if __name__ == "__main__":
                 file_name = (
                     f"{config_comparison['output_folder']}data_out/"
                     f"{cluster}/{dr_scen}/{param}_"
-                    f"{shares_energy[cluster][scenario][0]}-{shares_energy[cluster][scenario][-1]}_dynamic_"
-                    f"{shares_capacity[cluster][scenario][0]}-{shares_capacity[cluster][scenario][-1]}_LP.csv"
+                    f"{shares_energy[cluster][dr_scen][0]}-{shares_energy[cluster][dr_scen][-1]}_dynamic_"
+                    f"{shares_capacity[cluster][dr_scen][0]}-{shares_capacity[cluster][dr_scen][-1]}_LP.csv"
                 )
                 param_results = pd.read_csv(file_name, sep=";", index_col=0)
                 results[param][cluster][dr_scen] = param_results
