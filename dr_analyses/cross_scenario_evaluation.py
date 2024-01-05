@@ -91,10 +91,12 @@ def evaluate_parameter_results(
             f"_dynamic_"
             f"{config_workflow['tariff_config']['capacity']['min_share']}-"
             f"{config_workflow['tariff_config']['capacity']['max_share']}"
-            f"_LP.csv"
+            f"_LP"
         )
+        if config_workflow["optional_file_add_on"] != "":
+            file_name += config_workflow["optional_file_add_on"]
         make_directory_if_missing(data_output_folder)
-        param_results.to_csv(file_name, sep=";")
+        param_results.to_csv(f"{file_name}.csv", sep=";")
 
     return param_results
 
