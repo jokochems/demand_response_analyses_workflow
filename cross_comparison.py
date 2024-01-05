@@ -1,5 +1,3 @@
-import warnings
-
 import pandas as pd
 
 from dr_analyses.plotting import (

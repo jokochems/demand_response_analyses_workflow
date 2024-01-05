@@ -29,7 +29,7 @@ Agents:
         Api:
           ServiceUrl: http://127.0.0.1:8000/load_shift/
           UseAnnualLimit: 1
-          Solver: cplex
+          Solver: cplex  # cplex, gurobi
           PriceSensitivityEstimate: 0.0
       Policy:
         EEGSurchargeInEURPerMWH: 0.0

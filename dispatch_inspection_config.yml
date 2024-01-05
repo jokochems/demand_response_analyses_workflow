@@ -1,0 +1,104 @@
+config_workflow:
+  create_combined_results: True
+  plot_dispatch_situations: True
+
+config_dispatch:
+  input_folder: "./inputs/"
+  data_sub_folder: "data"
+  output_folder: "./results/"
+  plots_output: "plots_out/"
+  demand_response_scenarios:
+    "5": "scenario_w_dr_5"
+    "50": "scenario_w_dr_50"
+    "95": "scenario_w_dr_95"
+  all_clusters:
+    - "hoho_cluster_shift_only"
+    - "hoho_cluster_shift_shed"
+    - "ind_cluster_shift_only"
+    - "ind_cluster_shift_shed"
+    - "tcs_cluster_shift_only"
+    - "tcs+hoho_cluster_shift_only"
+  columns_to_keep:
+    - "ElectricityPriceInEURperMWH"
+    - "NetAwardedPower"
+    - "BaselineLoadProfile"
+    - "LoadAfterShifting"
+
+config_plotting:
+  single_situation:
+    start_time: "2020-01-01 00:00:00"
+    timesteps: 24
+  cases:
+    hoho_cluster_shift_only:
+      - scenario: "50"
+        dynamic_share: 0
+        capacity_share: 0
+      - scenario: "50"
+        dynamic_share: 100
+        capacity_share: 0
+    ind_cluster_shift_only:
+      - scenario: "95"
+        dynamic_share: 0
+        capacity_share: 100
+  weekly_evaluation:
+    enable: True
+    year_to_analyse: 2020
+  save_plot: True
+  show_plot: False
+  language: "German"  # "German", "English"
+  small_size: 11
+  medium_size: 14
+  bigger_size: 15
+  width:
+    line: 10
+  height:
+    line: 8
+  xtick_frequency: 1
+  styles:
+    "ElectricityPriceInEURperMWH":
+      color: "#CBC448"
+      linestyle: "solid"
+      secondary_y: True
+    "NetAwardedPower":
+      color: "#777777"
+      linestyle: "solid"
+      secondary_y: False
+    "BaselineLoadProfile":
+      color: "#999999"
+      linestyle: "dashed"
+      secondary_y: False
+    "LoadAfterShifting":
+      color: "#111111"
+      linestyle: "solid"
+      secondary_y: False
+    "ElectricityPriceEstimateInEURperMWH":
+      color: "#E4DD51"
+      linestyle: "dashdot"
+      secondary_y: True
+  rename_dict:
+    x_axis:
+      "English": "time"
+      "German": "Zeit"
+    area:
+      "English": "shifted energy"
+      "German": "Verschobene Energie"
+    parameters:
+      "English":
+        "ElectricityPriceInEURperMWH": "electricity price in EUR/MWh"
+        "NetAwardedPower": "net load shifting in MW"
+        "BaselineLoadProfile": "baseline load profile in MW"
+        "LoadAfterShifting": "load after shifting in MW"
+        "ElectricityPriceEstimateInEURperMWH": "prognosed electricity price in EUR/MWh"
+      "German":
+        "ElectricityPriceInEURperMWH": "Strompreis in EUR/MWh"
+        "NetAwardedPower": "Netto Lastverschiebung in MW"
+        "BaselineLoadProfile": "Baseline-Lastprofil in MW"
+        "LoadAfterShifting": "Last nach Verschiebung in MW"
+        "ElectricityPriceEstimateInEURperMWH": "Prognostizierter Strompreis in EUR/MWh"
+  axes_labels:
+    "English":
+      primary_y: "load in MW"
+      secondary_y: "price in EUR/MWh"
+    "German":
+      primary_y: "Last in MW"
+      secondary_y: "Preis in EUR/MWh"

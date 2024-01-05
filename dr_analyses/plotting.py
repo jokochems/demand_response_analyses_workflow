@@ -700,3 +700,247 @@ def plot_cross_run_heatmaps(
         plt.close(fig)
         if config_plotting["show_plot"]:
             plt.show()
+
+
+def plot_single_dispatch_pattern(
+    combined_results: pd.DataFrame,
+    cluster: str,
+    tariff: Dict,
+    config_plotting: Dict,
+    config_dispatch: Dict,
+    xtick_frequency: int = 1,
+):
+    """Plot dispatch of load shifting against prices and planned load"""
+    fig, ax = plt.subplots(figsize=config_plotting["figsize"]["line"])
+    create_dispatch_plot(
+        combined_results,
+        config_plotting,
+        ax=ax,
+        xtick_frequency=xtick_frequency,
+    )
+    _ = plt.tight_layout()
+    if config_plotting["save_plot"]:
+        path = (
+            f"{config_dispatch['output_folder']}"
+            f"{config_dispatch['plots_output']}"
+            f"{cluster}/{tariff['scenario']}/dispatch/"
+        )
+        file_name = (
+            f"{path}{tariff['scenario']}_"
+            f"{tariff['dynamic_share']}_dynamic_"
+            f"{tariff['capacity_share']}_LP_"
+            f"{combined_results.index[0]}-{combined_results.index[-1]}.png"
+        )
+        file_name = file_name.replace(":", "-").replace(" ", "_")
+        make_directory_if_missing(path)
+        _ = fig.savefig(file_name, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    if config_plotting["show_plot"]:
+        plt.show()
+
+
+def create_dispatch_plot(
+    combined_results: pd.DataFrame,
+    config_plotting: Dict,
+    ax: matplotlib.axes.Axes,
+    xtick_frequency: int,
+):
+    """Plot a given dispatch situation"""
+
+    _ = ax.axhline(0, color="darkgray", linewidth=1)
+    ax2 = ax.twinx()
+    price_cols = [
+        col
+        for col in combined_results.columns
+        if config_plotting["styles"][col]["secondary_y"]
+    ]
+    power_cols = [
+        col for col in combined_results.columns if col not in price_cols
+    ]
+    power_results = combined_results[power_cols]
+    price_results = combined_results[price_cols]
+    for key, val in config_plotting["rename_dict"]["parameters"][
+        config_plotting["language"]
+    ].items():
+        config_plotting["styles"][val] = config_plotting["styles"][key]
+    power_results.rename(
+        columns=config_plotting["rename_dict"]["parameters"][
+            config_plotting["language"]
+        ],
+        inplace=True,
+    )
+    price_results.index.name = config_plotting["rename_dict"]["x_axis"][
+        config_plotting["language"]
+    ]
+    price_results.rename(
+        columns=config_plotting["rename_dict"]["parameters"][
+            config_plotting["language"]
+        ],
+        inplace=True,
+    )
+    power_colors = {
+        col: config_plotting["styles"][col]["color"]
+        for col in power_results.columns
+    }
+    price_colors = {
+        col: config_plotting["styles"][col]["color"]
+        for col in price_results.columns
+    }
+    power_linestyles = {
+        col: config_plotting["styles"][col]["linestyle"]
+        for col in power_results.columns
+    }
+    price_linestyles = {
+        col: config_plotting["styles"][col]["linestyle"]
+        for col in price_results.columns
+    }
+    for col in power_results.columns:
+        ax.plot(
+            power_results.index,
+            power_results[col],
+            label=col,
+            linestyle=power_linestyles[col],
+            color=power_colors[col],
+        )
+    for col in price_results.columns:
+        ax2.plot(
+            price_results.index,
+            price_results[col],
+            label=col,
+            linestyle=price_linestyles[col],
+            color=price_colors[col],
+        )
+    net_awarded = power_results[
+        config_plotting["rename_dict"]["parameters"][
+            config_plotting["language"]
+        ]["NetAwardedPower"]
+    ]
+    _ = ax.fill_between(
+        power_results.index,
+        net_awarded,
+        facecolor=power_colors[
+            config_plotting["rename_dict"]["parameters"][
+                config_plotting["language"]
+            ]["NetAwardedPower"]
+        ],
+        alpha=0.7,
+        label=config_plotting["rename_dict"]["area"][
+            config_plotting["language"]
+        ],
+    )
+    _ = ax.set_ylim(
+        power_results.min().min() * 1.05, power_results.max().max() * 1.05
+    )
+    ax2.set_ylim(-50, 250)
+    ax.set_ylabel(
+        config_plotting["axes_labels"][config_plotting["language"]][
+            "primary_y"
+        ],
+        labelpad=10,
+    )
+    ax2.set_ylabel(
+        config_plotting["axes_labels"][config_plotting["language"]][
+            "secondary_y"
+        ],
+        labelpad=10,
+    )
+    _ = ax.set_xticks(range(0, len(power_results.index), xtick_frequency))
+    _ = ax.set_xticklabels(
+        [label[:16] for label in power_results.index[::xtick_frequency]],
+        rotation=90,
+        ha="center",
+    )
+    _ = ax.set_xlabel(
+        config_plotting["rename_dict"]["x_axis"][config_plotting["language"]],
+        labelpad=10,
+    )
+
+    handles, labels = [], []
+    for ax_object in [ax, ax2]:
+        h, l = ax_object.get_legend_handles_labels()
+        handles.extend(h)
+        labels.extend(l)
+
+    _ = plt.legend(
+        handles,
+        labels,
+        loc="upper center",
+        bbox_to_anchor=[0.5, -0.55],
+        fancybox=True,
+        shadow=False,
+        ncol=2,
+    )
+    _ = ax.get_yaxis().set_major_formatter(
+        FuncFormatter(lambda x, p: format(int(x), ","))
+    )
+    _ = ax.margins(0, 0.05)
+    _ = ax2.margins(0, 0.05)
+    align_zeros(ax, ax2)
+
+
+def align_zeros(ax1, ax2):
+    """Align zero values for secondary y axis
+
+    Solution taken from this stackoverflow issue:
+    https://stackoverflow.com/questions/55646777/aligning-two-y-axis-around-zero,
+    accessed 03.01.2024
+    """  # noqa: E501
+    ax1_ylims = ax1.axes.get_ylim()
+    ax1_yratio = ax1_ylims[0] / ax1_ylims[1]
+
+    ax2_ylims = ax2.axes.get_ylim()
+    ax2_yratio = ax2_ylims[0] / ax2_ylims[1]
+
+    if ax1_yratio < ax2_yratio:
+        ax2.set_ylim(bottom=ax2_ylims[1] * ax1_yratio)
+    else:
+        ax1.set_ylim(bottom=ax1_ylims[1] * ax2_yratio)
+
+
+def plot_weekly_dispatch_situations(
+    combined_results: pd.DataFrame,
+    cluster: str,
+    tariff: Dict,
+    config_plotting: Dict,
+    config_dispatch: Dict,
+    week: int,
+    xtick_frequency: int = 12,
+):
+    """Plot dispatch of load shifting, prices and planned load for given week"""
+    fig, ax = plt.subplots(figsize=config_plotting["figsize"]["line"])
+    create_dispatch_plot(
+        combined_results,
+        config_plotting,
+        ax=ax,
+        xtick_frequency=xtick_frequency,
+    )
+    title = {
+        "German": (
+            f"Dispatch für Woche {week + 1} im Jahr "
+            f"{config_plotting['weekly_evaluation']['year_to_analyse']}"
+        ),
+        "English": (
+            f"Dispatch for week {week + 1} of year "
+            f"{config_plotting['weekly_evaluation']['year_to_analyse']}"
+        ),
+    }
+    plt.title(title[config_plotting["language"]])
+    _ = plt.tight_layout()
+    if config_plotting["save_plot"]:
+        path = (
+            f"{config_dispatch['output_folder']}"
+            f"{config_dispatch['plots_output']}"
+            f"{cluster}/{tariff['scenario']}/dispatch/"
+        )
+        file_name = (
+            f"{path}{tariff['scenario']}_"
+            f"{tariff['dynamic_share']}_dynamic_"
+            f"{tariff['capacity_share']}_LP_"
+            f"week_{week}_of_"
+            f"{config_plotting['weekly_evaluation']['year_to_analyse']}.png"
+        )
+        make_directory_if_missing(path)
+        _ = fig.savefig(file_name, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    if config_plotting["show_plot"]:
+        plt.show()
