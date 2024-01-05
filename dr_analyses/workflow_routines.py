@@ -825,9 +825,18 @@ def convert_amiris_results(cont: Container) -> None:
         f"{cont.config_workflow['output_folder']}/"
         f"{focus_cluster}/{dr_scenario}/"
     )
+    add_string = (
+        f"{cont.config_workflow['tariff_config']['energy']['min_share']}-"
+        f"{cont.config_workflow['tariff_config']['energy']['max_share']}_"
+        f"dynamic_"
+        f"{cont.config_workflow['tariff_config']['capacity']['min_share']}-"
+        f"{cont.config_workflow['tariff_config']['capacity']['max_share']}_LP"
+    )
+    if "optional_file_add_on" in cont.config_workflow:
+        add_string += cont.config_workflow["optional_file_add_on"]
     convert_results(
         f"{cont.config_workflow['output_folder']}/"
-        f"amiris-output_{focus_cluster}_{dr_scenario}.pb",
+        f"amiris-output_{focus_cluster}_{dr_scenario}_{add_string}.pb",
         cont.config_convert,
     )
     print(f"Scenario {cont.trimmed_scenario} results converted")

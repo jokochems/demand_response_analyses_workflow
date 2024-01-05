@@ -63,7 +63,7 @@ if __name__ == "__main__":
         run_properties[dr_scen] = update_run_properties(
             default_run_properties,
             dr_scen,
-            config_workflow["load_shifting_focus_cluster"],
+            config_workflow,
         )
 
     make_directory_if_missing(

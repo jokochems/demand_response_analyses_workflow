@@ -72,13 +72,24 @@ def extract_fame_config(config: Dict, key: str):
 def update_run_properties(
     default_run_properties: Dict,
     dr_scen: str,
-    load_shifting_focus_cluster: str,
+    config: Dict,
 ):
     """Create a duplicate of fameSetup.yaml and adjust output file"""
-    new_setup_file = (
-        f"{default_run_properties['setup'].split('.')[0]}_"
-        f"{load_shifting_focus_cluster}_{dr_scen}.yaml"
+    tariff_string = (
+        f"{config['tariff_config']['energy']['min_share']}-"
+        f"{config['tariff_config']['energy']['max_share']}_dynamic_"
+        f"{config['tariff_config']['capacity']['min_share']}-"
+        f"{config['tariff_config']['capacity']['max_share']}_LP"
     )
+
+    new_file_name = (
+        f"{default_run_properties['setup'].split('.')[0]}_"
+        f"{config['load_shifting_focus_cluster']}_{dr_scen}_{tariff_string}"
+    )
+    if "optional_file_add_on" in config:
+        new_file_name += config["optional_file_add_on"]
+    new_setup_file = f"{new_file_name}.yaml"
+
     shutil.copyfile(
         f"{default_run_properties['setup']}",
         new_setup_file,
@@ -86,8 +97,11 @@ def update_run_properties(
     fame_setup = load_yaml(new_setup_file)
     fame_setup["outputFilePrefix"] = (
         f"{fame_setup['outputFilePrefix']}_"
-        f"{load_shifting_focus_cluster}_{dr_scen}"
+        f"{config['load_shifting_focus_cluster']}_{dr_scen}_{tariff_string}"
     )
+    if "optional_file_add_on" in config:
+        fame_setup["outputFilePrefix"] += config["optional_file_add_on"]
+
     with open(new_setup_file, "w") as file:
         yaml.dump(fame_setup, file, sort_keys=False)
 
