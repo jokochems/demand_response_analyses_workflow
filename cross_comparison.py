@@ -3,6 +3,7 @@ import pandas as pd
 from dr_analyses.plotting import (
     plot_cross_run_bar_charts,
     plot_cross_run_heatmaps,
+    configure_plots,
 )
 from dr_analyses.workflow_config import (
     add_args,
@@ -48,6 +49,7 @@ if __name__ == "__main__":
                 param_results = pd.read_csv(file_name, sep=";", index_col=0)
                 results[param][cluster][dr_scen] = param_results
 
+    configure_plots(config_plotting)
     plot_cross_run_bar_charts(
         config_comparison,
         results,
