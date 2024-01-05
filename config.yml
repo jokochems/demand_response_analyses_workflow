@@ -49,6 +49,7 @@ config_workflow:
   evaluate_cross_scenarios: True
   make_plots: True
   baseline_load_file: "baseline_load_profile"
+  optional_file_add_on: ""
 
 # Plotting control
 config_plotting:
