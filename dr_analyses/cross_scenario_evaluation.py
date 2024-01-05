@@ -93,7 +93,7 @@ def evaluate_parameter_results(
             f"{config_workflow['tariff_config']['capacity']['max_share']}"
             f"_LP"
         )
-        if config_workflow["optional_file_add_on"] != "":
+        if "optional_file_add_on" in config_workflow:
             file_name += config_workflow["optional_file_add_on"]
         make_directory_if_missing(data_output_folder)
         param_results.to_csv(f"{file_name}.csv", sep=";")
