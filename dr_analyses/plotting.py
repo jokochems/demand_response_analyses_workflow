@@ -231,10 +231,7 @@ def plot_cross_run_bar_charts(
                     )  # noqa: E501
                 else:
                     title = None
-                if (
-                    len(dr_clusters) == 1
-                    and not config_plotting["subplots_in_columns"]
-                ):
+                if len(dr_clusters) == 1:
                     axes_argument = axs[scenario_number]
                 elif len(dr_scenarios) == 1:
                     axes_argument = axs[cluster_number]
@@ -625,10 +622,7 @@ def plot_cross_run_heatmaps(
                     f"{config_plotting['rename_dict']['clusters'][config_plotting['language']][cluster]}"
                     f" - DR {scenario}"
                 )  # noqa: E501
-                if (
-                    len(dr_clusters) == 1
-                    and not config_plotting["subplots_in_columns"]
-                ):
+                if len(dr_clusters) == 1:
                     axes_argument = axs[scenario_number]
                 else:
                     axes_argument = plt.subplot(
