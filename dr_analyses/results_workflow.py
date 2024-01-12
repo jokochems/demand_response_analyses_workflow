@@ -109,10 +109,7 @@ def extract_load_shifting_cashflows(
     year_index_shift = int(cont.config_workflow["investment_year"]) - 2020
 
     for i in range(derive_lifetime_from_simulation_horizon(cont.results)):
-        if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
-            stop = len(cont.results) - 1
-        else:
-            stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR
+        stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR - 1
 
         baseline_annual_payments = (
             cont.results[[f"Baseline{col}" for col in payment_columns]]
@@ -225,10 +222,7 @@ def add_discounted_payments_to_results(
     for col in cols:
         cont.results[f"Discounted{col}"] = 0
     for i in range(derive_lifetime_from_simulation_horizon(cont.results)):
-        if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
-            stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
-        else:
-            stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR
+        stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR - 1
 
         for col in cols:
             cont.results[f"Discounted{col}"].loc[
@@ -327,10 +321,7 @@ def calculate_capacity_payments_from_file(
 ):
     """Calculate capacity payment obligations"""
     for i in range(derive_lifetime_from_simulation_horizon(cont.results)):
-        if (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR >= len(cont.results):
-            stop = i * AMIRIS_TIMESTEPS_PER_YEAR + len(cont.results) - 1
-        else:
-            stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR
+        stop = (i + 1) * AMIRIS_TIMESTEPS_PER_YEAR - 1
         cont.results.at[
             i * AMIRIS_TIMESTEPS_PER_YEAR, "BaselineCapacityPayment"
         ] = (
