@@ -164,6 +164,15 @@ def create_bar_chart(
                     config_plotting["y_limits"][original_param]["limits"][1]
                 ),
             )
+        else:
+            _ = ax.set_ylim(
+                top=np.max(
+                    [
+                        param_results.max().max() * 1.25,
+                        0.25 * abs(param_results.min().min()),
+                    ]
+                )
+            )
     if config_plotting["format_axis"]:
         if param_results.max().max() >= 10:
             _ = ax.get_yaxis().set_major_formatter(
