@@ -64,7 +64,10 @@ def evaluate_all_parameter_results(
 
 
 def evaluate_parameter_results(
-    config_workflow: Dict, overall_results: pd.DataFrame, param: str, dr_scen: str
+    config_workflow: Dict,
+    overall_results: pd.DataFrame,
+    param: str,
+    dr_scen: str,
 ) -> pd.DataFrame:
     """Pivot and evaluate parameter results"""
     param_results = overall_results.loc[
@@ -109,3 +112,20 @@ def sort_data_ascending(param_results: pd.DataFrame) -> pd.DataFrame:
     param_results = param_results.sort_index().sort_index(axis=1)
 
     return param_results
+
+
+def calc_average_param_results(
+    results: Dict[str, Dict[str, Dict[str, pd.DataFrame]]]
+) -> Dict[str, Dict[str, pd.DataFrame]]:
+    """Calculate average parameter results"""
+    results_agg = dict()
+    for param in results:
+        results_agg[param] = dict()
+        for sens_param in results[param]:
+            results_agg[param][sens_param] = pd.DataFrame(columns=["average"])
+            for sens_case in results[param][sens_param]:
+                results_agg[param][sens_param].loc[sens_case] = results[param][
+                    sens_param
+                ][sens_case].mean().mean()
+
+    return results_agg
