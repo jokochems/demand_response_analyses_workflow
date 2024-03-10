@@ -134,9 +134,9 @@ config_comparison:
     "50": "dr50"
     "95": "dr95"
   load_shifting_focus_clusters:
-#    "hoho_cluster_shift_only": "ho-shi"
+    "hoho_cluster_shift_only": "ho-shi"
 #    "hoho_cluster_shift_shed": "ho-shi-she"
-    "ind_cluster_shift_only": "ind-shi"
+#    "ind_cluster_shift_only": "ind-shi"
 #    "ind_cluster_shift_shed": "ind-shi-she"
 #    "tcs_cluster_shift_only": "tcs-shi"
 #    "tcs+hoho_cluster_shift_only": "tcs-ho-shi"
@@ -149,8 +149,8 @@ config_comparison:
 #    - "EnergyPaymentBeforeShifting"
 #    - "EnergyPaymentChange"
 #    - "InvestmentExpenses"
-#    - "NetPresentValue"
-    - "NetPresentValuePerCapacity"
+    - "NetPresentValue"
+#    - "NetPresentValuePerCapacity"
 #    - "NetSavings"
 #    - "NoOfFullShiftCycles"
 #    - "PeakLoadAfterShifting"
@@ -160,6 +160,14 @@ config_comparison:
 #    - "TotalPaymentBeforeShifting"
 #    - "TotalPaymentChange"
 #    - "TotalShiftingCosts"
+  sensitivity:
+    enabled: True
+    params: ["interest", "network_charge"]
+    cases:
+      - "minus_50_percent"
+      - "minus_25_percent"
+      - "plus_25_percent"
+      - "plus_50_percent"
 
 config_plotting:
   very_small_size: 10
@@ -178,6 +186,20 @@ config_plotting:
   language: "English"  # "German", "English"
   format_axis: True
   show_title: True
+  sensitivity_params:
+    "x_label":
+      "English": "sensitivity"
+      "German": "Sensitivität"
+    "interest":
+      "color": "darkblue"
+      "name":
+          "English": "interest rate"
+          "German": "Verzinsungsanspruch"
+    "network_charge":
+      "color": "darkgrey"
+      "name":
+          "English": "network charge growth"
+          "German": "Anstieg der Netzentgelte"
   division:
     "Annuity": 1e6
     "CapacityPaymentAfterShifting": 1e6

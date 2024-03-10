@@ -4,7 +4,7 @@ from typing import Dict
 import matplotlib.axes
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt, gridspec
+from matplotlib import pyplot as plt, gridspec, ticker
 from matplotlib.ticker import FuncFormatter
 
 from dr_analyses.workflow_routines import make_directory_if_missing
@@ -950,3 +950,85 @@ def plot_weekly_dispatch_situations(
     plt.close(fig)
     if config_plotting["show_plot"]:
         plt.show()
+
+
+def plot_sensitivity_comparison(
+    results_agg: Dict[str, Dict[str, pd.DataFrame]],
+    config_plotting: Dict,
+    config_comparison: Dict,
+):
+    """Plot a comparison of aggregated results sensitivities"""
+    renamed_param = dict()
+    for param in results_agg:
+        if (
+            param
+            in config_plotting["rename_dict"]["parameters"][
+                config_plotting["language"]
+            ]
+        ):
+            renamed_param[param] = config_plotting["rename_dict"][
+                "parameters"
+            ][config_plotting["language"]][param]
+
+        fig, ax = plt.subplots(figsize=(config_plotting["figsize"]["bar"]))
+        for sens_param in results_agg[param]:
+            if config_plotting["division"]:
+                if param in config_plotting["division"]:
+                    to_plot = results_agg[param][sens_param] / float(
+                        config_plotting["division"][param]
+                    )
+
+            to_plot = to_plot.reindex(
+                [
+                    "minus_50_percent",
+                    "minus_25_percent",
+                    "+/-0",
+                    "plus_25_percent",
+                    "plus_50_percent",
+                ]
+            )
+            to_plot.rename(
+                index={
+                    "minus_50_percent": "-50%",
+                    "minus_25_percent": "-25%",
+                    "plus_25_percent": "+25%",
+                    "plus_50_percent": "+50%",
+                },
+                columns={
+                    "average": config_plotting["sensitivity_params"][
+                        sens_param
+                    ]["name"][config_plotting["language"]]
+                },
+                inplace=True,
+            )
+            to_plot.plot(
+                ax=ax,
+                color=config_plotting["sensitivity_params"][sens_param][
+                    "color"
+                ],
+                marker="s",
+            )
+            if config_plotting["format_axis"]:
+                if to_plot.max().max() >= 10:
+                    _ = ax.get_yaxis().set_major_formatter(
+                        FuncFormatter(lambda x, p: format(int(x), ","))
+                    )
+            ax.set_xlabel(
+                config_plotting["sensitivity_params"]["x_label"][
+                    config_plotting["language"]
+                ],
+                labelpad=10,
+            )
+            ax.set_ylabel(renamed_param[param], labelpad=10)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+
+        if config_plotting["save_plot"]:
+            file_name = (
+                f"{config_comparison['output_folder']}"
+                f"{config_comparison['plots_output']}"
+                f"sensitivity_plot.png"
+            )
+            _ = fig.savefig(file_name, dpi=300, bbox_inches="tight")
+        plt.close(fig)
+        if config_plotting["show_plot"]:
+            plt.show()
