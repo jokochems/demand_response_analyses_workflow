@@ -186,6 +186,20 @@ config_plotting:
   language: "English"  # "German", "English"
   format_axis: True
   show_title: True
+  sensitivity_params:
+    "x_label":
+      "English": "sensitivity"
+      "German": "Sensitivität"
+    "interest":
+      "color": "darkblue"
+      "name":
+          "English": "interest rate"
+          "German": "Verzinsungsanspruch"
+    "network_charge":
+      "color": "darkgrey"
+      "name":
+          "English": "network charge growth"
+          "German": "Anstieg der Netzentgelte"
   division:
     "Annuity": 1e6
     "CapacityPaymentAfterShifting": 1e6

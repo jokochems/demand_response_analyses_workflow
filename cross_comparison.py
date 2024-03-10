@@ -5,6 +5,7 @@ from dr_analyses.plotting import (
     plot_cross_run_bar_charts,
     plot_cross_run_heatmaps,
     configure_plots,
+    plot_sensitivity_comparison,
 )
 from dr_analyses.workflow_config import (
     add_args,
@@ -107,4 +108,9 @@ if __name__ == "__main__":
                 results[param][sens_param]["+/-0"] = param_results
 
         results_agg = calc_average_param_results(results)
-        # TODO: Add plotting routine
+        configure_plots(config_plotting)
+        plot_sensitivity_comparison(
+            results_agg,
+            config_plotting,
+            config_comparison,
+        )
