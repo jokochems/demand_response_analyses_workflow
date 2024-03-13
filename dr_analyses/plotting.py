@@ -324,11 +324,6 @@ def plot_heat_maps(
             cbarlabel=param,
             config_plotting=config_plotting,
         )
-        if config_plotting["format_axis"]:
-            if data.max().max() >= 10:
-                _ = ax.get_yaxis().set_major_formatter(
-                    FuncFormatter(lambda x, p: format(int(x), ","))
-                )
         annotate = config_plotting["annotate"]
         if annotate:
             _ = annotate_heatmap(im, config_plotting)
@@ -669,11 +664,6 @@ def plot_cross_run_heatmaps(
                     title=title,
                     hide_cbar=hide_cbar,
                 )
-                if config_plotting["format_axis"]:
-                    if data.max().max() >= 10:
-                        _ = axes_argument.get_yaxis().set_major_formatter(
-                            FuncFormatter(lambda x, p: format(int(x), ","))
-                        )
                 annotate = config_plotting["annotate"]
                 if annotate:
                     _ = annotate_heatmap(im, config_plotting)
