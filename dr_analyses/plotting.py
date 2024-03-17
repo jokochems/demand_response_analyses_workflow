@@ -310,8 +310,7 @@ def use_custom_colormap():
     """Use hard-coded color map
 
     Created using free online tool, at
-    https://eltos.github.io/gradient/#A30DF0-0DF03F-F0A10D,
-    accessed 17.03.2024
+    https://eltos.github.io/gradient/, accessed 17.03.2024
     """
     return LinearSegmentedColormap.from_list(
         "custom_cmap",
@@ -324,6 +323,16 @@ def use_custom_colormap():
             (1.000, (0.831, 0.424, 0.424)),
         ),
     )
+    # return LinearSegmentedColormap.from_list('custom_map', (
+    #     # Edit this gradient at https://eltos.github.io/gradient/#Random%20gradient%206674=0:04024D-15:363470-30:686794-50:ADEC72-70:BE9173-85:9D5A2D-100:934816
+    #     (0.000, (0.016, 0.008, 0.302)),
+    #     (0.150, (0.212, 0.204, 0.439)),
+    #     (0.300, (0.408, 0.404, 0.580)),
+    #     (0.500, (0.678, 0.925, 0.447)),
+    #     (0.700, (0.745, 0.569, 0.451)),
+    #     (0.850, (0.616, 0.353, 0.176)),
+    #     (1.000, (0.576, 0.282, 0.086)))
+    # )
 
 
 def plot_heat_maps(
