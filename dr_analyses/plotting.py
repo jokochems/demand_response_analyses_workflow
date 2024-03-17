@@ -547,12 +547,33 @@ def annotate_heatmap(
             ) or int(im.norm(data[i, j]) < lower_threshold)
             kw.update(color=textcolors[color_condition])
             try:
-                text = im.axes.text(j, i, abbreviate(data[i, j]), **kw)
+                text_arg = format_data(data[i, j], config_plotting["language"])
+                if "abbreviate" in config_plotting:
+                    if config_plotting["abbreviate"]:
+                        text_arg = abbreviate(data[i, j])
+                text = im.axes.text(j, i, text_arg, **kw)
                 texts.append(text)
             except Exception:
                 raise
 
     return texts
+
+
+def format_data(x: float or None, lang: str) -> str:
+    """Format given entry"""
+    if isinstance(x, np.ma.core.MaskedConstant):
+        return "--"
+    if lang == "German":
+        to_replace = (".", ",")
+    else:
+        to_replace = ("", "")
+    if abs(x) < 100:
+        if abs(x) < 0.01:
+            return "{:,.3f}".format(x).replace(to_replace[0], to_replace[1])
+        else:
+            return "{:,.1f}".format(x).replace(to_replace[0], to_replace[1])
+    else:
+        return "{:,.0f}".format(x).replace(to_replace[1], to_replace[0])
 
 
 def abbreviate(x: float or None) -> str:
