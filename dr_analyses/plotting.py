@@ -5,7 +5,6 @@ import matplotlib.axes
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt, gridspec, ticker
-from matplotlib.ticker import FuncFormatter
 
 from dr_analyses.workflow_routines import make_directory_if_missing
 
@@ -174,9 +173,19 @@ def create_bar_chart(
                 )
             )
     if config_plotting["format_axis"]:
-        if param_results.max().max() >= 10:
+        if config_plotting["language"] == "English":
+            if param_results.max().max() >= 10:
+                _ = ax.get_yaxis().set_major_formatter(
+                    ticker.FuncFormatter(lambda x, p: format(int(x), ","))
+                )
+        elif config_plotting["language"] == "German":
             _ = ax.get_yaxis().set_major_formatter(
-                FuncFormatter(lambda x, p: format(int(x), ","))
+                ticker.FuncFormatter(apply_european_number_format)
+            )
+        else:
+            raise ValueError(
+                f"Invalid language selection. "
+                f"Given value was: {config_plotting['language']}."
             )
     _ = ax.set_ylabel(param)
 
@@ -866,12 +875,40 @@ def create_dispatch_plot(
         shadow=False,
         ncol=2,
     )
-    _ = ax.get_yaxis().set_major_formatter(
-        FuncFormatter(lambda x, p: format(int(x), ","))
-    )
+    if config_plotting["language"] == "English":
+        _ = ax.get_yaxis().set_major_formatter(
+            ticker.FuncFormatter(lambda x, p: format(int(x), ","))
+        )
+    elif config_plotting["language"] == "German":
+        _ = ax.get_yaxis().set_major_formatter(
+            ticker.FuncFormatter(apply_european_number_format)
+        )
+    else:
+        raise ValueError(
+            f"Invalid language selection. "
+            f"Given value was: {config_plotting['language']}."
+        )
     _ = ax.margins(0, 0.05)
     _ = ax2.margins(0, 0.05)
     align_zeros(ax, ax2)
+
+
+def apply_european_number_format(x: float, pos: float):
+    """Use point as thousands separator and comma as thousands separator
+
+    Solution was achieved querying ChatGPT
+    """
+    if any(
+        isinstance(val, float) and val % 1 != 0
+        for val in plt.gca().get_yticks()
+    ):
+        if abs(max([val for val in plt.gca().get_yticks()])) < 0.01:
+            return "{:,.3f}".format(x).replace(".", ",")
+        else:
+            return "{:,.2f}".format(x).replace(".", ",")
+    else:
+        return "{:,.0f}".format(x).replace(",", ".")
+    # return "{:,.0f}".format(x).replace(",", ".")
 
 
 def align_zeros(ax1, ax2):
@@ -999,9 +1036,21 @@ def plot_sensitivity_comparison(
                 marker="s",
             )
             if config_plotting["format_axis"]:
-                if to_plot.max().max() >= 10:
+                if config_plotting["language"] == "English":
+                    if to_plot.max().max() >= 10:
+                        _ = ax.get_yaxis().set_major_formatter(
+                            ticker.FuncFormatter(
+                                lambda x, p: format(int(x), ",")
+                            )
+                        )
+                elif config_plotting["language"] == "German":
                     _ = ax.get_yaxis().set_major_formatter(
-                        FuncFormatter(lambda x, p: format(int(x), ","))
+                        ticker.FuncFormatter(apply_european_number_format)
+                    )
+                else:
+                    raise ValueError(
+                        f"Invalid language selection. "
+                        f"Given value was: {config_plotting['language']}."
                     )
             ax.set_xlabel(
                 config_plotting["sensitivity_params"]["x_label"][
