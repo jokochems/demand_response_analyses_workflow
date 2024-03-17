@@ -5,6 +5,7 @@ import matplotlib.axes
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt, gridspec, ticker
+from matplotlib.colors import LinearSegmentedColormap
 
 from dr_analyses.workflow_routines import make_directory_if_missing
 
@@ -305,6 +306,26 @@ def initialize_empty_plot_config() -> Dict:
     }
 
 
+def use_custom_colormap():
+    """Use hard-coded color map
+
+    Created using free online tool, at
+    https://eltos.github.io/gradient/#A30DF0-0DF03F-F0A10D,
+    accessed 17.03.2024
+    """
+    return LinearSegmentedColormap.from_list(
+        "custom_cmap",
+        (
+            # Edit this gradient at https://eltos.github.io/gradient/#Random%20gradient%206674=92B7F6-B2CCF8-95F49C-F3AEAE-D46C6C
+            (0.000, (0.573, 0.718, 0.965)),
+            (0.250, (0.698, 0.800, 0.973)),
+            (0.500, (0.584, 0.957, 0.612)),
+            (0.750, (0.953, 0.682, 0.682)),
+            (1.000, (0.831, 0.424, 0.424)),
+        ),
+    )
+
+
 def plot_heat_maps(
     config_workflow: Dict,
     all_parameter_results: Dict[str, pd.DataFrame],
@@ -335,6 +356,12 @@ def plot_heat_maps(
         col_labels = param_results.columns.values
 
         cbar_bounds = derive_cbar_bounds(data, config_plotting, original_param)
+        cmap = "coolwarm"
+        if "cmap" in config_plotting:
+            if config_plotting["cmap"] == "custom":
+                cmap = use_custom_colormap()
+            else:
+                cmap = config_plotting["cmap"]
         im, cbar = heatmap(
             data,
             row_labels,
@@ -343,7 +370,7 @@ def plot_heat_maps(
             vmin=-cbar_bounds,
             vmax=cbar_bounds,
             cbar_kw={"shrink": 1.0},
-            cmap=plt.cm.get_cmap("coolwarm").reversed(),
+            cmap=plt.cm.get_cmap(cmap).reversed(),
             cbarlabel=param,
             config_plotting=config_plotting,
         )
@@ -694,6 +721,12 @@ def plot_cross_run_heatmaps(
                     hide_cbar = True
                 else:
                     hide_cbar = False
+                cmap = "coolwarm"
+                if "cmap" in config_plotting:
+                    if config_plotting["cmap"] == "custom":
+                        cmap = use_custom_colormap()
+                    else:
+                        cmap = config_plotting["cmap"]
                 im, cbar = heatmap(
                     data,
                     row_labels,
@@ -702,7 +735,7 @@ def plot_cross_run_heatmaps(
                     vmin=-cbar_bounds,
                     vmax=cbar_bounds,
                     cbar_kw={"shrink": 1.0},
-                    cmap=plt.cm.get_cmap("coolwarm").reversed(),
+                    cmap=plt.cm.get_cmap(cmap).reversed(),
                     cbarlabel=param_results[0],
                     config_plotting=config_plotting,
                     title=title,
