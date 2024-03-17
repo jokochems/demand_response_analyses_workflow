@@ -201,6 +201,8 @@ config_plotting:
         "TotalShiftingCosts": "Gesamte variable Lastverschiebekosten in Mio. EUR"
   x_label: None
   annotate: True
+  abbreviate: False
+  cmap: "custom"
   save_plot: True
   show_plot: False
 
