@@ -82,6 +82,67 @@ config_plotting:
     "TotalPaymentBeforeShifting": 1e6
     "TotalPaymentLoadChange": 1e6
     "TotalShiftingCosts": 1e6
+  legend:
+    "Annuity":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "CapacityPaymentAfterShifting":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "CapacityPaymentBeforeShifting":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "CapacityPaymentChange":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "EnergyPaymentAfterShifting":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "EnergyPaymentBeforeShifting":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "EnergyPaymentChange":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "InvestmentExpenses":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "NetPresentValue":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3  # "max"
+    "NetPresentValuePerCapacity":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "Net Savings":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "TotalPaymentAfterShifting":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "TotalPaymentBeforeShifting":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "TotalPaymentLoadChange":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
+    "TotalShiftingCosts":
+      bbox_x: 0.01
+      spacing: 1.25
+      ncol: 3
   y_limits:
     "NetPresentValuePerCapacity":
       "limits": [-20000, 20000]

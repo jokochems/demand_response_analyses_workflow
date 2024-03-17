@@ -141,12 +141,25 @@ def create_bar_chart(
     _ = ax.set_axisbelow(True)
     _ = ax.grid(axis="y", color="lightgrey")
 
+    bbox_x = 0.01
+    ncol = 3
+    spacing = 1.25
+    if "legend" in config_plotting:
+        if original_param in config_plotting["legend"]:
+            bbox_x = config_plotting["legend"][original_param]["bbox_x"]
+            spacing = config_plotting["legend"][original_param]["spacing"]
+            if isinstance(
+                config_plotting["legend"][original_param]["ncol"], int
+            ):
+                ncol = config_plotting["legend"][original_param]["ncol"]
+            elif config_plotting["legend"][original_param]["ncol"] == "max":
+                ncol = len(param_results.columns)
     _ = ax.legend(
-        bbox_to_anchor=(0.01, 0.98),
+        bbox_to_anchor=(bbox_x, 0.98),
         loc="upper left",
         fancybox=False,
         shadow=False,
-        ncol=3,
+        ncol=ncol,
     )
     if title:
         ax.set_title(title)
@@ -164,10 +177,11 @@ def create_bar_chart(
                 ),
             )
         else:
+
             _ = ax.set_ylim(
                 top=np.max(
                     [
-                        param_results.max().max() * 1.25,
+                        param_results.max().max() * spacing,
                         0.25 * abs(param_results.min().min()),
                     ]
                 )
@@ -908,7 +922,6 @@ def apply_european_number_format(x: float, pos: float):
             return "{:,.2f}".format(x).replace(".", ",")
     else:
         return "{:,.0f}".format(x).replace(",", ".")
-    # return "{:,.0f}".format(x).replace(",", ".")
 
 
 def align_zeros(ax1, ax2):
