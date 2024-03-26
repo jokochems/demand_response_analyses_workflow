@@ -315,7 +315,7 @@ def use_custom_colormap():
     return LinearSegmentedColormap.from_list(
         "custom_cmap",
         (
-            # Edit this gradient at https://eltos.github.io/gradient/#Random%20gradient%206674=0:24233C-10:3C3B64-20:55538C-30:6D6BB4-40:9E9CD7-46:C9C8E9-48:A2E88F-50:AAF683-52:A2E88F-54:DCC5B6-60:CEAD98-70:BA8B6C-80:A66A42-90:8D5128-100:512101
+            # Edit this gradient at https://eltos.github.io/gradient/#Random%20gradient%206674=0:24233C-10:3C3B64-20:55538C-30:6D6BB4-40:9E9CD7-46:C9C8E9-48:A2E88F-50:AAF683-52:A2E88F-54:DCC5B6-60:CEAD98-70:BA8B6C-80:A66A42-90:8D5128-100:512101    # noqa: E501
             (0.000, (0.141, 0.137, 0.235)),
             (0.100, (0.235, 0.231, 0.392)),
             (0.200, (0.333, 0.325, 0.549)),
@@ -336,7 +336,7 @@ def use_custom_colormap():
     # return LinearSegmentedColormap.from_list(
     #     "custom_cmap",
     #     (
-    #         # Edit this gradient at https://eltos.github.io/gradient/#Random%20gradient%206674=92B7F6-B2CCF8-95F49C-F3AEAE-D46C6C
+    #         # Edit this gradient at https://eltos.github.io/gradient/#Random%20gradient%206674=92B7F6-B2CCF8-95F49C-F3AEAE-D46C6C  # noqa: E501
     #         (0.000, (0.573, 0.718, 0.965)),
     #         (0.250, (0.698, 0.800, 0.973)),
     #         (0.500, (0.584, 0.957, 0.612)),
