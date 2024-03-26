@@ -936,7 +936,7 @@ def create_dispatch_plot(
         ],
     )
     _ = axs[0].set_ylim(0, top_plot_results.max().max() * 1.05)
-    ax2.set_ylim(-50, 250)
+    ax2.set_ylim(-50, 100)
     axs[0].set_ylabel(
         config_plotting["axes_labels"][config_plotting["language"]][
             "primary_y"
