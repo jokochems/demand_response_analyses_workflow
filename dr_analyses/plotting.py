@@ -5,7 +5,7 @@ import matplotlib.axes
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt, gridspec, ticker
-from matplotlib.ticker import FuncFormatter
+from matplotlib.colors import LinearSegmentedColormap
 
 from dr_analyses.workflow_routines import make_directory_if_missing
 
@@ -142,12 +142,25 @@ def create_bar_chart(
     _ = ax.set_axisbelow(True)
     _ = ax.grid(axis="y", color="lightgrey")
 
+    bbox_x = 0.01
+    ncol = 3
+    spacing = 1.25
+    if "legend" in config_plotting:
+        if original_param in config_plotting["legend"]:
+            bbox_x = config_plotting["legend"][original_param]["bbox_x"]
+            spacing = config_plotting["legend"][original_param]["spacing"]
+            if isinstance(
+                config_plotting["legend"][original_param]["ncol"], int
+            ):
+                ncol = config_plotting["legend"][original_param]["ncol"]
+            elif config_plotting["legend"][original_param]["ncol"] == "max":
+                ncol = len(param_results.columns)
     _ = ax.legend(
-        bbox_to_anchor=(0.01, 0.98),
+        bbox_to_anchor=(bbox_x, 0.98),
         loc="upper left",
         fancybox=False,
         shadow=False,
-        ncol=3,
+        ncol=ncol,
     )
     if title:
         ax.set_title(title)
@@ -165,18 +178,29 @@ def create_bar_chart(
                 ),
             )
         else:
+
             _ = ax.set_ylim(
                 top=np.max(
                     [
-                        param_results.max().max() * 1.25,
+                        param_results.max().max() * spacing,
                         0.25 * abs(param_results.min().min()),
                     ]
                 )
             )
     if config_plotting["format_axis"]:
-        if param_results.max().max() >= 10:
+        if config_plotting["language"] == "English":
+            if param_results.max().max() >= 10:
+                _ = ax.get_yaxis().set_major_formatter(
+                    ticker.FuncFormatter(lambda x, p: format(int(x), ","))
+                )
+        elif config_plotting["language"] == "German":
             _ = ax.get_yaxis().set_major_formatter(
-                FuncFormatter(lambda x, p: format(int(x), ","))
+                ticker.FuncFormatter(apply_european_number_format)
+            )
+        else:
+            raise ValueError(
+                f"Invalid language selection. "
+                f"Given value was: {config_plotting['language']}."
             )
     _ = ax.set_ylabel(param)
 
@@ -282,6 +306,46 @@ def initialize_empty_plot_config() -> Dict:
     }
 
 
+def use_custom_colormap():
+    """Use hard-coded color map
+
+    Created using free online tool, at
+    https://eltos.github.io/gradient/, accessed 17.03.2024
+    """
+    return LinearSegmentedColormap.from_list(
+        "custom_cmap",
+        (
+            # Edit this gradient at https://eltos.github.io/gradient/#Random%20gradient%206674=0:24233C-10:3C3B64-20:55538C-30:6D6BB4-40:9E9CD7-46:C9C8E9-48:A2E88F-50:AAF683-52:A2E88F-54:DCC5B6-60:CEAD98-70:BA8B6C-80:A66A42-90:8D5128-100:512101    # noqa: E501
+            (0.000, (0.141, 0.137, 0.235)),
+            (0.100, (0.235, 0.231, 0.392)),
+            (0.200, (0.333, 0.325, 0.549)),
+            (0.300, (0.427, 0.420, 0.706)),
+            (0.400, (0.620, 0.612, 0.843)),
+            (0.460, (0.788, 0.784, 0.914)),
+            (0.480, (0.635, 0.910, 0.561)),
+            (0.500, (0.667, 0.965, 0.514)),
+            (0.520, (0.635, 0.910, 0.561)),
+            (0.540, (0.863, 0.773, 0.714)),
+            (0.600, (0.808, 0.678, 0.596)),
+            (0.700, (0.729, 0.545, 0.424)),
+            (0.800, (0.651, 0.416, 0.259)),
+            (0.900, (0.553, 0.318, 0.157)),
+            (1.000, (0.318, 0.129, 0.004)),
+        ),
+    )
+    # return LinearSegmentedColormap.from_list(
+    #     "custom_cmap",
+    #     (
+    #         # Edit this gradient at https://eltos.github.io/gradient/#Random%20gradient%206674=92B7F6-B2CCF8-95F49C-F3AEAE-D46C6C  # noqa: E501
+    #         (0.000, (0.573, 0.718, 0.965)),
+    #         (0.250, (0.698, 0.800, 0.973)),
+    #         (0.500, (0.584, 0.957, 0.612)),
+    #         (0.750, (0.953, 0.682, 0.682)),
+    #         (1.000, (0.831, 0.424, 0.424)),
+    #     ),
+    # )
+
+
 def plot_heat_maps(
     config_workflow: Dict,
     all_parameter_results: Dict[str, pd.DataFrame],
@@ -312,6 +376,12 @@ def plot_heat_maps(
         col_labels = param_results.columns.values
 
         cbar_bounds = derive_cbar_bounds(data, config_plotting, original_param)
+        cmap = "coolwarm"
+        if "cmap" in config_plotting:
+            if config_plotting["cmap"] == "custom":
+                cmap = use_custom_colormap()
+            else:
+                cmap = config_plotting["cmap"]
         im, cbar = heatmap(
             data,
             row_labels,
@@ -320,7 +390,7 @@ def plot_heat_maps(
             vmin=-cbar_bounds,
             vmax=cbar_bounds,
             cbar_kw={"shrink": 1.0},
-            cmap=plt.cm.get_cmap("coolwarm").reversed(),
+            cmap=plt.cm.get_cmap(cmap).reversed(),
             cbarlabel=param,
             config_plotting=config_plotting,
         )
@@ -524,12 +594,33 @@ def annotate_heatmap(
             ) or int(im.norm(data[i, j]) < lower_threshold)
             kw.update(color=textcolors[color_condition])
             try:
-                text = im.axes.text(j, i, abbreviate(data[i, j]), **kw)
+                text_arg = format_data(data[i, j], config_plotting["language"])
+                if "abbreviate" in config_plotting:
+                    if config_plotting["abbreviate"]:
+                        text_arg = abbreviate(data[i, j])
+                text = im.axes.text(j, i, text_arg, **kw)
                 texts.append(text)
             except Exception:
                 raise
 
     return texts
+
+
+def format_data(x: float or None, lang: str) -> str:
+    """Format given entry"""
+    if isinstance(x, np.ma.core.MaskedConstant):
+        return "--"
+    if lang == "German":
+        to_replace = (".", ",")
+    else:
+        to_replace = ("", "")
+    if abs(x) < 100:
+        if abs(x) < 0.01:
+            return "{:,.3f}".format(x).replace(to_replace[0], to_replace[1])
+        else:
+            return "{:,.1f}".format(x).replace(to_replace[0], to_replace[1])
+    else:
+        return "{:,.0f}".format(x).replace(to_replace[1], to_replace[0])
 
 
 def abbreviate(x: float or None) -> str:
@@ -650,6 +741,12 @@ def plot_cross_run_heatmaps(
                     hide_cbar = True
                 else:
                     hide_cbar = False
+                cmap = "coolwarm"
+                if "cmap" in config_plotting:
+                    if config_plotting["cmap"] == "custom":
+                        cmap = use_custom_colormap()
+                    else:
+                        cmap = config_plotting["cmap"]
                 im, cbar = heatmap(
                     data,
                     row_labels,
@@ -658,7 +755,7 @@ def plot_cross_run_heatmaps(
                     vmin=-cbar_bounds,
                     vmax=cbar_bounds,
                     cbar_kw={"shrink": 1.0},
-                    cmap=plt.cm.get_cmap("coolwarm").reversed(),
+                    cmap=plt.cm.get_cmap(cmap).reversed(),
                     cbarlabel=param_results[0],
                     config_plotting=config_plotting,
                     title=title,
@@ -866,12 +963,39 @@ def create_dispatch_plot(
         shadow=False,
         ncol=2,
     )
-    _ = ax.get_yaxis().set_major_formatter(
-        FuncFormatter(lambda x, p: format(int(x), ","))
-    )
+    if config_plotting["language"] == "English":
+        _ = ax.get_yaxis().set_major_formatter(
+            ticker.FuncFormatter(lambda x, p: format(int(x), ","))
+        )
+    elif config_plotting["language"] == "German":
+        _ = ax.get_yaxis().set_major_formatter(
+            ticker.FuncFormatter(apply_european_number_format)
+        )
+    else:
+        raise ValueError(
+            f"Invalid language selection. "
+            f"Given value was: {config_plotting['language']}."
+        )
     _ = ax.margins(0, 0.05)
     _ = ax2.margins(0, 0.05)
     align_zeros(ax, ax2)
+
+
+def apply_european_number_format(x: float, pos: float):
+    """Use point as thousands separator and comma as thousands separator
+
+    Solution was achieved querying ChatGPT
+    """
+    if any(
+        isinstance(val, float) and val % 1 != 0
+        for val in plt.gca().get_yticks()
+    ):
+        if abs(max([val for val in plt.gca().get_yticks()])) < 0.01:
+            return "{:,.3f}".format(x).replace(".", ",")
+        else:
+            return "{:,.2f}".format(x).replace(".", ",")
+    else:
+        return "{:,.0f}".format(x).replace(",", ".")
 
 
 def align_zeros(ax1, ax2):
@@ -999,9 +1123,21 @@ def plot_sensitivity_comparison(
                 marker="s",
             )
             if config_plotting["format_axis"]:
-                if to_plot.max().max() >= 10:
+                if config_plotting["language"] == "English":
+                    if to_plot.max().max() >= 10:
+                        _ = ax.get_yaxis().set_major_formatter(
+                            ticker.FuncFormatter(
+                                lambda x, p: format(int(x), ",")
+                            )
+                        )
+                elif config_plotting["language"] == "German":
                     _ = ax.get_yaxis().set_major_formatter(
-                        FuncFormatter(lambda x, p: format(int(x), ","))
+                        ticker.FuncFormatter(apply_european_number_format)
+                    )
+                else:
+                    raise ValueError(
+                        f"Invalid language selection. "
+                        f"Given value was: {config_plotting['language']}."
                     )
             ax.set_xlabel(
                 config_plotting["sensitivity_params"]["x_label"][
