@@ -50,31 +50,36 @@ config_plotting:
   medium_size: 14
   bigger_size: 15
   width:
-    line: 10
+    line: 12
   height:
-    line: 8
+    line: 9
   xtick_frequency: 1
   styles:
     "ElectricityPriceInEURperMWH":
-      color: "#CBC448"
+      color: "#E4DD51"
       linestyle: "solid"
       secondary_y: True
+      bottom_plot: True
     "NetAwardedPower":
-      color: "#777777"
+      color: "#ADADAD"
       linestyle: "solid"
       secondary_y: False
+      bottom_plot: True
     "BaselineLoadProfile":
       color: "#999999"
       linestyle: "dashed"
       secondary_y: False
+      bottom_plot: False
     "LoadAfterShifting":
       color: "#111111"
       linestyle: "solid"
       secondary_y: False
+      bottom_plot: False
     "ElectricityPriceEstimateInEURperMWH":
-      color: "#E4DD51"
+      color: "#9F9A38"
       linestyle: "dashdot"
       secondary_y: True
+      bottom_plot: True
   rename_dict:
     x_axis:
       "English": "time"
@@ -97,8 +102,12 @@ config_plotting:
         "ElectricityPriceEstimateInEURperMWH": "Prognostizierter Strompreis in EUR/MWh"
   axes_labels:
     "English":
-      primary_y: "load in MW"
+      primary_y:
+        top: "load in MW"
+        bottom: "load change in MW"
       secondary_y: "price in EUR/MWh"
     "German":
-      primary_y: "Last in MW"
+      primary_y:
+        top: "Last in MW"
+        bottom: "Laständerung in MW"
       secondary_y: "Preis in EUR/MWh"

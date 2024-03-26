@@ -178,7 +178,6 @@ def create_bar_chart(
                 ),
             )
         else:
-
             _ = ax.set_ylim(
                 top=np.max(
                     [
@@ -804,11 +803,17 @@ def plot_single_dispatch_pattern(
     xtick_frequency: int = 1,
 ):
     """Plot dispatch of load shifting against prices and planned load"""
-    fig, ax = plt.subplots(figsize=config_plotting["figsize"]["line"])
+    fig, axs = plt.subplots(
+        2,
+        1,
+        figsize=config_plotting["figsize"]["line"],
+        sharex=True,
+        gridspec_kw={"height_ratios": [1.3, 1]},
+    )
     create_dispatch_plot(
         combined_results,
         config_plotting,
-        ax=ax,
+        axs=axs,
         xtick_frequency=xtick_frequency,
     )
     _ = plt.tight_layout()
@@ -835,83 +840,92 @@ def plot_single_dispatch_pattern(
 def create_dispatch_plot(
     combined_results: pd.DataFrame,
     config_plotting: Dict,
-    ax: matplotlib.axes.Axes,
+    axs: matplotlib.axes.Axes,
     xtick_frequency: int,
 ):
     """Plot a given dispatch situation"""
-
-    _ = ax.axhline(0, color="darkgray", linewidth=1)
-    ax2 = ax.twinx()
-    price_cols = [
+    _ = axs[1].axhline(0, color="darkgray", linewidth=1)
+    ax2 = axs[1].twinx()
+    bottom_plot_cols = [
         col
         for col in combined_results.columns
         if config_plotting["styles"][col]["secondary_y"]
+        or config_plotting["styles"][col]["bottom_plot"]
     ]
-    power_cols = [
-        col for col in combined_results.columns if col not in price_cols
+    top_plot_cols = [
+        col for col in combined_results.columns if col not in bottom_plot_cols
     ]
-    power_results = combined_results[power_cols]
-    price_results = combined_results[price_cols]
+    top_plot_results = combined_results[top_plot_cols]
+    bottom_plot_results = combined_results[bottom_plot_cols]
     for key, val in config_plotting["rename_dict"]["parameters"][
         config_plotting["language"]
     ].items():
         config_plotting["styles"][val] = config_plotting["styles"][key]
-    power_results.rename(
+    top_plot_results.rename(
         columns=config_plotting["rename_dict"]["parameters"][
             config_plotting["language"]
         ],
         inplace=True,
     )
-    price_results.index.name = config_plotting["rename_dict"]["x_axis"][
+    bottom_plot_results.index.name = config_plotting["rename_dict"]["x_axis"][
         config_plotting["language"]
     ]
-    price_results.rename(
+    bottom_plot_results.rename(
         columns=config_plotting["rename_dict"]["parameters"][
             config_plotting["language"]
         ],
         inplace=True,
     )
-    power_colors = {
+    top_plot_colors = {
         col: config_plotting["styles"][col]["color"]
-        for col in power_results.columns
+        for col in top_plot_results.columns
     }
-    price_colors = {
+    bottom_plot_colors = {
         col: config_plotting["styles"][col]["color"]
-        for col in price_results.columns
+        for col in bottom_plot_results.columns
     }
-    power_linestyles = {
+    top_plot_linestyles = {
         col: config_plotting["styles"][col]["linestyle"]
-        for col in power_results.columns
+        for col in top_plot_results.columns
     }
-    price_linestyles = {
+    bottom_plot_linestyles = {
         col: config_plotting["styles"][col]["linestyle"]
-        for col in price_results.columns
+        for col in bottom_plot_results.columns
     }
-    for col in power_results.columns:
-        ax.plot(
-            power_results.index,
-            power_results[col],
+    for col in top_plot_results.columns:
+        axs[0].plot(
+            top_plot_results.index,
+            top_plot_results[col],
             label=col,
-            linestyle=power_linestyles[col],
-            color=power_colors[col],
+            linestyle=top_plot_linestyles[col],
+            color=top_plot_colors[col],
         )
-    for col in price_results.columns:
-        ax2.plot(
-            price_results.index,
-            price_results[col],
-            label=col,
-            linestyle=price_linestyles[col],
-            color=price_colors[col],
-        )
-    net_awarded = power_results[
+    for col in bottom_plot_results.columns:
+        if config_plotting["styles"][col]["secondary_y"]:
+            ax2.plot(
+                bottom_plot_results.index,
+                bottom_plot_results[col],
+                label=col,
+                linestyle=bottom_plot_linestyles[col],
+                color=bottom_plot_colors[col],
+            )
+        else:
+            axs[1].plot(
+                bottom_plot_results.index,
+                bottom_plot_results[col],
+                label=col,
+                linestyle=bottom_plot_linestyles[col],
+                color=bottom_plot_colors[col],
+            )
+    net_awarded = bottom_plot_results[
         config_plotting["rename_dict"]["parameters"][
             config_plotting["language"]
         ]["NetAwardedPower"]
     ]
-    _ = ax.fill_between(
-        power_results.index,
+    _ = axs[1].fill_between(
+        bottom_plot_results.index,
         net_awarded,
-        facecolor=power_colors[
+        facecolor=bottom_plot_colors[
             config_plotting["rename_dict"]["parameters"][
                 config_plotting["language"]
             ]["NetAwardedPower"]
@@ -921,14 +935,18 @@ def create_dispatch_plot(
             config_plotting["language"]
         ],
     )
-    _ = ax.set_ylim(
-        power_results.min().min() * 1.05, power_results.max().max() * 1.05
-    )
+    _ = axs[0].set_ylim(0, top_plot_results.max().max() * 1.05)
     ax2.set_ylim(-50, 250)
-    ax.set_ylabel(
+    axs[0].set_ylabel(
         config_plotting["axes_labels"][config_plotting["language"]][
             "primary_y"
-        ],
+        ]["top"],
+        labelpad=10,
+    )
+    axs[1].set_ylabel(
+        config_plotting["axes_labels"][config_plotting["language"]][
+            "primary_y"
+        ]["bottom"],
         labelpad=10,
     )
     ax2.set_ylabel(
@@ -937,19 +955,34 @@ def create_dispatch_plot(
         ],
         labelpad=10,
     )
-    _ = ax.set_xticks(range(0, len(power_results.index), xtick_frequency))
-    _ = ax.set_xticklabels(
-        [label[:16] for label in power_results.index[::xtick_frequency]],
-        rotation=90,
-        ha="center",
+    _ = axs[1].set_xticks(
+        range(0, len(top_plot_results.index), xtick_frequency)
     )
-    _ = ax.set_xlabel(
+    if config_plotting["language"] == "English":
+        _ = axs[1].set_xticklabels(
+            [
+                label[5:16]
+                for label in top_plot_results.index[::xtick_frequency]
+            ],
+            rotation=90,
+            ha="center",
+        )
+    elif config_plotting["language"] == "German":
+        _ = axs[1].set_xticklabels(
+            [
+                f"{label[8:10]}.{label[5:7]}. {label[11:16]}"
+                for label in top_plot_results.index[::xtick_frequency]
+            ],
+            rotation=90,
+            ha="center",
+        )
+    _ = axs[1].set_xlabel(
         config_plotting["rename_dict"]["x_axis"][config_plotting["language"]],
         labelpad=10,
     )
 
     handles, labels = [], []
-    for ax_object in [ax, ax2]:
+    for ax_object in [axs[0], axs[1], ax2]:
         h, l = ax_object.get_legend_handles_labels()
         handles.extend(h)
         labels.extend(l)
@@ -961,24 +994,34 @@ def create_dispatch_plot(
         bbox_to_anchor=[0.5, -0.55],
         fancybox=True,
         shadow=False,
-        ncol=2,
+        ncol=3,
     )
-    if config_plotting["language"] == "English":
-        _ = ax.get_yaxis().set_major_formatter(
-            ticker.FuncFormatter(lambda x, p: format(int(x), ","))
-        )
-    elif config_plotting["language"] == "German":
-        _ = ax.get_yaxis().set_major_formatter(
-            ticker.FuncFormatter(apply_european_number_format)
-        )
-    else:
-        raise ValueError(
-            f"Invalid language selection. "
-            f"Given value was: {config_plotting['language']}."
-        )
-    _ = ax.margins(0, 0.05)
+    for ax in [0, 1]:
+        if config_plotting["language"] == "English":
+            _ = (
+                axs[ax]
+                .get_yaxis()
+                .set_major_formatter(
+                    ticker.FuncFormatter(lambda x, p: format(int(x), ","))
+                )
+            )
+        elif config_plotting["language"] == "German":
+            _ = (
+                axs[ax]
+                .get_yaxis()
+                .set_major_formatter(
+                    ticker.FuncFormatter(apply_european_number_format)
+                )
+            )
+        else:
+            raise ValueError(
+                f"Invalid language selection. "
+                f"Given value was: {config_plotting['language']}."
+            )
+    _ = axs[0].margins(0, 0.05)
+    _ = axs[1].margins(0, 0.05)
     _ = ax2.margins(0, 0.05)
-    align_zeros(ax, ax2)
+    align_zeros(axs[1], ax2)
 
 
 def apply_european_number_format(x: float, pos: float):
@@ -1027,11 +1070,17 @@ def plot_weekly_dispatch_situations(
     xtick_frequency: int = 12,
 ):
     """Plot dispatch of load shifting, prices and planned load for given week"""
-    fig, ax = plt.subplots(figsize=config_plotting["figsize"]["line"])
+    fig, axs = plt.subplots(
+        2,
+        1,
+        figsize=config_plotting["figsize"]["line"],
+        sharex=True,
+        gridspec_kw={"height_ratios": [1.3, 1]},
+    )
     create_dispatch_plot(
         combined_results,
         config_plotting,
-        ax=ax,
+        axs=axs,
         xtick_frequency=xtick_frequency,
     )
     title = {
@@ -1044,7 +1093,7 @@ def plot_weekly_dispatch_situations(
             f"{config_plotting['weekly_evaluation']['year_to_analyse']}"
         ),
     }
-    plt.title(title[config_plotting["language"]])
+    fig.suptitle(title[config_plotting["language"]])
     _ = plt.tight_layout()
     if config_plotting["save_plot"]:
         path = (
