@@ -194,7 +194,9 @@ def create_bar_chart(
                 )
         elif config_plotting["language"] == "German":
             _ = ax.get_yaxis().set_major_formatter(
-                ticker.FuncFormatter(apply_european_number_format)
+                ticker.FuncFormatter(
+                    lambda x, pos: apply_european_number_format(x, pos, ax)
+                )
             )
         else:
             raise ValueError(
@@ -1010,7 +1012,11 @@ def create_dispatch_plot(
                 axs[ax]
                 .get_yaxis()
                 .set_major_formatter(
-                    ticker.FuncFormatter(apply_european_number_format)
+                    ticker.FuncFormatter(
+                        lambda x, pos: apply_european_number_format(
+                            x, pos, axs[ax]
+                        )
+                    )
                 )
             )
         else:
@@ -1024,19 +1030,21 @@ def create_dispatch_plot(
     align_zeros(axs[1], ax2)
 
 
-def apply_european_number_format(x: float, pos: float):
+def apply_european_number_format(
+    x: float, pos: float, ax: matplotlib.axes.Axes
+):
     """Use point as thousands separator and comma as thousands separator
+    and define number of digits dependent on maximum value
 
     Solution was achieved querying ChatGPT
     """
-    if any(
-        isinstance(val, float) and val % 1 != 0
-        for val in plt.gca().get_yticks()
-    ):
-        if abs(max([val for val in plt.gca().get_yticks()])) < 0.01:
-            return "{:,.3f}".format(x).replace(".", ",")
-        else:
-            return "{:,.2f}".format(x).replace(".", ",")
+    max_val = max(ax.get_yticks())
+    if max_val < 0.01:
+        return "{:,.3f}".format(x).replace(".", ",")
+    elif max_val < 2.5:
+        return "{:,.2f}".format(x).replace(".", ",")
+    elif max_val < 10:
+        return "{:,.1f}".format(x).replace(".", ",")
     else:
         return "{:,.0f}".format(x).replace(",", ".")
 
@@ -1181,7 +1189,11 @@ def plot_sensitivity_comparison(
                         )
                 elif config_plotting["language"] == "German":
                     _ = ax.get_yaxis().set_major_formatter(
-                        ticker.FuncFormatter(apply_european_number_format)
+                        ticker.FuncFormatter(
+                            lambda x, pos: apply_european_number_format(
+                                x, pos, ax
+                            )
+                        )
                     )
                 else:
                     raise ValueError(
