@@ -494,7 +494,7 @@ def heatmap(
         ax = plt.gca()
 
     # Plot the heatmap
-    im = ax.imshow(data, **kwargs)
+    im = ax.imshow(data, aspect="auto", **kwargs)
 
     # Create colorbar
     if not hide_cbar:
