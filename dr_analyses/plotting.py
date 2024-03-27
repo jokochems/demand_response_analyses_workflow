@@ -1039,7 +1039,7 @@ def apply_european_number_format(
     Solution was achieved querying ChatGPT
     """
     max_val = max(ax.get_yticks())
-    if max_val < 0.01:
+    if max_val < 0.05:
         return "{:,.3f}".format(x).replace(".", ",")
     elif max_val < 2.5:
         return "{:,.2f}".format(x).replace(".", ",")
